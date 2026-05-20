@@ -42,7 +42,44 @@ button.is-active {
 }
 
 .game-area {
+  position: relative;
   width: min(100%, 440px);
+}
+
+.game-area:not(.is-started) .top-bar,
+.game-area:not(.is-started) .screen-wrap,
+.game-area:not(.is-started) .status-strip,
+.game-area:not(.is-started) .touch-pad,
+.game-area:not(.is-started) .menu-actions {
+  display: none;
+}
+
+.intro-screen {
+  display: grid;
+  min-height: min(760px, calc(100vh - 36px));
+  align-content: center;
+  gap: 20px;
+}
+
+.intro-screen img {
+  width: min(100%, 390px);
+  justify-self: center;
+  border: 1px solid rgba(244, 240, 223, 0.14);
+  border-radius: 8px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  box-shadow: 0 20px 52px rgba(0, 0, 0, 0.42);
+}
+
+.start-button {
+  width: min(100%, 280px);
+  justify-self: center;
+  background: #9f4d36;
+  font-size: 18px;
+}
+
+.game-area.is-started .intro-screen {
+  display: none;
 }
 
 .top-bar {

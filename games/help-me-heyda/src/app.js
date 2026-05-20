@@ -516,6 +516,7 @@ document.addEventListener("click", async (event) => {
   if (action === "push") await game.push();
   if (action === "skill") game.useSkill();
   if (action === "pause") game.pause();
+  if (action === "start") document.querySelector(".game-area")?.classList.add("is-started");
   if (action === "story") await game.startStory(1);
   if (action === "survival") game.startSurvival();
   if (action === "help") game.help();

@@ -1,7 +1,8 @@
 const LOGICAL_WIDTH = 120;
 const LOGICAL_HEIGHT = 132;
-const BOARD_X = 16;
-const BOARD_Y = 13;
+const BOARD_X = 15;
+const BOARD_Y = 5;
+const BOTTOM_Y = 105;
 const TILE_W = 12;
 const TILE_H = 8;
 const ROWS = 13;
@@ -34,6 +35,8 @@ class HeydaGame {
     this.time = 900;
     this.actorY = 10;
     this.stoneFlag = 4;
+    this.actorPushUntil = 0;
+    this.blockRectTick = 0;
     this.message = "자료를 불러오는 중";
     this.board = this.emptyBoard();
     this.lastTick = 0;
@@ -174,9 +177,10 @@ class HeydaGame {
       this.board[row][col] = this.board[row][col + 1];
     }
     this.board[row][COLS - 1] = 0;
-    this.settleBlocks();
     this.addBottomBlock(block);
     this.checkClear();
+    this.settleBlocksOneStep();
+    this.actorPushUntil = performance.now() + 180;
     this.updateHud();
   }
 
@@ -194,22 +198,17 @@ class HeydaGame {
         if (this.board[row][col] === target) this.board[row][col] = 0;
       }
     }
-    this.settleBlocks();
+    this.settleBlocksOneStep();
     this.message = `${target}번 블록 제거`;
     this.updateHud();
   }
 
-  settleBlocks() {
-    let moved = true;
-    while (moved) {
-      moved = false;
-      for (let row = ROWS - 2; row >= 1; row -= 1) {
-        for (let col = 0; col < COLS; col += 1) {
-          if (this.board[row][col] && !this.board[row + 1][col]) {
-            this.board[row + 1][col] = this.board[row][col];
-            this.board[row][col] = 0;
-            moved = true;
-          }
+  settleBlocksOneStep() {
+    for (let row = ROWS - 2; row >= 1; row -= 1) {
+      for (let col = 0; col < COLS; col += 1) {
+        if (this.board[row][col] && !this.board[row + 1][col]) {
+          this.board[row + 1][col] = this.board[row][col];
+          this.board[row][col] = 0;
         }
       }
     }
@@ -349,9 +348,13 @@ class HeydaGame {
     this.ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
     this.drawImage("bg1", 0, 0);
     this.drawImage("bg2", 0, 13);
-    this.drawImage("bg3", 0, 102);
-    this.drawImage("back", 16, 13);
-    this.drawImage("feather", 99, 106);
+    this.drawImage("bg3", 0, 101);
+    this.drawImage("back", 16, 12);
+    this.drawImage("feather", 100, 106);
+    if (this.mode === "story") {
+      this.drawImage(this.scene === "gameover" ? "tent1" : "tent0", 17, this.scene === "gameover" ? 2 : 1);
+    }
+    this.drawEnemy();
   }
 
   drawBoard() {
@@ -360,12 +363,12 @@ class HeydaGame {
         const value = this.board[row][col];
         if (!value) continue;
         const x = BOARD_X + col * TILE_W;
-        const y = BOARD_Y + row * TILE_H;
+        const y = row < 12 ? BOARD_Y + row * TILE_H : BOTTOM_Y;
         this.drawBlock(value, x, y);
       }
     }
-    for (let col = 7 - this.stoneFlag; col < 7; col += 1) {
-      if (this.mode === "story" && col >= 0) this.drawImage("stone", BOARD_X + col * TILE_W, 105);
+    for (let k = 0; k < this.stoneFlag; k += 1) {
+      if (this.mode === "story") this.drawImage("stone", 88 - k * TILE_W, BOTTOM_Y);
     }
   }
 
@@ -377,8 +380,8 @@ class HeydaGame {
       return;
     }
     const index = Math.max(0, Math.min(11, value - 1));
-    const sx = (index % 2) * TILE_W;
-    const sy = Math.floor(index / 2) * TILE_H;
+    const sx = 0;
+    const sy = index * TILE_H;
     this.ctx.drawImage(img, sx, sy, TILE_W, TILE_H, x, y, TILE_W, TILE_H);
   }
 
@@ -388,10 +391,32 @@ class HeydaGame {
   }
 
   drawActor() {
-    const frame = Math.floor(performance.now() / 180) % 6;
-    this.drawImage(`hero${frame}`, 1, BOARD_Y + this.actorY * TILE_H - 1);
-    this.ctx.strokeStyle = "#fff06a";
-    this.ctx.strokeRect(BOARD_X - 1, BOARD_Y + (this.actorY + 1) * TILE_H - 1, 98, TILE_H + 1);
+    const row = this.board[this.actorY + 1] || [];
+    let firstEmpty = row.findIndex((value) => value === 0);
+    if (firstEmpty < 0) firstEmpty = COLS - 1;
+    if (firstEmpty === 0) firstEmpty = 1;
+
+    const selectedY = 13 + this.actorY * TILE_H;
+    const blink = this.blockRectTick % 4;
+    this.ctx.strokeStyle = ["#ffffff", "#8a8a8a", "#000000", "#8a8a8a"][blink];
+    this.ctx.strokeRect(15.5, selectedY + 0.5, 11, 7);
+    this.blockRectTick = (this.blockRectTick + 1) % 4;
+
+    const prefix = this.mode === "survival" ? "s_hero" : "hero";
+    const isPushing = performance.now() < this.actorPushUntil;
+    const frame = isPushing ? 1 : 0;
+    const x = isPushing ? 24 + firstEmpty * TILE_W : 28 + (firstEmpty - 1) * TILE_W;
+    const y = 4 + this.actorY * TILE_H;
+    this.drawImage(`${prefix}${frame}`, x, y);
+  }
+
+  drawEnemy() {
+    const frame = Math.floor(performance.now() / 220) % 2;
+    if (this.mode === "story") {
+      this.drawImage(`enemy${frame}`, 112 - Math.floor((900 - this.time) / 10), 3);
+      return;
+    }
+    this.drawImage(`enemy${frame}`, 74, 3);
   }
 
   drawHudText() {

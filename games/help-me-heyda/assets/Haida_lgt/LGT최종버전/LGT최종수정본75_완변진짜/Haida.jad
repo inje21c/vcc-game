@@ -1,0 +1,8 @@
+MIDlet-Name: 도와줘헤이다
+MIDlet-Version: 1.1
+MIDlet-Vendor: MobileAge Corp.
+MIDlet-Jar-URL: http://220.85.121.50:8892/lgt/Haida.jar
+MIDlet-Jar-Size: 49507
+MIDlet-Description: www.mobileage.co.kr
+MIDlet-1: Haida, \icon.png, Haida
+MIDletX-No-Command: true

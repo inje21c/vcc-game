@@ -1,0 +1,6 @@
+#ifndef HAIDA_BID
+#define HAIDA_BID
+
+#define AEECLSID_HAIDA        0x00012345
+
+#endif //HAIDA_BID

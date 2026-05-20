@@ -1,0 +1,12 @@
+games/help-me-heyda/assets
+games/help-me-heyda/docs
+games/help-me-heyda/**/*.ppt
+games/help-me-heyda/**/*.avi
+games/help-me-heyda/**/*.obj
+games/help-me-heyda/**/*.pch
+games/help-me-heyda/**/*.pdb
+games/help-me-heyda/**/*.ilk
+games/help-me-heyda/**/*.ncb
+games/help-me-heyda/**/*.class
+games/help-me-heyda/**/*.jar
+games/help-me-heyda/**/*.dll

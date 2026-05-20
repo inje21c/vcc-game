@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>도와줘 헤이다</title>
+    <link rel="stylesheet" href="../src/styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="game-area" aria-label="도와줘 헤이다 게임 화면">
+        <div class="top-bar">
+          <div>
+            <p class="eyebrow">MobileAge 2003</p>
+            <h1>도와줘 헤이다</h1>
+          </div>
+          <button class="icon-button" data-action="pause" aria-label="일시정지">Ⅱ</button>
+        </div>
+
+        <div class="screen-wrap">
+          <canvas id="game" width="120" height="132" aria-label="게임 캔버스"></canvas>
+        </div>
+
+        <div class="status-strip" aria-live="polite">
+          <span id="modeLabel">LOADING</span>
+          <span id="stageLabel">STAGE 1</span>
+          <span id="scoreLabel">SCORE 0</span>
+        </div>
+
+        <div class="touch-pad" aria-label="게임 조작">
+          <div class="row-select" id="rowSelect"></div>
+          <div class="actions">
+            <button data-action="up" aria-label="위">▲</button>
+            <button data-action="push" class="primary-action" aria-label="밀기">밀기</button>
+            <button data-action="down" aria-label="아래">▼</button>
+            <button data-action="skill" aria-label="스킬">스킬</button>
+          </div>
+        </div>
+
+        <div class="menu-actions">
+          <button data-action="story">스토리</button>
+          <button data-action="survival">서바이벌</button>
+          <button data-action="help">도움말</button>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="../src/app.js"></script>
+  </body>
+</html>

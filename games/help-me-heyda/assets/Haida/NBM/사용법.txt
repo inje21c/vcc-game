@@ -1,0 +1,59 @@
+NBM 리소스 편집기
+
+- 리소스ID : 값은 입력해야하지만 무시됩니다.
+
+- 리소스이름 : 리소스의 이름을 입력합니다
+
+- 이미지경로 : [찾아보기]를 눌러 선택하시면 됩니다.
+  * 이미지는 8비트 bmp 이미지만 지원합니다. - 추후 변환기능(이미지 보정포함)지원예정 ^^
+
+- 리소스를 작성하신후 빌드(F5)하시면 bar 파일과 헤더파일이 만들어 집니다. - 물론 브루의 bar파일과는 틀린...
+
+
+
+브루에서의 사용
+
+- 기본적으로 IImage를 꿈꾸며(?) 만들었기 때문에 사용이 거의 비슷하다고 보시면 됩니다.
+
+- 브루에서 IImage를 이용하여 그림을 출력하는 부분과 NBM을 사용하여 그림을 출력하는 부분의 코드비교입니다.
+	* IImage (정지이미지)
+	IImage *pImage;
+	pImage = ISHELL_LoadResImage(pIShell, RESOURCE_FILE, IDB_EXAMPLE);
+	IIMAGE_Draw(pImage, 0, 0);
+	IIMAGE_Release(pImage);
+
+	* NBM (정지이미지)
+	NBMImage *pImage;
+	pImage = NBM_LoadImage(pIShell, RESOURCE_FILE, IDB_EXAMPLE);
+	NBM_Draw(pIDisplay, 0, 0, pImage, AEE_RO_COPY);
+	NBM_Release(pImage);
+
+	* IImage (애니메이션)
+	IImage *pImage;
+	pImage = ISHELL_LoadResImage(pIShell, RESOURCE_FILE, IDB_EXAMPLE);
+	IIMAGE_SetParm(pImage, IPARM_NFRAMES, 6, 0);
+	IIMAGE_SetParm(pImage, IPARM_RATE, 500, 0);
+	IIMAGE_Start(pImage, 0, 0);
+	IIMAGE_Release(pImage);
+
+	* NBM (애니메이션)
+	NBMImage *pImage;
+	pImage = NBM_LoadImage(pIShell, RESOURCE_FILE, IDB_EXAMPLE);
+	NBM_SetParm(pImage, IPARM_NFRAMES, 6);
+	NBM_SetParm(pImage, IPARM_RATE, 500);
+	NBM_Start(pIShell, pIDisplay, 0, 0, pImage, AEE_RO_COPY);
+	NBM_Release(pImage);
+
+
+NBM 이미지
+
+- 기본적으로 Run-Length Encoding 기법을 사용하였으며, 약간(?)의 변형이 첨가되었습니다.
+
+- 모바일의 리소스 이미지의 특성상 대부분 색상을 별로 사용하지 않는 8비트 비트맵임을 감안하였습니다.
+
+- 이미지에 쓰인 색상수가 적으면 적을수록 압축이 많이 됩니다. (사진이미지의 경우 이미지 보정처리를 하지 않고
+  color-Depth만 줄인경우도 압축효과를 좀 보실 수 있습니다.)
+
+- 사용예로 저희 프로젝트에서 270KB에 달하던 브루 리소스를 압축할경우 41KB(15%)로 줄어들었습니다.
+
+* 주의 - 이미지 보정처리된 사진 이미지의 경우 압축데이타가 원본데이타보다 커질 경우가 있습니다.

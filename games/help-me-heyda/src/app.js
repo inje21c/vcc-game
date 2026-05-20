@@ -216,7 +216,7 @@ class HeydaGame {
   }
 
   settleBlocksOneStep() {
-    for (let row = ROWS - 2; row >= 1; row -= 1) {
+    for (let row = ROWS - 3; row >= 1; row -= 1) {
       for (let col = 0; col < COLS; col += 1) {
         if (this.board[row][col] && !this.board[row + 1][col]) {
           this.board[row + 1][col] = this.board[row][col];

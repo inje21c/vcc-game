@@ -37,6 +37,7 @@ class HeydaGame {
     this.stoneFlag = 4;
     this.actorPushUntil = 0;
     this.blockRectTick = 0;
+    this.pendingPush = null;
     this.message = "자료를 불러오는 중";
     this.board = this.emptyBoard();
     this.lastTick = 0;
@@ -91,6 +92,7 @@ class HeydaGame {
     this.stage = Math.max(1, Math.min(stage, this.stageFiles.length || 18));
     this.board = await this.loadStage(this.stage);
     this.actorY = 10;
+    this.pendingPush = null;
     this.time = 900;
     this.combo = 0;
     this.skill = 0;
@@ -111,6 +113,7 @@ class HeydaGame {
       }
     }
     this.actorY = 10;
+    this.pendingPush = null;
     this.time = 900;
     this.score = 0;
     this.combo = 0;
@@ -143,6 +146,7 @@ class HeydaGame {
   loop(time) {
     const delta = time - this.lastTick;
     this.lastTick = time;
+    this.finishPushAnimation(time);
     if (this.scene === "play" && delta < 1000) {
       this.time = Math.max(0, this.time - delta / 1000 * 8);
       if (this.time === 0) this.endGame("시간 종료");
@@ -153,11 +157,13 @@ class HeydaGame {
 
   moveActor(amount) {
     if (this.scene !== "play") return;
+    if (this.pendingPush) return;
     this.actorY = Math.max(0, Math.min(10, this.actorY + amount));
   }
 
   selectRow(row) {
     if (this.scene !== "play") return;
+    if (this.pendingPush) return;
     this.actorY = Math.max(0, Math.min(10, row));
   }
 
@@ -167,6 +173,7 @@ class HeydaGame {
       return;
     }
     if (this.scene !== "play") return;
+    if (this.pendingPush) return;
     const row = this.actorY + 1;
     const block = this.board[row][0];
     if (!block) {
@@ -177,15 +184,20 @@ class HeydaGame {
       this.board[row][col] = this.board[row][col + 1];
     }
     this.board[row][COLS - 1] = 0;
-    this.addBottomBlock(block);
-    this.checkClear();
-    this.settleBlocksOneStep();
-    this.actorPushUntil = performance.now() + 180;
+    const now = performance.now();
+    this.pendingPush = {
+      block,
+      row,
+      start: now,
+      duration: 260
+    };
+    this.actorPushUntil = now + 180;
     this.updateHud();
   }
 
   useSkill() {
     if (this.scene !== "play") return;
+    if (this.pendingPush) return;
     if (this.skill < 5) {
       this.message = "스킬 포인트가 부족합니다";
       return;
@@ -212,6 +224,17 @@ class HeydaGame {
         }
       }
     }
+  }
+
+  finishPushAnimation(time) {
+    if (!this.pendingPush) return;
+    if (time - this.pendingPush.start < this.pendingPush.duration) return;
+    const { block } = this.pendingPush;
+    this.pendingPush = null;
+    this.addBottomBlock(block);
+    this.checkClear();
+    this.settleBlocksOneStep();
+    this.updateHud();
   }
 
   addBottomBlock(block) {
@@ -335,6 +358,7 @@ class HeydaGame {
     }
     this.drawGameFrame();
     this.drawBoard();
+    this.drawPushBlock();
     this.drawActor();
     this.drawHudText();
     if (this.scene === "score") this.drawPanel("CLEAR", "밀기 버튼으로 다음 스테이지");
@@ -408,6 +432,18 @@ class HeydaGame {
     const x = isPushing ? 24 + firstEmpty * TILE_W : 28 + (firstEmpty - 1) * TILE_W;
     const y = 4 + this.actorY * TILE_H;
     this.drawImage(`${prefix}${frame}`, x, y);
+  }
+
+  drawPushBlock() {
+    if (!this.pendingPush) return;
+    const elapsed = performance.now() - this.pendingPush.start;
+    const phase = Math.min(1, elapsed / this.pendingPush.duration);
+    const sourceY = 13 + this.pendingPush.row * TILE_H;
+    const targetY = Math.min(53 + this.pendingPush.row * TILE_H, 102);
+    const y = phase < 0.45
+      ? sourceY
+      : sourceY + (targetY - sourceY) * ((phase - 0.45) / 0.55);
+    this.drawBlock(this.pendingPush.block, 1, Math.round(y));
   }
 
   drawEnemy() {

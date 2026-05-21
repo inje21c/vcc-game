@@ -79,7 +79,9 @@ button:active {
 
 .intro {
   align-content: end;
-  gap: 28px;
+  gap: 18px;
+  padding-left: 0;
+  padding-right: 0;
   background:
     linear-gradient(180deg, transparent 0 45%, rgba(5, 8, 7, 0.38) 68%, rgba(5, 8, 7, 0.95) 100%);
 }
@@ -93,8 +95,10 @@ button:active {
 }
 
 .title-mark img {
-  width: min(92vw, 390px);
-  image-rendering: pixelated;
+  width: min(100vw, 430px);
+  height: min(74svh, 720px);
+  object-fit: cover;
+  object-position: center top;
   filter: drop-shadow(0 18px 20px rgba(0, 0, 0, 0.55));
 }
 
@@ -111,6 +115,10 @@ button:active {
   color: #1b100b;
 }
 
+.intro .primary-button {
+  margin: 0 22px max(22px, env(safe-area-inset-bottom));
+}
+
 .menu {
   place-items: center;
   background: linear-gradient(180deg, rgba(5, 8, 7, 0.04), rgba(5, 8, 7, 0.82));
@@ -123,6 +131,8 @@ button:active {
   border: 1px solid rgba(247, 241, 223, 0.17);
   border-radius: 50%;
   background:
+    linear-gradient(rgba(5, 8, 7, 0.08), rgba(5, 8, 7, 0.42)),
+    url("../public/assets/menu-dial-2026.png") center / cover no-repeat,
     radial-gradient(circle at center, rgba(247, 193, 95, 0.22) 0 28%, rgba(18, 43, 38, 0.7) 29% 58%, rgba(90, 45, 38, 0.5) 59% 100%);
   animation: dialIn 640ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
@@ -141,8 +151,10 @@ button:active {
 }
 
 .dial-core img {
-  width: 66px;
-  image-rendering: pixelated;
+  width: 78px;
+  height: 78px;
+  object-fit: cover;
+  border-radius: 50%;
 }
 
 .dial-core b {

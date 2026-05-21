@@ -4,10 +4,10 @@ const COLS = 8;
 const ACTOR_MAX = 10;
 
 const chapters = [
-  ["Chapter 1", "숲의 심장", "관광 개발의 표식이 새벽 숲에 박힌다. 모두가 침묵할 때, 헤이다는 마지막 토템을 들고 마을 입구로 걸어간다."],
-  ["Chapter 2", "쇳소리의 새벽", "불도저의 엔진음이 가까워질수록 숲은 더 낮게 숨을 쉰다. 헤이다는 토템의 문양을 이어 길을 막고, 아이들은 그 뒤에서 첫 노래를 배운다."],
-  ["Chapter 3", "토템의 노래", "같은 문양이 이어지는 순간 오래된 기억이 빛난다. 콤보는 점수가 아니라 마을 사람들이 되찾는 용기다."],
-  ["Chapter 4", "헤이다의 손", "헤이다는 쇳덩이를 부수지 않는다. 대신 숲의 길과 사람들의 이름을 보여준다. 지켜야 할 것은 땅이 아니라 함께 살아온 시간이다."]
+  ["Scene 1", "숲이 숨을 멈춘 날", "새벽 안개가 걷히자 숲의 심장부에 붉은 깃발이 꽂혀 있었다. 수목족 마을은 지도 위에서 이미 사라진 이름이 되었고, 멀리서는 쇳소리를 품은 불도저가 천천히 깨어났다."],
+  ["Scene 2", "헤이다의 첫 걸음", "어른들은 포기했고 아이들은 숨었다. 하지만 헤이다는 오래된 토템을 품에 안고 마을 입구로 걸어간다. 그녀가 밀어내는 것은 돌조각이 아니라, 사라지려는 기억을 붙잡는 마지막 손길이다."],
+  ["Scene 3", "토템의 노래", "같은 문양이 이어지는 순간 숲의 빛이 되살아난다. 토템은 길을 만들고, 길은 사람들을 불러 모은다. 콤보가 이어질수록 침묵하던 마을은 다시 노래하기 시작한다."],
+  ["Final Scene", "도와줘, 헤이다", "마지막 대치의 순간, 헤이다는 불도저를 부수지 않는다. 대신 마을 사람들이 살아온 길과 이름을 보여준다. 이 싸움은 파괴가 아니라 기억을 지키는 이야기다."]
 ];
 
 class Sound {
@@ -87,6 +87,8 @@ class Game2026 {
     this.chapter = 0;
     this.stageFiles = [];
     this.stageCache = new Map();
+    this.stage = 1;
+    this.stageClear = false;
     this.board = this.emptyBoard();
     this.actorY = 10;
     this.pendingPush = null;
@@ -252,6 +254,8 @@ class Game2026 {
 
   async startStory(stage) {
     this.mode = "story";
+    this.stage = stage;
+    this.stageClear = false;
     this.board = await this.loadStage(stage);
     this.actorY = 10;
     this.pendingPush = null;
@@ -259,7 +263,7 @@ class Game2026 {
     this.score = 0;
     this.combo = 0;
     this.mistakes = 0;
-    this.message = "같은 토템을 바닥에 모으세요";
+    this.message = `Stage ${stage}: 같은 토템을 바닥에 모으세요`;
     this.pulse(1.08, 0);
     this.sound.cue("start");
     this.updateHud();
@@ -268,6 +272,7 @@ class Game2026 {
 
   async startSurvival() {
     this.mode = "survival";
+    this.stageClear = false;
     this.board = this.emptyBoard();
     for (let row = 9; row <= 11; row += 1) {
       for (let col = 0; col < COLS - 1; col += 1) this.board[row][col] = this.randomBlock();
@@ -322,6 +327,10 @@ class Game2026 {
   }
 
   push() {
+    if (this.stageClear) {
+      this.nextStage();
+      return;
+    }
     if (this.screen !== "play" || this.pendingPush) return;
     const row = this.actorY + 1;
     const block = this.board[row][0];
@@ -381,6 +390,7 @@ class Game2026 {
       this.message = this.combo > 1 ? `콤보 ${this.combo}` : "바닥 클리어";
       this.pulse(1.18, 1);
       this.sound.cue("clear");
+      this.checkStageClear();
     } else {
       this.combo = 0;
       this.mistakes += 1;
@@ -388,6 +398,31 @@ class Game2026 {
       this.shiftUp();
       this.sound.cue("fail");
     }
+  }
+
+  checkStageClear() {
+    if (this.mode !== "story") return;
+    for (let row = 1; row <= 11; row += 1) {
+      for (let col = 0; col < COLS; col += 1) {
+        if (this.board[row][col]) return;
+      }
+    }
+    if (this.board[12].some(Boolean)) return;
+    this.stageClear = true;
+    this.score += Math.max(300, 1000 - this.mistakes * 80);
+    this.message = `Stage ${this.stage} Clear! Push로 다음 단계`;
+    this.pulse(1.2, 1);
+    this.sound.cue("clear");
+  }
+
+  async nextStage() {
+    const next = this.stage + 1;
+    if (this.stageFiles.length && next > this.stageFiles.length) {
+      this.message = "엔딩: 마을의 길이 지켜졌습니다";
+      this.stageClear = true;
+      return;
+    }
+    await this.startStory(next);
   }
 
   checkSurvivalBottom() {
@@ -608,13 +643,13 @@ class Game2026 {
         ctx.strokeStyle = row === this.actorY + 1 ? "rgba(121, 221, 191, 0.48)" : "rgba(247, 241, 223, 0.1)";
         ctx.lineWidth = row === this.actorY + 1 ? 2 : 1;
         ctx.strokeRect(cell.x - cell.size / 2, cell.y - cell.size / 2, cell.size, cell.size);
-        if (this.board[row][col]) this.drawBlock(ctx, cell.x, cell.y, cell.size * 0.88, this.board[row][col]);
+        if (this.board[row][col]) this.drawBlock(ctx, cell.x, cell.y, cell.size * 0.72, this.board[row][col]);
       }
     }
     if (this.mode === "story") {
       for (let i = 0; i < this.stoneFlag; i += 1) {
         const cell = this.boardToScreen(12, 7 - i);
-        this.drawTotem(ctx, cell.x, cell.y, cell.size);
+        this.drawTotem(ctx, cell.x, cell.y, cell.size * 0.82);
       }
     }
   }
@@ -625,7 +660,7 @@ class Game2026 {
     const start = this.boardToScreen(this.pendingPush.row, -0.55);
     const end = this.boardToScreen(12, this.mode === "story" ? Math.max(0, 6 - this.stoneFlag) : 3);
     const t = phase < 0.45 ? 0 : (phase - 0.45) / 0.55;
-    this.drawBlock(ctx, start.x, start.y + (end.y - start.y) * t, start.size * 0.88, this.pendingPush.block);
+    this.drawBlock(ctx, start.x, start.y + (end.y - start.y) * t, start.size * 0.72, this.pendingPush.block);
   }
 
   drawActor(ctx) {
@@ -656,7 +691,7 @@ class Game2026 {
       const startX = sheet.width * 0.46;
       const blockW = (sheet.width - startX) / 5;
       const index = (value - 1) % 5;
-      this.drawSpriteContain(ctx, sheet, startX + blockW * index, sheet.height * 0.08, blockW, sheet.height * 0.84, x, y, size * 0.96, size * 0.96);
+      this.drawSpriteContain(ctx, sheet, startX + blockW * index, sheet.height * 0.08, blockW, sheet.height * 0.84, x, y, size, size);
       return;
     }
     ctx.fillStyle = this.color(value);
@@ -667,7 +702,7 @@ class Game2026 {
   drawTotem(ctx, x, y, size) {
     const sheet = this.sprites.totems;
     if (sheet) {
-      this.drawSpriteContain(ctx, sheet, 0, 0, sheet.width * 0.42, sheet.height, x, y - size * 0.06, size * 0.92, size * 1.18);
+      this.drawSpriteContain(ctx, sheet, 0, 0, sheet.width * 0.42, sheet.height, x, y - size * 0.04, size, size * 1.18);
       return;
     }
     ctx.fillStyle = "#d58a52";

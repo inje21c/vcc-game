@@ -117,7 +117,7 @@ class HeydaGame {
     this.blockRectTick = 0;
     this.pendingPush = null;
     this.survivalDropTimer = 0;
-    this.survivalDropDelay = 3200;
+    this.survivalDropDelay = 6000;
     this.message = "자료를 불러오는 중";
     this.board = this.emptyBoard();
     this.lastTick = 0;
@@ -201,7 +201,7 @@ class HeydaGame {
     this.skill = 5;
     this.stoneFlag = 0;
     this.survivalDropTimer = 0;
-    this.survivalDropDelay = 3200;
+    this.survivalDropDelay = 6000;
     this.message = "같은 블록 4개를 모으세요";
     this.updateHud();
   }
@@ -247,7 +247,7 @@ class HeydaGame {
     if (this.survivalDropTimer < this.survivalDropDelay) return;
     this.survivalDropTimer = 0;
     this.addSurvivalTotems();
-    this.survivalDropDelay = Math.max(1500, this.survivalDropDelay - 45);
+    this.survivalDropDelay = Math.max(3000, this.survivalDropDelay - 30);
   }
 
   addSurvivalTotems() {

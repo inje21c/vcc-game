@@ -116,6 +116,8 @@ class HeydaGame {
     this.actorPushUntil = 0;
     this.blockRectTick = 0;
     this.pendingPush = null;
+    this.survivalDropTimer = 0;
+    this.survivalDropDelay = 1400;
     this.message = "자료를 불러오는 중";
     this.board = this.emptyBoard();
     this.lastTick = 0;
@@ -172,6 +174,7 @@ class HeydaGame {
     this.actorY = 10;
     this.pendingPush = null;
     this.time = 900;
+    this.survivalDropTimer = 0;
     this.combo = 0;
     this.skill = 0;
     this.mistakes = 0;
@@ -192,11 +195,13 @@ class HeydaGame {
     }
     this.actorY = 10;
     this.pendingPush = null;
-    this.time = 900;
+    this.time = 0;
     this.score = 0;
     this.combo = 0;
     this.skill = 5;
     this.stoneFlag = 0;
+    this.survivalDropTimer = 0;
+    this.survivalDropDelay = 1400;
     this.message = "같은 블록 4개를 모으세요";
     this.updateHud();
   }
@@ -225,12 +230,46 @@ class HeydaGame {
     const delta = time - this.lastTick;
     this.lastTick = time;
     this.finishPushAnimation(time);
-    if (this.scene === "play" && delta < 1000) {
+    if (this.scene === "play" && this.mode === "story" && delta < 1000) {
       this.time = Math.max(0, this.time - delta / 1000 * 8);
       if (this.time === 0) this.endGame("시간 종료");
     }
+    if (this.scene === "play" && this.mode === "survival" && delta < 1000) {
+      this.updateSurvivalPressure(delta);
+    }
     this.draw();
     requestAnimationFrame((next) => this.loop(next));
+  }
+
+  updateSurvivalPressure(delta) {
+    if (this.pendingPush) return;
+    this.survivalDropTimer += delta;
+    if (this.survivalDropTimer < this.survivalDropDelay) return;
+    this.survivalDropTimer = 0;
+    this.addSurvivalTotems();
+    this.survivalDropDelay = Math.max(680, this.survivalDropDelay - 18);
+  }
+
+  addSurvivalTotems() {
+    this.insertSurvivalColumnBlock(0, this.randomBlock());
+    this.insertSurvivalColumnBlock(1, this.randomBlock());
+    this.message = "토템이 늘어납니다";
+    this.sound.play("push");
+    this.updateHud();
+  }
+
+  insertSurvivalColumnBlock(col, value) {
+    for (let row = 1; row < 12; row += 1) {
+      if (this.board[row][col] !== 0) {
+        if (row === 1 && this.board[0][col] !== 0) {
+          this.endGame("토템이 가득 찼습니다");
+          return;
+        }
+        this.board[row - 1][col] = value;
+        return;
+      }
+    }
+    this.board[11][col] = value;
   }
 
   moveActor(amount) {

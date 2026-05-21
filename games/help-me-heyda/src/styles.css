@@ -34,10 +34,11 @@ button {
 
 button.intro-screen {
   width: 100vw;
-  min-height: 100vh;
+  min-height: 100svh;
   border: 0;
   background: transparent;
   padding: 0;
+  place-items: center;
   transform: none;
 }
 
@@ -61,6 +62,11 @@ body:has(.view-intro) .app-shell {
 .game-area {
   position: relative;
   width: min(100%, 440px);
+}
+
+.game-area.view-intro {
+  width: 100vw;
+  max-width: none;
 }
 
 .intro-screen,
@@ -96,9 +102,10 @@ body:has(.view-intro) .app-shell {
 }
 
 .intro-screen img {
-  width: 100vw;
-  height: 100vh;
-  object-fit: cover;
+  width: min(96vw, 430px);
+  height: auto;
+  max-height: 88svh;
+  object-fit: contain;
   justify-self: center;
   border: 0;
   border-radius: 0;

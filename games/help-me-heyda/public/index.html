@@ -9,19 +9,33 @@
   <body>
     <main class="app-shell">
       <section class="game-area view-intro" aria-label="도와줘 헤이다 게임 화면">
-        <div class="intro-screen" id="introScreen">
+        <button class="intro-screen" id="introScreen" data-action="start" aria-label="타이틀 화면, 터치하면 메뉴로 이동">
           <img src="legacy/img/title.png" alt="도와줘 헤이다 타이틀">
-          <button class="start-button" data-action="start">시작</button>
-        </div>
+        </button>
 
         <div class="main-menu" id="mainMenu" aria-label="메인 메뉴">
-          <img src="legacy/img/title.png" alt="도와줘 헤이다 타이틀">
-          <div class="main-menu-buttons">
-            <button data-action="open-story">스토리모드</button>
-            <button data-action="start-survival">서바이벌모드</button>
-            <button data-action="show-help">도움말</button>
-            <button data-action="show-options">옵션</button>
-            <button data-action="show-ranking">랭킹 준비중</button>
+          <div class="dial-menu">
+            <img class="dial-title" src="legacy/img/title.png" alt="도와줘 헤이다">
+            <button class="dial-item story-item" data-action="open-story" aria-label="스토리모드">
+              <img src="legacy/img/hero0.png" alt="">
+              <span>스토리</span>
+            </button>
+            <button class="dial-item survival-item" data-action="start-survival" aria-label="서바이벌모드">
+              <img src="legacy/img/s_hero0.png" alt="">
+              <span>서바이벌</span>
+            </button>
+            <button class="dial-item help-item" data-action="show-help" aria-label="도움말">
+              <img src="legacy/img/feather.png" alt="">
+              <span>도움말</span>
+            </button>
+            <button class="dial-item option-item" data-action="show-options" aria-label="옵션">
+              <img src="legacy/img/stone.png" alt="">
+              <span>옵션</span>
+            </button>
+            <button class="dial-item rank-item" data-action="show-ranking" aria-label="랭킹 준비중">
+              <img src="legacy/img/combo.png" alt="">
+              <span>랭킹</span>
+            </button>
           </div>
         </div>
 

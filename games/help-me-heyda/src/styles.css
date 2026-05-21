@@ -28,6 +28,14 @@ button {
   touch-action: manipulation;
 }
 
+button.intro-screen {
+  min-height: min(760px, calc(100vh - 36px));
+  border: 0;
+  background: transparent;
+  padding: 0;
+  transform: none;
+}
+
 button:active,
 button.is-active {
   transform: translateY(1px);
@@ -78,8 +86,7 @@ button.is-active {
   gap: 20px;
 }
 
-.intro-screen img,
-.main-menu img {
+.intro-screen img {
   width: min(100%, 390px);
   justify-self: center;
   border: 1px solid rgba(244, 240, 223, 0.14);
@@ -89,18 +96,75 @@ button.is-active {
   box-shadow: 0 20px 52px rgba(0, 0, 0, 0.42);
 }
 
-.main-menu-buttons {
-  display: grid;
-  width: min(100%, 300px);
+.dial-menu {
+  position: relative;
+  width: min(100%, 380px);
+  aspect-ratio: 1;
   justify-self: center;
-  gap: 9px;
+  border: 1px solid rgba(244, 240, 223, 0.14);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(244, 240, 223, 0.12) 0 28%, transparent 29%),
+    radial-gradient(circle, rgba(159, 77, 54, 0.22), rgba(8, 9, 7, 0.82) 68%);
+  box-shadow: 0 20px 52px rgba(0, 0, 0, 0.42);
 }
 
-.start-button {
-  width: min(100%, 280px);
-  justify-self: center;
-  background: #9f4d36;
-  font-size: 18px;
+.dial-title {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 43%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  transform: translate(-50%, -50%);
+}
+
+.dial-item {
+  position: absolute;
+  display: grid;
+  width: 92px;
+  min-height: 82px;
+  place-items: center;
+  gap: 4px;
+  padding: 8px 6px;
+  background: rgba(46, 53, 41, 0.92);
+}
+
+.dial-item img {
+  max-width: 42px;
+  max-height: 34px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.dial-item span {
+  font-size: 13px;
+  line-height: 1;
+}
+
+.story-item {
+  left: 50%;
+  top: 4%;
+  transform: translateX(-50%);
+}
+
+.survival-item {
+  right: 2%;
+  top: 35%;
+}
+
+.help-item {
+  right: 13%;
+  bottom: 5%;
+}
+
+.option-item {
+  left: 13%;
+  bottom: 5%;
+}
+
+.rank-item {
+  left: 2%;
+  top: 35%;
 }
 
 .story-screen,
@@ -253,5 +317,19 @@ canvas {
 
   .screen-wrap {
     padding: 10px;
+  }
+
+  .dial-item {
+    width: 78px;
+    min-height: 72px;
+  }
+
+  .dial-item img {
+    max-width: 34px;
+    max-height: 28px;
+  }
+
+  .dial-item span {
+    font-size: 12px;
   }
 }

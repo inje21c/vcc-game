@@ -1,0 +1,320 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, Arial, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  background: #050807;
+  color: #f7f1df;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  display: grid;
+  min-height: 100svh;
+  margin: 0;
+  place-items: center;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(5, 8, 7, 0.88), rgba(5, 8, 7, 0.98)),
+    linear-gradient(140deg, #0a211f 0%, #281a21 48%, #101410 100%);
+}
+
+button {
+  min-height: 48px;
+  border: 1px solid rgba(247, 241, 223, 0.18);
+  border-radius: 8px;
+  background: rgba(19, 31, 28, 0.82);
+  color: #f7f1df;
+  font: inherit;
+  font-weight: 800;
+  letter-spacing: 0;
+  touch-action: manipulation;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+}
+
+button:active {
+  transform: translateY(1px) scale(0.99);
+}
+
+.app {
+  position: relative;
+  width: min(100vw, 430px);
+  height: min(100svh, 932px);
+  min-height: 740px;
+  overflow: hidden;
+  background: #050807;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.54);
+  isolation: isolate;
+}
+
+#scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.screen,
+.hud,
+.controls {
+  position: absolute;
+  z-index: 2;
+}
+
+.screen {
+  inset: 0;
+  display: none;
+  padding: max(28px, env(safe-area-inset-top)) 22px max(26px, env(safe-area-inset-bottom));
+}
+
+.screen.is-active {
+  display: grid;
+}
+
+.intro {
+  align-content: end;
+  gap: 28px;
+  background:
+    linear-gradient(180deg, transparent 0 45%, rgba(5, 8, 7, 0.38) 68%, rgba(5, 8, 7, 0.95) 100%);
+}
+
+.title-mark {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  transform: translateY(-20px);
+  animation: titleRise 900ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.title-mark img {
+  width: min(92vw, 390px);
+  image-rendering: pixelated;
+  filter: drop-shadow(0 18px 20px rgba(0, 0, 0, 0.55));
+}
+
+.title-mark p {
+  margin: 0;
+  color: #f7c15f;
+  font-size: 15px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.primary-button {
+  background: linear-gradient(180deg, rgba(255, 203, 98, 0.96), rgba(205, 85, 56, 0.96));
+  color: #1b100b;
+}
+
+.menu {
+  place-items: center;
+  background: linear-gradient(180deg, rgba(5, 8, 7, 0.04), rgba(5, 8, 7, 0.82));
+}
+
+.dial {
+  position: relative;
+  width: min(88vw, 360px);
+  aspect-ratio: 1;
+  border: 1px solid rgba(247, 241, 223, 0.17);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at center, rgba(247, 193, 95, 0.22) 0 28%, rgba(18, 43, 38, 0.7) 29% 58%, rgba(90, 45, 38, 0.5) 59% 100%);
+  animation: dialIn 640ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.dial-core {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  display: grid;
+  width: 116px;
+  height: 116px;
+  place-items: center;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: rgba(5, 8, 7, 0.78);
+  border: 1px solid rgba(247, 241, 223, 0.16);
+}
+
+.dial-core img {
+  width: 66px;
+  image-rendering: pixelated;
+}
+
+.dial-core b {
+  font-size: 13px;
+}
+
+.dial-button {
+  position: absolute;
+  display: grid;
+  width: 112px;
+  height: 76px;
+  place-items: center;
+  padding: 8px;
+}
+
+.dial-button span {
+  color: #f7c15f;
+  font-size: 12px;
+}
+
+.dial-button strong {
+  font-size: 18px;
+}
+
+.dial-button.story {
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.dial-button.survival {
+  top: 50%;
+  right: -8px;
+  transform: translateY(-50%);
+}
+
+.dial-button.help {
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.dial-button.option {
+  top: 50%;
+  left: -8px;
+  transform: translateY(-50%);
+}
+
+.story-screen,
+.help-screen {
+  align-content: end;
+  gap: 14px;
+  background: linear-gradient(180deg, rgba(5, 8, 7, 0.04), rgba(5, 8, 7, 0.88) 42%, rgba(5, 8, 7, 0.98));
+}
+
+.chapter-kicker {
+  color: #79ddbf;
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.story-screen h1,
+.help-screen h1 {
+  margin: 0;
+  font-size: 36px;
+  line-height: 1.08;
+}
+
+.story-screen p,
+.help-screen p {
+  min-height: 140px;
+  margin: 0;
+  color: rgba(247, 241, 223, 0.86);
+  font-size: 17px;
+  line-height: 1.58;
+  word-break: keep-all;
+}
+
+.story-actions {
+  display: grid;
+  grid-template-columns: 1fr 1.35fr;
+  gap: 10px;
+}
+
+.hud {
+  top: max(16px, env(safe-area-inset-top));
+  left: 14px;
+  right: 14px;
+  display: none;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.hud div {
+  display: grid;
+  min-height: 54px;
+  align-content: center;
+  padding: 8px 10px;
+  border: 1px solid rgba(247, 241, 223, 0.14);
+  border-radius: 8px;
+  background: rgba(5, 8, 7, 0.56);
+  backdrop-filter: blur(14px);
+}
+
+.hud span {
+  color: rgba(247, 241, 223, 0.58);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.hud b {
+  font-size: 18px;
+}
+
+.controls {
+  left: 14px;
+  right: 14px;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  display: none;
+  grid-template-columns: 1fr 1.4fr 1fr 0.9fr;
+  gap: 8px;
+}
+
+.push-button {
+  background: linear-gradient(180deg, rgba(121, 221, 191, 0.95), rgba(51, 126, 118, 0.95));
+  color: #03100d;
+}
+
+.app.is-playing .hud,
+.app.is-playing .controls {
+  display: grid;
+}
+
+@keyframes titleRise {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.94);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(-20px) scale(1);
+  }
+}
+
+@keyframes dialIn {
+  from {
+    opacity: 0;
+    transform: scale(0.82) rotate(-18deg);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
+@media (max-height: 780px) {
+  .app {
+    min-height: 100svh;
+  }
+
+  .story-screen h1,
+  .help-screen h1 {
+    font-size: 30px;
+  }
+
+  .story-screen p,
+  .help-screen p {
+    min-height: 118px;
+    font-size: 15px;
+  }
+}

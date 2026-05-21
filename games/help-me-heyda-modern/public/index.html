@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#050807">
+    <title>도와줘 헤이다 2026</title>
+    <link rel="stylesheet" href="../src/styles.css">
+  </head>
+  <body>
+    <main class="app" aria-label="도와줘 헤이다 2026">
+      <canvas id="scene" aria-label="게임 화면"></canvas>
+
+      <section class="screen intro is-active" data-screen="intro">
+        <div class="title-mark">
+          <img src="../../help-me-heyda/public/legacy/img/title.png" alt="도와줘 헤이다">
+          <p>2026 Reborn</p>
+        </div>
+        <button class="primary-button" data-action="open-menu">Touch Start</button>
+      </section>
+
+      <section class="screen menu" data-screen="menu">
+        <div class="dial" aria-label="메인 메뉴">
+          <button class="dial-button story" data-action="story">
+            <span>Story</span>
+            <strong>스토리</strong>
+          </button>
+          <button class="dial-button survival" data-action="survival">
+            <span>Survival</span>
+            <strong>서바이벌</strong>
+          </button>
+          <button class="dial-button help" data-action="help">
+            <span>Guide</span>
+            <strong>도움말</strong>
+          </button>
+          <button class="dial-button option" data-action="option">
+            <span>Sound</span>
+            <strong>옵션</strong>
+          </button>
+          <div class="dial-core">
+            <img src="../../help-me-heyda/public/legacy/img/logo.png" alt="">
+            <b>HEYDA</b>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen story-screen" data-screen="story">
+        <div class="chapter-kicker" id="chapterKicker">Chapter 1</div>
+        <h1 id="chapterTitle">숲의 심장</h1>
+        <p id="chapterText"></p>
+        <div class="story-actions">
+          <button data-action="prev-chapter" aria-label="이전 이야기">Prev</button>
+          <button class="primary-button" data-action="next-chapter">Next</button>
+        </div>
+      </section>
+
+      <section class="screen help-screen" data-screen="help">
+        <h1>도움말</h1>
+        <p>같은 문양의 토템을 이어 마을 입구를 지켜라. 밀기 성공, 콤보, 스킬 사용은 음악과 카메라 반응으로 이어진다.</p>
+        <button class="primary-button" data-action="open-menu">Menu</button>
+      </section>
+
+      <section class="hud" data-screen="play">
+        <div>
+          <span>Mode</span>
+          <b id="modeLabel">Story</b>
+        </div>
+        <div>
+          <span>Score</span>
+          <b id="scoreLabel">0</b>
+        </div>
+        <div>
+          <span>Combo</span>
+          <b id="comboLabel">0</b>
+        </div>
+      </section>
+
+      <section class="controls" data-screen="play">
+        <button data-action="move-up" aria-label="위로 이동">Up</button>
+        <button class="push-button" data-action="push">Push</button>
+        <button data-action="move-down" aria-label="아래로 이동">Down</button>
+        <button data-action="open-menu">Menu</button>
+      </section>
+    </main>
+
+    <script src="../src/app.js"></script>
+  </body>
+</html>

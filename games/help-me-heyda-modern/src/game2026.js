@@ -133,6 +133,7 @@ class Game2026 {
       blockWave: "assets/block-wave.png",
       blockMountain: "assets/block-mountain.png",
       blockFire: "assets/block-fire.png",
+      background: "assets/background-forest-2026.png",
       totems: "assets/totem-block-sheet-source.png",
       villain: "assets/villain-bulldozer-sheet-source.png"
     };
@@ -143,7 +144,7 @@ class Game2026 {
         img.onload = resolve;
         img.onerror = resolve;
       });
-      this.sprites[key] = this.stripBackground(img);
+      this.sprites[key] = key === "background" ? img : this.stripBackground(img);
     }
   }
 
@@ -557,6 +558,33 @@ class Game2026 {
   }
 
   drawWorld(ctx) {
+    const bg = this.sprites.background;
+    if (bg?.complete && bg.naturalWidth) {
+      const driftX = Math.sin(this.time * 0.00018) * 10;
+      const driftY = Math.cos(this.time * 0.00014) * 14;
+      this.drawCoverImage(ctx, bg, this.width / 2 + driftX, this.height / 2 + driftY, this.width + 28, this.height + 36);
+
+      ctx.fillStyle = "rgba(5, 8, 7, 0.22)";
+      ctx.fillRect(0, 0, this.width, this.height);
+
+      ctx.save();
+      ctx.globalAlpha = 0.34;
+      ctx.fillStyle = "#08251f";
+      for (let i = 0; i < 12; i += 1) {
+        const x = (i * 71 - this.time * 0.006) % (this.width + 90) - 45;
+        const h = 100 + Math.sin(i * 1.9) * 28;
+        ctx.beginPath();
+        ctx.moveTo(x, this.height);
+        ctx.lineTo(x + 16, this.height - h);
+        ctx.lineTo(x + 32, this.height);
+        ctx.fill();
+      }
+      ctx.restore();
+
+      if (this.screen === "intro") this.drawTotem(ctx, this.width * 0.5, this.height * 0.42, 150);
+      return;
+    }
+
     const sky = ctx.createLinearGradient(0, 0, 0, this.height);
     sky.addColorStop(0, "#122d2d");
     sky.addColorStop(0.5, "#773b41");
@@ -593,6 +621,13 @@ class Game2026 {
     ctx.bezierCurveTo(this.width * 0.4, this.height * 0.78, this.width * 0.56, this.height * 0.94, this.width * 0.88, this.height * 0.75);
     ctx.stroke();
     if (this.screen === "intro") this.drawTotem(ctx, this.width * 0.5, this.height * 0.42, 150);
+  }
+
+  drawCoverImage(ctx, image, cx, cy, width, height) {
+    const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
+    const drawW = image.naturalWidth * scale;
+    const drawH = image.naturalHeight * scale;
+    ctx.drawImage(image, cx - drawW / 2, cy - drawH / 2, drawW, drawH);
   }
 
   drawGame(ctx) {

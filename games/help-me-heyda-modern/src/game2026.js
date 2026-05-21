@@ -789,17 +789,94 @@ class Game2026 {
   }
 
   drawBlock(ctx, x, y, size, value) {
-    const sheet = this.sprites.totems;
-    if (sheet) {
-      const startX = sheet.width * 0.46;
-      const blockW = (sheet.width - startX) / 5;
-      const index = (value - 1) % 5;
-      this.drawSpriteContain(ctx, sheet, startX + blockW * index, sheet.height * 0.08, blockW, sheet.height * 0.84, x, y, size, size);
+    const colors = {
+      1: ["#173f2d", "#6ee58f"],
+      2: ["#5a3514", "#ffd15c"],
+      3: ["#123556", "#5ec6ff"],
+      4: ["#273142", "#a8c0d6"],
+      5: ["#552211", "#ff7b39"]
+    };
+    const [dark, light] = colors[((value - 1) % 5) + 1] || colors[1];
+    const r = Math.max(5, size * 0.16);
+    const left = x - size / 2;
+    const top = y - size / 2;
+
+    ctx.save();
+    const body = ctx.createLinearGradient(left, top, left, top + size);
+    body.addColorStop(0, light);
+    body.addColorStop(0.46, dark);
+    body.addColorStop(1, "#0b1715");
+    ctx.fillStyle = body;
+    this.roundRect(ctx, left, top, size, size, r);
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(247, 241, 223, 0.62)";
+    ctx.lineWidth = Math.max(1, size * 0.045);
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(5, 8, 7, 0.34)";
+    this.roundRect(ctx, left + size * 0.12, top + size * 0.12, size * 0.76, size * 0.76, r * 0.8);
+    ctx.fill();
+
+    ctx.strokeStyle = light;
+    ctx.fillStyle = light;
+    ctx.lineWidth = Math.max(2, size * 0.08);
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    this.drawBlockSymbol(ctx, x, y, size * 0.58, ((value - 1) % 5) + 1);
+    ctx.restore();
+  }
+
+  drawBlockSymbol(ctx, x, y, size, value) {
+    if (value === 1) {
+      ctx.beginPath();
+      ctx.ellipse(x, y, size * 0.28, size * 0.43, -0.7, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x - size * 0.18, y + size * 0.24);
+      ctx.quadraticCurveTo(x, y, x + size * 0.22, y - size * 0.3);
+      ctx.stroke();
       return;
     }
-    ctx.fillStyle = this.color(value);
-    this.roundRect(ctx, x - size / 2, y - size / 2, size, size, 8);
-    ctx.fill();
+    if (value === 2) {
+      ctx.beginPath();
+      ctx.arc(x, y, size * 0.23, 0, Math.PI * 2);
+      ctx.fill();
+      for (let i = 0; i < 8; i += 1) {
+        const a = i * Math.PI / 4;
+        ctx.beginPath();
+        ctx.moveTo(x + Math.cos(a) * size * 0.34, y + Math.sin(a) * size * 0.34);
+        ctx.lineTo(x + Math.cos(a) * size * 0.48, y + Math.sin(a) * size * 0.48);
+        ctx.stroke();
+      }
+      return;
+    }
+    if (value === 3) {
+      for (let i = -1; i <= 1; i += 1) {
+        ctx.beginPath();
+        ctx.moveTo(x - size * 0.44, y + i * size * 0.17);
+        ctx.bezierCurveTo(x - size * 0.2, y - size * 0.16 + i * size * 0.17, x + size * 0.2, y + size * 0.16 + i * size * 0.17, x + size * 0.44, y + i * size * 0.17);
+        ctx.stroke();
+      }
+      return;
+    }
+    if (value === 4) {
+      ctx.beginPath();
+      ctx.moveTo(x - size * 0.44, y + size * 0.36);
+      ctx.lineTo(x - size * 0.12, y - size * 0.32);
+      ctx.lineTo(x + size * 0.08, y + size * 0.03);
+      ctx.lineTo(x + size * 0.26, y - size * 0.22);
+      ctx.lineTo(x + size * 0.48, y + size * 0.36);
+      ctx.closePath();
+      ctx.stroke();
+      return;
+    }
+    ctx.beginPath();
+    ctx.moveTo(x, y - size * 0.46);
+    ctx.bezierCurveTo(x + size * 0.34, y - size * 0.16, x + size * 0.32, y + size * 0.28, x, y + size * 0.42);
+    ctx.bezierCurveTo(x - size * 0.36, y + size * 0.18, x - size * 0.18, y - size * 0.08, x - size * 0.02, y - size * 0.2);
+    ctx.bezierCurveTo(x + size * 0.04, y, x + size * 0.14, y + size * 0.14, x, y + size * 0.26);
+    ctx.stroke();
   }
 
   drawTotem(ctx, x, y, size) {

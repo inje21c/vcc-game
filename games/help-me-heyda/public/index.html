@@ -8,13 +8,41 @@
   </head>
   <body>
     <main class="app-shell">
-      <section class="game-area" aria-label="도와줘 헤이다 게임 화면">
+      <section class="game-area view-intro" aria-label="도와줘 헤이다 게임 화면">
         <div class="intro-screen" id="introScreen">
           <img src="legacy/img/title.png" alt="도와줘 헤이다 타이틀">
           <button class="start-button" data-action="start">시작</button>
         </div>
 
-        <div class="top-bar">
+        <div class="main-menu" id="mainMenu" aria-label="메인 메뉴">
+          <img src="legacy/img/title.png" alt="도와줘 헤이다 타이틀">
+          <div class="main-menu-buttons">
+            <button data-action="open-story">스토리모드</button>
+            <button data-action="start-survival">서바이벌모드</button>
+            <button data-action="show-help">도움말</button>
+            <button data-action="show-options">옵션</button>
+            <button data-action="show-ranking">랭킹 준비중</button>
+          </div>
+        </div>
+
+        <div class="story-screen" id="storyScreen" aria-live="polite">
+          <p class="eyebrow" id="storyEpisode">EPISODE 1</p>
+          <h2 id="storyTitle">수목족의 위기</h2>
+          <p id="storyText"></p>
+          <div class="story-actions">
+            <button data-action="back-menu">메뉴</button>
+            <button class="primary-action" data-action="next-story" id="storyNext">다음</button>
+          </div>
+        </div>
+
+        <div class="info-screen" id="infoScreen" aria-live="polite">
+          <p class="eyebrow" id="infoEyebrow">HELP</p>
+          <h2 id="infoTitle">도움말</h2>
+          <p id="infoText"></p>
+          <button data-action="back-menu">메뉴</button>
+        </div>
+
+        <div class="top-bar game-ui">
           <div>
             <p class="eyebrow">MobileAge 2003</p>
             <h1>도와줘 헤이다</h1>
@@ -22,17 +50,17 @@
           <button class="icon-button" data-action="pause" aria-label="일시정지">Ⅱ</button>
         </div>
 
-        <div class="screen-wrap">
+        <div class="screen-wrap game-ui">
           <canvas id="game" width="120" height="132" aria-label="게임 캔버스"></canvas>
         </div>
 
-        <div class="status-strip" aria-live="polite">
+        <div class="status-strip game-ui" aria-live="polite">
           <span id="modeLabel">LOADING</span>
           <span id="stageLabel">STAGE 1</span>
           <span id="scoreLabel">SCORE 0</span>
         </div>
 
-        <div class="touch-pad" aria-label="게임 조작">
+        <div class="touch-pad game-ui" aria-label="게임 조작">
           <div class="row-select" id="rowSelect"></div>
           <div class="actions">
             <button data-action="up" aria-label="위">▲</button>
@@ -42,10 +70,10 @@
           </div>
         </div>
 
-        <div class="menu-actions">
-          <button data-action="story">스토리</button>
+        <div class="menu-actions game-ui">
+          <button data-action="back-menu">메뉴</button>
+          <button data-action="story">스토리 재시작</button>
           <button data-action="survival">서바이벌</button>
-          <button data-action="help">도움말</button>
         </div>
       </section>
     </main>

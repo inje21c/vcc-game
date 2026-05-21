@@ -17,6 +17,29 @@ const imageNames = [
   "tent0", "tent1", "button0", "button1"
 ];
 
+const storyScenes = [
+  {
+    episode: "EPISODE 1",
+    title: "수목족의 위기",
+    text: "평화롭던 수목족 인디언 마을에 관광객 개발을 위해 불도저가 나타납니다.\n마을 사람들은 모두 자포자기하고 말지만, 헤이다는 혼자서라도 맞서 싸우려 합니다."
+  },
+  {
+    episode: "EPISODE 1",
+    title: "추장의 부탁",
+    text: "마을을 없애려고 불도저가 나타났습니다.\n추장은 헤이다에게 마을을 지켜달라고 부탁합니다.\n헤이다는 두려워하지 않고 앞으로 나섭니다."
+  },
+  {
+    episode: "EPISODE 2",
+    title: "헤이다의 결심",
+    text: "헤이다를 저지하려는 방해가 계속됩니다.\n하지만 헤이다는 토템과 마을 사람들을 지키기 위해 불도저 앞에 섭니다."
+  },
+  {
+    episode: "EPISODE 3",
+    title: "도움의 약속",
+    text: "헤이다의 노력으로 마을 사람들은 하나둘씩 용기를 되찾습니다.\n이제 모두가 힘을 모아 수목족 마을을 지켜야 합니다."
+  }
+];
+
 class SoundSystem {
   constructor() {
     this.context = null;
@@ -569,6 +592,71 @@ class HeydaGame {
 const game = new HeydaGame(document.getElementById("game"));
 await game.init();
 
+const gameArea = document.querySelector(".game-area");
+const storyEpisode = document.getElementById("storyEpisode");
+const storyTitle = document.getElementById("storyTitle");
+const storyText = document.getElementById("storyText");
+const storyNext = document.getElementById("storyNext");
+const infoEyebrow = document.getElementById("infoEyebrow");
+const infoTitle = document.getElementById("infoTitle");
+const infoText = document.getElementById("infoText");
+let storyIndex = 0;
+
+function setView(name) {
+  gameArea.classList.remove("view-intro", "view-menu", "view-story", "view-info", "view-game");
+  gameArea.classList.add(`view-${name}`);
+}
+
+function openStory() {
+  storyIndex = 0;
+  renderStory();
+  setView("story");
+}
+
+function renderStory() {
+  const scene = storyScenes[storyIndex];
+  storyEpisode.textContent = scene.episode;
+  storyTitle.textContent = scene.title;
+  storyText.textContent = scene.text;
+  storyNext.textContent = storyIndex === storyScenes.length - 1 ? "게임 시작" : "다음";
+}
+
+async function nextStory() {
+  if (storyIndex < storyScenes.length - 1) {
+    storyIndex += 1;
+    renderStory();
+    game.sound.play("start");
+    return;
+  }
+  await game.startStory(1);
+  setView("game");
+  game.sound.play("start");
+}
+
+function showInfo(kind) {
+  const content = {
+    help: {
+      eyebrow: "HELP",
+      title: "도움말",
+      text: "위/아래로 줄을 고르고 밀기 버튼으로 맨 앞 블록을 왼쪽 통로로 보냅니다.\n스토리모드에서는 아래 판정 라인을 같은 블록으로 채워 마을을 지켜야 합니다.\n서바이벌모드는 끝없이 내려오는 블록 속에서 같은 블록 4개를 모아 점수를 올립니다."
+    },
+    options: {
+      eyebrow: "OPTIONS",
+      title: "옵션",
+      text: "현재 버전에서는 효과음이 켜져 있습니다.\n원본 MMF 사운드는 보관되어 있으며, 웹 호환 포맷으로 변환되면 원본 음악으로 교체할 수 있습니다."
+    },
+    ranking: {
+      eyebrow: "RANKING",
+      title: "랭킹 준비중",
+      text: "원본 기획에는 네트워크 실시간 랭킹이 포함되어 있습니다.\n지금 단계에서는 게임 흐름 복원에 집중하고, 랭킹은 다음 단계에서 붙입니다."
+    }
+  }[kind];
+  infoEyebrow.textContent = content.eyebrow;
+  infoTitle.textContent = content.title;
+  infoText.textContent = content.text;
+  setView("info");
+}
+
 document.addEventListener("click", async (event) => {
   const button = event.target.closest("[data-action]");
   if (!button) return;
@@ -579,9 +667,20 @@ document.addEventListener("click", async (event) => {
   if (action === "skill") game.useSkill();
   if (action === "pause") game.pause();
   if (action === "start") {
-    document.querySelector(".game-area")?.classList.add("is-started");
+    setView("menu");
     game.sound.play("start");
   }
+  if (action === "open-story") openStory();
+  if (action === "next-story") await nextStory();
+  if (action === "start-survival") {
+    game.startSurvival();
+    setView("game");
+    game.sound.play("start");
+  }
+  if (action === "show-help") showInfo("help");
+  if (action === "show-options") showInfo("options");
+  if (action === "show-ranking") showInfo("ranking");
+  if (action === "back-menu") setView("menu");
   if (action === "story") await game.startStory(1);
   if (action === "survival") game.startSurvival();
   if (action === "help") game.help();

@@ -46,22 +46,40 @@ button.is-active {
   width: min(100%, 440px);
 }
 
-.game-area:not(.is-started) .top-bar,
-.game-area:not(.is-started) .screen-wrap,
-.game-area:not(.is-started) .status-strip,
-.game-area:not(.is-started) .touch-pad,
-.game-area:not(.is-started) .menu-actions {
+.intro-screen,
+.main-menu,
+.story-screen,
+.info-screen,
+.game-ui {
   display: none;
 }
 
-.intro-screen {
+.view-intro .intro-screen,
+.view-menu .main-menu,
+.view-story .story-screen,
+.view-info .info-screen {
   display: grid;
+}
+
+.view-game .game-ui {
+  display: grid;
+}
+
+.view-game .top-bar {
+  display: flex;
+}
+
+.intro-screen,
+.main-menu,
+.story-screen,
+.info-screen {
   min-height: min(760px, calc(100vh - 36px));
   align-content: center;
   gap: 20px;
 }
 
-.intro-screen img {
+.intro-screen img,
+.main-menu img {
   width: min(100%, 390px);
   justify-self: center;
   border: 1px solid rgba(244, 240, 223, 0.14);
@@ -71,6 +89,13 @@ button.is-active {
   box-shadow: 0 20px 52px rgba(0, 0, 0, 0.42);
 }
 
+.main-menu-buttons {
+  display: grid;
+  width: min(100%, 300px);
+  justify-self: center;
+  gap: 9px;
+}
+
 .start-button {
   width: min(100%, 280px);
   justify-self: center;
@@ -78,8 +103,32 @@ button.is-active {
   font-size: 18px;
 }
 
-.game-area.is-started .intro-screen {
-  display: none;
+.story-screen,
+.info-screen {
+  padding: 18px;
+  border: 1px solid rgba(244, 240, 223, 0.14);
+  border-radius: 8px;
+  background: rgba(8, 9, 7, 0.82);
+  box-shadow: 0 20px 52px rgba(0, 0, 0, 0.34);
+}
+
+.story-screen h2,
+.info-screen h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.story-screen p,
+.info-screen p {
+  margin: 0;
+  line-height: 1.65;
+  white-space: pre-line;
+}
+
+.story-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
 
 .top-bar {

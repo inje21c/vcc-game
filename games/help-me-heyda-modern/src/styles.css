@@ -245,7 +245,7 @@ button:active {
   left: 14px;
   right: 14px;
   display: none;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
 }
 
@@ -253,7 +253,7 @@ button:active {
   display: grid;
   min-height: 54px;
   align-content: center;
-  padding: 8px 10px;
+  padding: 8px 9px;
   border: 1px solid rgba(247, 241, 223, 0.14);
   border-radius: 8px;
   background: rgba(5, 8, 7, 0.56);
@@ -268,7 +268,7 @@ button:active {
 }
 
 .hud b {
-  font-size: 18px;
+  font-size: 17px;
 }
 
 .controls {

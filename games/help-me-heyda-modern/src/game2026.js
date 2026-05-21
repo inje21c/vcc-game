@@ -98,6 +98,8 @@ class Game2026 {
     this.combo = 0;
     this.mistakes = 0;
     this.message = "Ready";
+    this.storyTime = 900;
+    this.clearBlastUntil = 0;
     this.debug = false;
     this.pointer = null;
     this.camera = { zoom: 1, target: 1, shake: 0 };
@@ -260,6 +262,8 @@ class Game2026 {
     this.actorY = 10;
     this.pendingPush = null;
     this.stoneFlag = stage < 7 ? 4 : stage < 10 ? 3 : stage < 14 ? 2 : 1;
+    this.storyTime = 900;
+    this.clearBlastUntil = 0;
     this.score = 0;
     this.combo = 0;
     this.mistakes = 0;
@@ -280,6 +284,8 @@ class Game2026 {
     this.actorY = 10;
     this.pendingPush = null;
     this.stoneFlag = 0;
+    this.storyTime = 0;
+    this.clearBlastUntil = 0;
     this.survivalTimer = 0;
     this.survivalDelay = 7200;
     this.score = 0;
@@ -411,6 +417,8 @@ class Game2026 {
     this.stageClear = true;
     this.score += Math.max(300, 1000 - this.mistakes * 80);
     this.message = `Stage ${this.stage} Clear! Push로 다음 단계`;
+    this.clearBlastUntil = performance.now() + 1600;
+    this.burst(this.width * 0.76, 128, "#f7c15f", 42);
     this.pulse(1.2, 1);
     this.sound.cue("clear");
   }
@@ -475,6 +483,7 @@ class Game2026 {
 
   updateHud() {
     document.querySelector("#modeLabel").textContent = this.mode === "story" ? "Story" : "Survival";
+    document.querySelector("#timeLabel").textContent = this.mode === "story" ? String(Math.max(0, Math.ceil(this.storyTime))) : String(Math.ceil(this.survivalDelay / 1000));
     document.querySelector("#scoreLabel").textContent = String(this.score);
     document.querySelector("#comboLabel").textContent = String(this.combo);
   }
@@ -484,6 +493,14 @@ class Game2026 {
     this.last = now;
     this.time += delta;
     this.finishPush(now);
+    if (this.screen === "play" && this.mode === "story" && !this.stageClear) {
+      this.storyTime = Math.max(0, this.storyTime - delta / 100);
+      if (Math.floor(this.time / 120) !== Math.floor((this.time - delta) / 120)) this.updateHud();
+      if (this.storyTime <= 0) {
+        this.message = "불도저가 마을에 도달했습니다";
+        this.pulse(1.08, 4);
+      }
+    }
     if (this.screen === "play" && this.mode === "survival") {
       this.survivalTimer += delta;
       if (this.survivalTimer > this.survivalDelay) {
@@ -577,9 +594,15 @@ class Game2026 {
 
   drawVillain(ctx) {
     const sheet = this.sprites.villain;
-    const progress = this.mode === "story" ? Math.min(1, this.mistakes / 5 + 0.08) : Math.min(1, this.survivalTimer / this.survivalDelay);
-    const x = this.width - 44 - progress * 74 + Math.sin(this.time * 0.004) * 3;
-    const y = 118;
+    const clearPhase = this.clearBlastUntil ? Math.max(0, (this.clearBlastUntil - performance.now()) / 1600) : 0;
+    const timeProgress = this.mode === "story" ? 1 - Math.max(0, this.storyTime) / 900 : Math.min(1, this.survivalTimer / this.survivalDelay);
+    const progress = this.stageClear ? 0.72 : Math.min(1, timeProgress + this.mistakes * 0.04);
+    const blastPush = clearPhase > 0 ? (1 - clearPhase) * 260 : 0;
+    const x = this.width - 18 - progress * 126 + blastPush + Math.sin(this.time * 0.004) * 3;
+    const y = 128 - (clearPhase > 0 ? Math.sin((1 - clearPhase) * Math.PI) * 42 : 0);
+    this.drawVillageTent(ctx, 48, 130);
+    this.drawTimeRoad(ctx, progress);
+    if (clearPhase > 0) this.drawClearBeam(ctx, x, y, clearPhase);
     if (sheet) {
       this.drawSpriteContain(ctx, sheet, 0, 0, sheet.width * 0.56, sheet.height, x, y, 112, 74);
       this.drawSpriteContain(ctx, sheet, sheet.width * 0.56, 0, sheet.width * 0.44, sheet.height, 42, 146, 58, 76);
@@ -590,6 +613,86 @@ class Game2026 {
       ctx.fillStyle = "#3b3326";
       ctx.fillRect(x - 34, y + 12, 70, 12);
     }
+  }
+
+  drawVillageTent(ctx, x, y) {
+    ctx.save();
+    ctx.fillStyle = "rgba(0, 0, 0, 0.22)";
+    ctx.beginPath();
+    ctx.ellipse(x, y + 24, 46, 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    const cloth = ctx.createLinearGradient(x, y - 38, x, y + 26);
+    cloth.addColorStop(0, "#f4d18a");
+    cloth.addColorStop(1, "#a95b3a");
+    ctx.fillStyle = cloth;
+    ctx.beginPath();
+    ctx.moveTo(x - 42, y + 24);
+    ctx.lineTo(x, y - 44);
+    ctx.lineTo(x + 42, y + 24);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = "#2d1714";
+    ctx.beginPath();
+    ctx.moveTo(x - 12, y + 24);
+    ctx.lineTo(x, y - 4);
+    ctx.lineTo(x + 12, y + 24);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(247, 241, 223, 0.65)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x, y - 44);
+    ctx.lineTo(x, y + 24);
+    ctx.moveTo(x - 22, y + 8);
+    ctx.lineTo(x + 22, y + 8);
+    ctx.stroke();
+
+    ctx.fillStyle = "#79ddbf";
+    ctx.beginPath();
+    ctx.arc(x - 28, y + 18, 4, 0, Math.PI * 2);
+    ctx.arc(x + 28, y + 18, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  drawTimeRoad(ctx, progress) {
+    const x0 = 78;
+    const x1 = this.width - 42;
+    const y = 148;
+    ctx.save();
+    ctx.strokeStyle = "rgba(247, 241, 223, 0.22)";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(x0, y);
+    ctx.lineTo(x1, y);
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(232, 92, 92, 0.78)";
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(x0, y);
+    ctx.lineTo(x0 + (x1 - x0) * progress, y);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  drawClearBeam(ctx, bulldozerX, bulldozerY, phase) {
+    const start = this.boardToScreen(12, Math.max(0, 6 - this.stoneFlag));
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, phase + 0.15);
+    ctx.strokeStyle = "#f7c15f";
+    ctx.lineWidth = 5 + Math.sin(this.time * 0.04) * 2;
+    ctx.beginPath();
+    ctx.moveTo(start.x, start.y);
+    ctx.quadraticCurveTo(this.width * 0.55, 170, bulldozerX, bulldozerY);
+    ctx.stroke();
+    ctx.strokeStyle = "#79ddbf";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
   }
 
   drawBoardPanel(ctx) {

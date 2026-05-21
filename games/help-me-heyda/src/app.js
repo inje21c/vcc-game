@@ -17,12 +17,67 @@ const imageNames = [
   "tent0", "tent1", "button0", "button1"
 ];
 
+class SoundSystem {
+  constructor() {
+    this.context = null;
+    this.enabled = true;
+  }
+
+  unlock() {
+    if (!this.enabled) return;
+    if (!this.context) {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) {
+        this.enabled = false;
+        return;
+      }
+      this.context = new AudioContextClass();
+    }
+    if (this.context.state === "suspended") this.context.resume();
+  }
+
+  play(name) {
+    if (!this.enabled) return;
+    this.unlock();
+    if (!this.context) return;
+
+    const patterns = {
+      start: [[392, 0, 0.09], [523, 0.1, 0.11], [659, 0.22, 0.15]],
+      push: [[180, 0, 0.05], [110, 0.055, 0.06]],
+      clear: [[523, 0, 0.08], [659, 0.09, 0.08], [784, 0.18, 0.12]],
+      skill: [[880, 0, 0.05], [660, 0.06, 0.05], [880, 0.12, 0.08]],
+      fail: [[140, 0, 0.12], [90, 0.13, 0.18]],
+      gameover: [[220, 0, 0.15], [165, 0.16, 0.18], [110, 0.35, 0.3]]
+    };
+
+    for (const [frequency, delay, duration] of patterns[name] || []) {
+      this.tone(frequency, delay, duration);
+    }
+  }
+
+  tone(frequency, delay, duration) {
+    const start = this.context.currentTime + delay;
+    const gain = this.context.createGain();
+    const oscillator = this.context.createOscillator();
+    oscillator.type = "square";
+    oscillator.frequency.setValueAtTime(frequency, start);
+    gain.gain.setValueAtTime(0, start);
+    gain.gain.linearRampToValueAtTime(0.06, start + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
+    oscillator.connect(gain);
+    gain.connect(this.context.destination);
+    oscillator.start(start);
+    oscillator.stop(start + duration + 0.02);
+  }
+}
+
 class HeydaGame {
   constructor(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
     this.ctx.imageSmoothingEnabled = false;
     this.images = {};
+    this.sound = new SoundSystem();
     this.stageFiles = [];
     this.stageCache = new Map();
     this.scene = "loading";
@@ -185,6 +240,7 @@ class HeydaGame {
     }
     this.board[row][COLS - 1] = 0;
     const now = performance.now();
+    this.sound.play("push");
     this.pendingPush = {
       block,
       row,
@@ -205,6 +261,7 @@ class HeydaGame {
     const target = this.board[this.actorY + 1][0];
     if (!target) return;
     this.skill -= 5;
+    this.sound.play("skill");
     for (let row = 1; row < ROWS; row += 1) {
       for (let col = 0; col < COLS; col += 1) {
         if (this.board[row][col] === target) this.board[row][col] = 0;
@@ -273,11 +330,13 @@ class HeydaGame {
       this.combo += 1;
       if (this.combo > 1) this.skill += 1;
       this.message = this.combo > 1 ? `콤보 ${this.combo}` : "바닥 클리어";
+      this.sound.play("clear");
     } else {
       this.shiftBoardUp();
       this.combo = 0;
       this.mistakes += 1;
       this.message = "실수";
+      this.sound.play("fail");
     }
   }
 
@@ -298,10 +357,12 @@ class HeydaGame {
       this.score += 2 ** this.combo;
       if (this.combo > 1) this.skill += 1;
       this.message = `서바이벌 콤보 ${this.combo}`;
+      this.sound.play("clear");
     } else if (this.board[12][0]) {
       this.shiftBoardUp();
       this.combo = 0;
       this.message = "라인 상승";
+      this.sound.play("fail");
     }
   }
 
@@ -348,6 +409,7 @@ class HeydaGame {
   endGame(message) {
     this.scene = "gameover";
     this.message = message;
+    this.sound.play("gameover");
   }
 
   draw() {
@@ -516,7 +578,10 @@ document.addEventListener("click", async (event) => {
   if (action === "push") await game.push();
   if (action === "skill") game.useSkill();
   if (action === "pause") game.pause();
-  if (action === "start") document.querySelector(".game-area")?.classList.add("is-started");
+  if (action === "start") {
+    document.querySelector(".game-area")?.classList.add("is-started");
+    game.sound.play("start");
+  }
   if (action === "story") await game.startStory(1);
   if (action === "survival") game.startSurvival();
   if (action === "help") game.help();

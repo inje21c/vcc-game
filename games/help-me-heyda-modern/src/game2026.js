@@ -95,7 +95,7 @@ class Game2026 {
     this.pendingPush = null;
     this.actorPushUntil = 0;
     this.stoneFlag = 4;
-    if (stage === 1) this.score = 0;
+    this.score = 0;
     this.combo = 0;
     this.mistakes = 0;
     this.message = "Ready";
@@ -279,7 +279,7 @@ class Game2026 {
     this.stoneFlag = stage < 7 ? 4 : stage < 10 ? 3 : stage < 14 ? 2 : 1;
     this.storyTime = 900;
     this.clearBlastUntil = 0;
-    this.score = 0;
+    if (stage === 1) this.score = 0;
     this.combo = 0;
     this.mistakes = 0;
     this.message = `Stage ${stage}: 같은 토템을 바닥에 모으세요`;

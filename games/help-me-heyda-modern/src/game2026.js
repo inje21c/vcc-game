@@ -649,7 +649,7 @@ class Game2026 {
     if (this.mode === "story") {
       for (let i = 0; i < this.stoneFlag; i += 1) {
         const cell = this.boardToScreen(12, 7 - i);
-        this.drawTotem(ctx, cell.x, cell.y, cell.size * 0.82);
+        this.drawGoalTotem(ctx, cell.x, cell.y, cell.size * 0.74);
       }
     }
   }
@@ -708,6 +708,43 @@ class Game2026 {
     ctx.fillStyle = "#d58a52";
     this.roundRect(ctx, x - size * 0.3, y - size * 0.55, size * 0.6, size * 1.1, 12);
     ctx.fill();
+  }
+
+  drawGoalTotem(ctx, x, y, size) {
+    const w = size * 0.58;
+    const h = size * 0.82;
+    const top = y - h * 0.48;
+    const wood = ctx.createLinearGradient(x, top, x, top + h);
+    wood.addColorStop(0, "#f4bf6f");
+    wood.addColorStop(0.55, "#b66934");
+    wood.addColorStop(1, "#6e3924");
+
+    ctx.save();
+    ctx.fillStyle = "rgba(0, 0, 0, 0.24)";
+    ctx.beginPath();
+    ctx.ellipse(x, y + h * 0.46, w * 0.55, h * 0.12, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = wood;
+    this.roundRect(ctx, x - w / 2, top, w, h, Math.max(4, size * 0.12));
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(255, 232, 159, 0.72)";
+    ctx.lineWidth = Math.max(1, size * 0.04);
+    ctx.stroke();
+
+    ctx.fillStyle = "#14342f";
+    ctx.fillRect(x - w * 0.28, top + h * 0.28, w * 0.16, h * 0.14);
+    ctx.fillRect(x + w * 0.12, top + h * 0.28, w * 0.16, h * 0.14);
+
+    ctx.fillStyle = "#f7f1df";
+    ctx.fillRect(x - w * 0.24, top + h * 0.6, w * 0.48, h * 0.08);
+
+    ctx.fillStyle = "#79ddbf";
+    ctx.beginPath();
+    ctx.arc(x, top + h * 0.08, size * 0.08, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
   }
 
   drawParticles(ctx) {

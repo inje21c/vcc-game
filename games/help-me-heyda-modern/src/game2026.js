@@ -89,12 +89,13 @@ class Game2026 {
     this.stageCache = new Map();
     this.stage = 1;
     this.stageClear = false;
+    this.clearAdvanceAt = 0;
     this.board = this.emptyBoard();
     this.actorY = 10;
     this.pendingPush = null;
     this.actorPushUntil = 0;
     this.stoneFlag = 4;
-    this.score = 0;
+    if (stage === 1) this.score = 0;
     this.combo = 0;
     this.mistakes = 0;
     this.message = "Ready";
@@ -123,6 +124,15 @@ class Game2026 {
   async loadSprites() {
     const files = {
       hero: "assets/heyda-character-sheet-source.png",
+      heroIdle: "assets/heyda-idle.png",
+      heroPush: "assets/heyda-push.png",
+      heroAction: "assets/heyda-action.png",
+      guardian: "assets/totem-guardian.png",
+      blockLeaf: "assets/block-leaf.png",
+      blockSun: "assets/block-sun.png",
+      blockWave: "assets/block-wave.png",
+      blockMountain: "assets/block-mountain.png",
+      blockFire: "assets/block-fire.png",
       totems: "assets/totem-block-sheet-source.png",
       villain: "assets/villain-bulldozer-sheet-source.png"
     };
@@ -133,11 +143,11 @@ class Game2026 {
         img.onload = resolve;
         img.onerror = resolve;
       });
-      this.sprites[key] = this.stripGreen(img);
+      this.sprites[key] = this.stripBackground(img);
     }
   }
 
-  stripGreen(img) {
+  stripBackground(img) {
     if (!img.complete || !img.naturalWidth) return null;
     const canvas = document.createElement("canvas");
     canvas.width = img.naturalWidth;
@@ -149,7 +159,11 @@ class Game2026 {
       const r = pixels.data[i];
       const g = pixels.data[i + 1];
       const b = pixels.data[i + 2];
-      if (g > 150 && r < 105 && b < 135) pixels.data[i + 3] = 0;
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      const isGreenKey = g > 150 && r < 105 && b < 135;
+      const isCheckerKey = max > 218 && max - min < 18;
+      if (isGreenKey || isCheckerKey) pixels.data[i + 3] = 0;
     }
     ctx.putImageData(pixels, 0, 0);
     return canvas;
@@ -172,7 +186,7 @@ class Game2026 {
     const res = await fetch(`../../help-me-heyda/public/legacy/data/${file}`);
     const text = await res.text();
     const board = text.trim().split(/\n/).map((line) => {
-      const row = line.split(",").map((value) => Number.parseInt(value, 10) || 0);
+      const row = line.split(",").map((value) => this.normalizeBlock(Number.parseInt(value, 10) || 0));
       while (row.length < COLS) row.push(0);
       return row.slice(0, COLS);
     });
@@ -258,6 +272,7 @@ class Game2026 {
     this.mode = "story";
     this.stage = stage;
     this.stageClear = false;
+    this.clearAdvanceAt = 0;
     this.board = await this.loadStage(stage);
     this.actorY = 10;
     this.pendingPush = null;
@@ -277,6 +292,7 @@ class Game2026 {
   async startSurvival() {
     this.mode = "survival";
     this.stageClear = false;
+    this.clearAdvanceAt = 0;
     this.board = this.emptyBoard();
     for (let row = 9; row <= 11; row += 1) {
       for (let col = 0; col < COLS - 1; col += 1) this.board[row][col] = this.randomBlock();
@@ -322,6 +338,11 @@ class Game2026 {
     return Math.floor(Math.random() * 5) + 1;
   }
 
+  normalizeBlock(value) {
+    if (!value) return 0;
+    return ((value - 1) % 5) + 1;
+  }
+
   selectRow(row) {
     if (this.screen !== "play" || this.pendingPush) return;
     this.actorY = Math.max(0, Math.min(ACTOR_MAX, row));
@@ -334,7 +355,6 @@ class Game2026 {
 
   push() {
     if (this.stageClear) {
-      this.nextStage();
       return;
     }
     if (this.screen !== "play" || this.pendingPush) return;
@@ -415,8 +435,9 @@ class Game2026 {
     }
     if (this.board[12].some(Boolean)) return;
     this.stageClear = true;
+    this.clearAdvanceAt = performance.now() + 1900;
     this.score += Math.max(300, 1000 - this.mistakes * 80);
-    this.message = `Stage ${this.stage} Clear! Push로 다음 단계`;
+    this.message = `Stage ${this.stage} Clear! 다음 단계로 이동`;
     this.clearBlastUntil = performance.now() + 1600;
     this.burst(this.width * 0.76, 128, "#f7c15f", 42);
     this.pulse(1.2, 1);
@@ -493,6 +514,10 @@ class Game2026 {
     this.last = now;
     this.time += delta;
     this.finishPush(now);
+    if (this.stageClear && this.clearAdvanceAt && now >= this.clearAdvanceAt) {
+      this.clearAdvanceAt = 0;
+      this.nextStage();
+    }
     if (this.screen === "play" && this.mode === "story" && !this.stageClear) {
       this.storyTime = Math.max(0, this.storyTime - delta / 100);
       if (Math.floor(this.time / 120) !== Math.floor((this.time - delta) / 120)) this.updateHud();
@@ -776,6 +801,12 @@ class Game2026 {
   }
 
   drawHero(ctx, x, y, size, pose, flip = false) {
+    const poses = [this.sprites.heroIdle, this.sprites.heroPush, this.sprites.heroAction];
+    const poseImage = poses[pose];
+    if (poseImage) {
+      this.drawSpriteContain(ctx, poseImage, 0, 0, poseImage.width, poseImage.height, x, y - size * 0.08, size, size * 1.18, flip);
+      return;
+    }
     const sheet = this.sprites.hero;
     if (sheet) {
       const sw = sheet.width / 3;
@@ -789,6 +820,18 @@ class Game2026 {
   }
 
   drawBlock(ctx, x, y, size, value) {
+    const blockImages = [
+      this.sprites.blockLeaf,
+      this.sprites.blockSun,
+      this.sprites.blockWave,
+      this.sprites.blockMountain,
+      this.sprites.blockFire
+    ];
+    const blockImage = blockImages[((value - 1) % 5)];
+    if (blockImage) {
+      this.drawSpriteContain(ctx, blockImage, 0, 0, blockImage.width, blockImage.height, x, y, size, size);
+      return;
+    }
     const colors = {
       1: ["#173f2d", "#6ee58f"],
       2: ["#5a3514", "#ffd15c"],
@@ -880,6 +923,11 @@ class Game2026 {
   }
 
   drawTotem(ctx, x, y, size) {
+    const guardian = this.sprites.guardian;
+    if (guardian) {
+      this.drawSpriteContain(ctx, guardian, 0, 0, guardian.width, guardian.height, x, y - size * 0.04, size, size * 1.18);
+      return;
+    }
     const sheet = this.sprites.totems;
     if (sheet) {
       this.drawSpriteContain(ctx, sheet, 0, 0, sheet.width * 0.42, sheet.height, x, y - size * 0.04, size, size * 1.18);

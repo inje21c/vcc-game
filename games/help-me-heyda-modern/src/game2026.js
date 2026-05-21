@@ -104,6 +104,7 @@ class Game2026 {
     this.survivalTimer = 0;
     this.survivalDelay = 7200;
     this.sprites = {};
+    this.cropCache = new Map();
     this.bind();
     this.resize();
     this.boot();
@@ -500,6 +501,20 @@ class Game2026 {
       ctx.lineTo(x + 36, this.height);
       ctx.fill();
     }
+    ctx.fillStyle = "rgba(121, 221, 191, 0.1)";
+    ctx.beginPath();
+    ctx.moveTo(0, this.height * 0.72);
+    ctx.bezierCurveTo(this.width * 0.25, this.height * 0.67, this.width * 0.42, this.height * 0.78, this.width, this.height * 0.7);
+    ctx.lineTo(this.width, this.height);
+    ctx.lineTo(0, this.height);
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(247, 193, 95, 0.22)";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(this.width * 0.12, this.height);
+    ctx.bezierCurveTo(this.width * 0.4, this.height * 0.78, this.width * 0.56, this.height * 0.94, this.width * 0.88, this.height * 0.75);
+    ctx.stroke();
     if (this.screen === "intro") this.drawTotem(ctx, this.width * 0.5, this.height * 0.42, 150);
   }
 
@@ -531,8 +546,8 @@ class Game2026 {
     const x = this.width - 44 - progress * 74 + Math.sin(this.time * 0.004) * 3;
     const y = 118;
     if (sheet) {
-      ctx.drawImage(sheet, 0, 0, sheet.width * 0.56, sheet.height, x - 52, y - 42, 104, 74);
-      ctx.drawImage(sheet, sheet.width * 0.56, 0, sheet.width * 0.44, sheet.height, 16, 116, 52, 70);
+      this.drawSpriteContain(ctx, sheet, 0, 0, sheet.width * 0.56, sheet.height, x, y, 112, 74);
+      this.drawSpriteContain(ctx, sheet, sheet.width * 0.56, 0, sheet.width * 0.44, sheet.height, 42, 146, 58, 76);
     } else {
       ctx.fillStyle = "#d9a323";
       this.roundRect(ctx, x - 48, y - 20, 92, 38, 8);
@@ -544,9 +559,46 @@ class Game2026 {
 
   drawBoardPanel(ctx) {
     const { originX, originY, tile } = this.boardMetrics;
-    ctx.fillStyle = "rgba(5, 8, 7, 0.58)";
-    this.roundRect(ctx, originX - tile * 0.18, originY - tile * 0.18, tile * COLS + tile * 0.36, tile * ROWS + tile * 0.36, 16);
+    const x = originX - tile * 0.35;
+    const y = originY - tile * 0.35;
+    const w = tile * COLS + tile * 0.7;
+    const h = tile * ROWS + tile * 0.7;
+    const frame = ctx.createLinearGradient(x, y, x + w, y + h);
+    frame.addColorStop(0, "rgba(247, 193, 95, 0.34)");
+    frame.addColorStop(0.45, "rgba(18, 54, 47, 0.72)");
+    frame.addColorStop(1, "rgba(126, 58, 48, 0.56)");
+    ctx.fillStyle = frame;
+    this.roundRect(ctx, x, y, w, h, 18);
     ctx.fill();
+
+    ctx.fillStyle = "rgba(5, 8, 7, 0.7)";
+    this.roundRect(ctx, originX - tile * 0.14, originY - tile * 0.14, tile * COLS + tile * 0.28, tile * ROWS + tile * 0.28, 12);
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(247, 241, 223, 0.22)";
+    ctx.lineWidth = 2;
+    this.roundRect(ctx, x + 3, y + 3, w - 6, h - 6, 15);
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(121, 221, 191, 0.12)";
+    const target = this.boardToScreen(this.actorY + 1, 3.5);
+    this.roundRect(ctx, originX - tile * 0.06, target.y - tile * 0.48, tile * COLS + tile * 0.12, tile * 0.96, 8);
+    ctx.fill();
+
+    if (this.mode === "story") {
+      ctx.fillStyle = "rgba(247, 193, 95, 0.13)";
+      const bottom = this.boardToScreen(12, 3);
+      this.roundRect(ctx, originX - tile * 0.04, bottom.y - tile * 0.48, tile * (7 - this.stoneFlag), tile * 0.96, 8);
+      ctx.fill();
+    }
+
+    ctx.fillStyle = "rgba(247, 241, 223, 0.32)";
+    for (let col = 0; col < COLS; col += 1) {
+      const p = this.boardToScreen(12, col);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y + tile * 0.42, Math.max(1.5, tile * 0.06), 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 
   drawBoard(ctx) {
@@ -582,14 +634,14 @@ class Game2026 {
     if (empty < 1) empty = 1;
     const point = this.boardToScreen(this.actorY + 1, empty - 0.68);
     const pose = this.pendingPush || performance.now() < this.actorPushUntil ? 1 : this.mode === "survival" ? 2 : 0;
-    this.drawHero(ctx, point.x, point.y + point.size * 0.08, point.size * 1.45, pose);
+    this.drawHero(ctx, point.x, point.y + point.size * 0.08, point.size * 1.45, pose, pose === 1);
   }
 
-  drawHero(ctx, x, y, size, pose) {
+  drawHero(ctx, x, y, size, pose, flip = false) {
     const sheet = this.sprites.hero;
     if (sheet) {
       const sw = sheet.width / 3;
-      ctx.drawImage(sheet, sw * pose, 0, sw, sheet.height, x - size * 0.5, y - size * 0.66, size, size * 1.18);
+      this.drawSpriteContain(ctx, sheet, sw * pose, 0, sw, sheet.height, x, y - size * 0.08, size, size * 1.18, flip);
       return;
     }
     ctx.fillStyle = "#f7c15f";
@@ -604,7 +656,7 @@ class Game2026 {
       const startX = sheet.width * 0.46;
       const blockW = (sheet.width - startX) / 5;
       const index = (value - 1) % 5;
-      ctx.drawImage(sheet, startX + blockW * index, sheet.height * 0.08, blockW, sheet.height * 0.84, x - size / 2, y - size / 2, size, size);
+      this.drawSpriteContain(ctx, sheet, startX + blockW * index, sheet.height * 0.08, blockW, sheet.height * 0.84, x, y, size * 0.96, size * 0.96);
       return;
     }
     ctx.fillStyle = this.color(value);
@@ -615,7 +667,7 @@ class Game2026 {
   drawTotem(ctx, x, y, size) {
     const sheet = this.sprites.totems;
     if (sheet) {
-      ctx.drawImage(sheet, 0, 0, sheet.width * 0.42, sheet.height, x - size * 0.5, y - size * 0.72, size, size * 1.35);
+      this.drawSpriteContain(ctx, sheet, 0, 0, sheet.width * 0.42, sheet.height, x, y - size * 0.06, size * 0.92, size * 1.18);
       return;
     }
     ctx.fillStyle = "#d58a52";
@@ -632,6 +684,56 @@ class Game2026 {
       ctx.fill();
     }
     ctx.globalAlpha = 1;
+  }
+
+  drawSpriteContain(ctx, sheet, sx, sy, sw, sh, cx, cy, maxW, maxH, flip = false) {
+    const crop = this.tightCrop(sheet, sx, sy, sw, sh);
+    const scale = Math.min(maxW / crop.sw, maxH / crop.sh);
+    const dw = crop.sw * scale;
+    const dh = crop.sh * scale;
+    ctx.save();
+    if (flip) {
+      ctx.translate(cx, cy);
+      ctx.scale(-1, 1);
+      ctx.drawImage(sheet, crop.sx, crop.sy, crop.sw, crop.sh, -dw / 2, -dh / 2, dw, dh);
+    } else {
+      ctx.drawImage(sheet, crop.sx, crop.sy, crop.sw, crop.sh, cx - dw / 2, cy - dh / 2, dw, dh);
+    }
+    ctx.restore();
+  }
+
+  tightCrop(sheet, sx, sy, sw, sh) {
+    const key = `${sheet.width}:${sheet.height}:${Math.round(sx)}:${Math.round(sy)}:${Math.round(sw)}:${Math.round(sh)}`;
+    if (this.cropCache.has(key)) return this.cropCache.get(key);
+    const x0 = Math.max(0, Math.floor(sx));
+    const y0 = Math.max(0, Math.floor(sy));
+    const x1 = Math.min(sheet.width, Math.ceil(sx + sw));
+    const y1 = Math.min(sheet.height, Math.ceil(sy + sh));
+    const temp = document.createElement("canvas");
+    temp.width = sheet.width;
+    temp.height = sheet.height;
+    const tctx = temp.getContext("2d", { willReadFrequently: true });
+    tctx.drawImage(sheet, 0, 0);
+    const data = tctx.getImageData(x0, y0, x1 - x0, y1 - y0).data;
+    let minX = x1;
+    let minY = y1;
+    let maxX = x0;
+    let maxY = y0;
+    for (let y = 0; y < y1 - y0; y += 1) {
+      for (let x = 0; x < x1 - x0; x += 1) {
+        const alpha = data[(y * (x1 - x0) + x) * 4 + 3];
+        if (alpha <= 8) continue;
+        minX = Math.min(minX, x0 + x);
+        minY = Math.min(minY, y0 + y);
+        maxX = Math.max(maxX, x0 + x);
+        maxY = Math.max(maxY, y0 + y);
+      }
+    }
+    const crop = minX <= maxX
+      ? { sx: minX, sy: minY, sw: maxX - minX + 1, sh: maxY - minY + 1 }
+      : { sx: x0, sy: y0, sw: x1 - x0, sh: y1 - y0 };
+    this.cropCache.set(key, crop);
+    return crop;
   }
 
   drawDebug(ctx) {

@@ -882,9 +882,12 @@ class Game2026 {
     const progress = this.stageClear ? 0.72 : Math.min(1, timeProgress + this.mistakes * 0.04);
     const blastPush = clearPhase > 0 ? (1 - clearPhase) * 260 : 0;
     const yBase = Math.max(122, Math.min(146, this.height * 0.148));
-    const x = this.width - 30 - progress * 138 + blastPush + Math.sin(this.time * 0.004) * 3;
+    const tentX = 42;
+    const startX = this.width + 56;
+    const hitX = tentX + 52;
+    const x = startX + (hitX - startX) * progress + blastPush + Math.sin(this.time * 0.004) * 3;
     const y = yBase - (clearPhase > 0 ? Math.sin((1 - clearPhase) * Math.PI) * 38 : 0);
-    this.drawVillageTent(ctx, 42, yBase + 4);
+    this.drawVillageTent(ctx, tentX, yBase + 4);
     this.drawTimeRoad(ctx, progress);
     if (clearPhase > 0) this.drawClearBeam(ctx, x, y, clearPhase);
     if (bulldozer) {
@@ -1036,7 +1039,7 @@ class Game2026 {
         ctx.strokeStyle = row === this.actorY + 1 ? "rgba(121, 221, 191, 0.48)" : "rgba(247, 241, 223, 0.1)";
         ctx.lineWidth = row === this.actorY + 1 ? 2 : 1;
         ctx.strokeRect(cell.x - cell.size / 2, cell.y - cell.size / 2, cell.size, cell.size);
-        if (this.board[row][col]) this.drawBlock(ctx, cell.x, cell.y, cell.size * 0.72, this.board[row][col]);
+        if (this.board[row][col]) this.drawBlock(ctx, cell.x, cell.y, cell.size * 0.86, this.board[row][col]);
       }
     }
     if (this.mode === "story") {
@@ -1053,7 +1056,7 @@ class Game2026 {
     const start = this.boardToScreen(this.pendingPush.row, -0.55);
     const end = this.boardToScreen(12, this.mode === "story" ? Math.max(0, 6 - this.stoneFlag) : 3);
     const t = phase < 0.45 ? 0 : (phase - 0.45) / 0.55;
-    this.drawBlock(ctx, start.x, start.y + (end.y - start.y) * t, start.size * 0.72, this.pendingPush.block);
+    this.drawBlock(ctx, start.x, start.y + (end.y - start.y) * t, start.size * 0.86, this.pendingPush.block);
   }
 
   drawActor(ctx) {

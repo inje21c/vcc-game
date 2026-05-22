@@ -176,7 +176,8 @@ button:active {
 }
 
 .story-screen,
-.help-screen {
+.help-screen,
+.settings-screen {
   align-content: end;
   gap: 12px;
   background: linear-gradient(180deg, rgba(5, 8, 7, 0.04), rgba(5, 8, 7, 0.88) 42%, rgba(5, 8, 7, 0.98));
@@ -209,14 +210,16 @@ button:active {
 }
 
 .story-screen h1,
-.help-screen h1 {
+.help-screen h1,
+.settings-screen h1 {
   margin: 0;
   font-size: 36px;
   line-height: 1.08;
 }
 
 .story-screen p,
-.help-screen p {
+.help-screen p,
+.settings-screen p {
   min-height: 140px;
   margin: 0;
   color: rgba(247, 241, 223, 0.86);
@@ -228,6 +231,12 @@ button:active {
 .story-actions {
   display: grid;
   grid-template-columns: 1fr 1.35fr;
+  gap: 10px;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
 

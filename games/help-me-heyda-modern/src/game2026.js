@@ -127,6 +127,7 @@ class Game2026 {
 
   async boot() {
     await Promise.all([this.loadSprites(), this.loadStages()]);
+    this.handleDevShortcut();
   }
 
   async loadSprites() {
@@ -263,7 +264,11 @@ class Game2026 {
     if (action === "story") return this.openStory();
     if (action === "survival") return this.startSurvival();
     if (action === "help") return this.show("help");
-    if (action === "option" || action === "debug") return this.toggleDebug();
+    if (action === "option") return this.openSettings();
+    if (action === "debug") return this.toggleDebug();
+    if (action.startsWith("dev-stage-")) return this.startStory(Number.parseInt(action.replace("dev-stage-", ""), 10) || 1);
+    if (action === "dev-clear") return this.showResultShortcut("clear");
+    if (action === "dev-gameover") return this.showResultShortcut("gameover");
     if (action === "prev-chapter") return this.setChapter(Math.max(0, this.chapter - 1));
     if (action === "next-chapter") {
       if (this.chapter < chapters.length - 1) return this.setChapter(this.chapter + 1);
@@ -282,6 +287,51 @@ class Game2026 {
   openStory() {
     this.setChapter(0);
     this.show("story");
+  }
+
+  openSettings() {
+    this.sound.cue("menu");
+    this.show("settings");
+  }
+
+  async handleDevShortcut() {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has("dev")) return;
+    const stage = Number.parseInt(params.get("stage"), 10);
+    const result = params.get("result");
+    if (Number.isFinite(stage)) {
+      await this.startStory(stage);
+      return;
+    }
+    if (result === "clear" || result === "gameover" || result === "ending") {
+      await this.showResultShortcut(result);
+      return;
+    }
+    this.openSettings();
+  }
+
+  async showResultShortcut(type) {
+    await this.startStory(this.getSavedStage());
+    if (type === "gameover") {
+      this.endGame("Game Over: 테스트 화면");
+      return;
+    }
+    this.stageClear = true;
+    this.resultState = type === "ending" ? "ending" : "clear";
+    this.stageBestCombo = Math.max(this.stageBestCombo, 2);
+    this.stageResult = {
+      stage: this.stage,
+      boardScore: 1200,
+      clearBonus: 800,
+      timeLeft: Math.ceil(this.storyTime),
+      timeBonus: Math.ceil(this.storyTime) * 5,
+      bestCombo: this.stageBestCombo,
+      comboBonus: this.stageBestCombo * 100,
+      stageScore: 2000 + Math.ceil(this.storyTime) * 5 + this.stageBestCombo * 100,
+      totalScore: this.score + 2000 + Math.ceil(this.storyTime) * 5 + this.stageBestCombo * 100
+    };
+    this.message = type === "ending" ? "Ending Test" : "Clear Test";
+    this.sound.cue("clear");
   }
 
   setChapter(index) {

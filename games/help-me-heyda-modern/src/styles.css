@@ -61,8 +61,7 @@ button:active {
 }
 
 .screen,
-.hud,
-.controls {
+.hud {
   position: absolute;
   z-index: 2;
 }
@@ -78,8 +77,7 @@ button:active {
 }
 
 .intro {
-  align-content: end;
-  gap: 18px;
+  place-items: stretch;
   padding-left: 0;
   padding-right: 0;
   background:
@@ -88,26 +86,24 @@ button:active {
 
 .title-mark {
   display: grid;
+  width: 100%;
+  height: 100%;
   justify-items: center;
-  gap: 12px;
-  transform: translateY(-20px);
+  align-items: stretch;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
   animation: titleRise 900ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 .title-mark img {
-  width: min(100vw, 430px);
-  height: min(74svh, 720px);
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  object-position: center top;
+  object-position: center;
   filter: drop-shadow(0 18px 20px rgba(0, 0, 0, 0.55));
-}
-
-.title-mark p {
-  margin: 0;
-  color: #f7c15f;
-  font-size: 15px;
-  font-weight: 900;
-  text-transform: uppercase;
 }
 
 .primary-button {
@@ -115,99 +111,94 @@ button:active {
   color: #1b100b;
 }
 
-.intro .primary-button {
-  margin: 0 22px max(22px, env(safe-area-inset-bottom));
-}
-
 .menu {
-  place-items: center;
-  background: linear-gradient(180deg, rgba(5, 8, 7, 0.04), rgba(5, 8, 7, 0.82));
+  place-items: stretch;
+  padding: 0;
+  background: #050807;
 }
 
-.dial {
+.menu-art {
   position: relative;
-  width: min(88vw, 360px);
-  aspect-ratio: 1;
-  border: 1px solid rgba(247, 241, 223, 0.17);
-  border-radius: 50%;
-  background:
-    linear-gradient(rgba(5, 8, 7, 0.08), rgba(5, 8, 7, 0.42)),
-    url("../public/assets/menu-dial-2026.png") center / cover no-repeat,
-    radial-gradient(circle at center, rgba(247, 193, 95, 0.22) 0 28%, rgba(18, 43, 38, 0.7) 29% 58%, rgba(90, 45, 38, 0.5) 59% 100%);
-  animation: dialIn 640ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  animation: dialIn 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-.dial-core {
-  position: absolute;
-  inset: 50% auto auto 50%;
-  display: grid;
-  width: 116px;
-  height: 116px;
-  place-items: center;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background: rgba(5, 8, 7, 0.78);
-  border: 1px solid rgba(247, 241, 223, 0.16);
-}
-
-.dial-core img {
-  width: 78px;
-  height: 78px;
+.menu-art img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  border-radius: 50%;
+  object-position: center;
+  display: block;
 }
 
-.dial-core b {
-  font-size: 13px;
-}
-
-.dial-button {
+.menu-hotspot {
   position: absolute;
-  display: grid;
-  width: 112px;
-  height: 76px;
-  place-items: center;
-  padding: 8px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: none;
 }
 
-.dial-button span {
-  color: #f7c15f;
-  font-size: 12px;
+.menu-hotspot:active {
+  background: rgba(247, 193, 95, 0.1);
 }
 
-.dial-button strong {
-  font-size: 18px;
+.menu-hotspot.story {
+  left: 8%;
+  top: 41%;
+  width: 41%;
+  height: 19%;
 }
 
-.dial-button.story {
-  top: 4px;
-  left: 50%;
-  transform: translateX(-50%);
+.menu-hotspot.survival {
+  right: 7%;
+  top: 41%;
+  width: 41%;
+  height: 19%;
 }
 
-.dial-button.survival {
-  top: 50%;
-  right: -8px;
-  transform: translateY(-50%);
+.menu-hotspot.help {
+  left: 8%;
+  top: 65%;
+  width: 41%;
+  height: 19%;
 }
 
-.dial-button.help {
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.dial-button.option {
-  top: 50%;
-  left: -8px;
-  transform: translateY(-50%);
+.menu-hotspot.option {
+  right: 7%;
+  top: 65%;
+  width: 41%;
+  height: 19%;
 }
 
 .story-screen,
 .help-screen {
   align-content: end;
-  gap: 14px;
+  gap: 12px;
   background: linear-gradient(180deg, rgba(5, 8, 7, 0.04), rgba(5, 8, 7, 0.88) 42%, rgba(5, 8, 7, 0.98));
+}
+
+.story-cut {
+  align-self: start;
+  width: 100%;
+  margin: 0;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border: 1px solid rgba(247, 241, 223, 0.16);
+  border-radius: 8px;
+  background: rgba(5, 8, 7, 0.5);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.36);
+}
+
+.story-cut img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: storyDrift 6400ms ease-in-out infinite alternate;
 }
 
 .chapter-kicker {
@@ -245,60 +236,52 @@ button:active {
   left: 14px;
   right: 14px;
   display: none;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
+  grid-template-columns: 1.1fr 1fr 1fr;
+  gap: 10px;
 }
 
 .hud div {
   display: grid;
-  min-height: 54px;
+  min-height: 58px;
   align-content: center;
-  padding: 8px 9px;
-  border: 1px solid rgba(247, 241, 223, 0.14);
+  padding: 9px 11px;
+  border: 1px solid rgba(247, 193, 95, 0.22);
   border-radius: 8px;
-  background: rgba(5, 8, 7, 0.56);
-  backdrop-filter: blur(14px);
+  background:
+    linear-gradient(180deg, rgba(21, 45, 39, 0.74), rgba(6, 14, 12, 0.72)),
+    radial-gradient(circle at top left, rgba(247, 193, 95, 0.18), transparent 52%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 12px 24px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(12px);
 }
 
 .hud span {
-  color: rgba(247, 241, 223, 0.58);
-  font-size: 11px;
+  color: rgba(247, 193, 95, 0.78);
+  font-size: 10px;
   font-weight: 900;
   text-transform: uppercase;
 }
 
 .hud b {
-  font-size: 17px;
+  color: #f7f1df;
+  font-size: 20px;
+  line-height: 1.05;
 }
 
-.controls {
-  left: 14px;
-  right: 14px;
-  bottom: max(16px, env(safe-area-inset-bottom));
-  display: none;
-  grid-template-columns: 1fr 1.4fr 1fr 0.9fr;
-  gap: 8px;
-}
-
-.push-button {
-  background: linear-gradient(180deg, rgba(121, 221, 191, 0.95), rgba(51, 126, 118, 0.95));
-  color: #03100d;
-}
-
-.app.is-playing .hud,
-.app.is-playing .controls {
+.app.is-playing .hud {
   display: grid;
 }
 
 @keyframes titleRise {
   from {
     opacity: 0;
-    transform: translateY(18px) scale(0.94);
+    transform: scale(1.04);
   }
 
   to {
     opacity: 1;
-    transform: translateY(-20px) scale(1);
+    transform: scale(1);
   }
 }
 
@@ -311,6 +294,16 @@ button:active {
   to {
     opacity: 1;
     transform: scale(1) rotate(0);
+  }
+}
+
+@keyframes storyDrift {
+  from {
+    transform: scale(1.02) translate3d(-1.5%, -1%, 0);
+  }
+
+  to {
+    transform: scale(1.08) translate3d(1.5%, 1%, 0);
   }
 }
 

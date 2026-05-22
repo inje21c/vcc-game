@@ -2,12 +2,13 @@ const DPR = Math.min(window.devicePixelRatio || 1, 2);
 const ROWS = 13;
 const COLS = 8;
 const ACTOR_MAX = 10;
+const SAVE_KEY = "help-me-heyda-2026-story-progress";
 
 const chapters = [
-  ["Scene 1", "숲이 숨을 멈춘 날", "새벽 안개가 걷히자 숲의 심장부에 붉은 깃발이 꽂혀 있었다. 수목족 마을은 지도 위에서 이미 사라진 이름이 되었고, 멀리서는 쇳소리를 품은 불도저가 천천히 깨어났다."],
-  ["Scene 2", "헤이다의 첫 걸음", "어른들은 포기했고 아이들은 숨었다. 하지만 헤이다는 오래된 토템을 품에 안고 마을 입구로 걸어간다. 그녀가 밀어내는 것은 돌조각이 아니라, 사라지려는 기억을 붙잡는 마지막 손길이다."],
-  ["Scene 3", "토템의 노래", "같은 문양이 이어지는 순간 숲의 빛이 되살아난다. 토템은 길을 만들고, 길은 사람들을 불러 모은다. 콤보가 이어질수록 침묵하던 마을은 다시 노래하기 시작한다."],
-  ["Final Scene", "도와줘, 헤이다", "마지막 대치의 순간, 헤이다는 불도저를 부수지 않는다. 대신 마을 사람들이 살아온 길과 이름을 보여준다. 이 싸움은 파괴가 아니라 기억을 지키는 이야기다."]
+  ["Scene 1", "숲이 숨을 멈춘 날", "새벽 안개가 걷히자 숲의 심장부에 붉은 깃발이 꽂혀 있었다. 수목족 마을은 지도 위에서 이미 사라진 이름이 되었고, 멀리서는 쇳소리를 품은 불도저가 천천히 깨어났다.", "assets/story1.png"],
+  ["Scene 2", "헤이다의 첫 걸음", "어른들은 포기했고 아이들은 숨었다. 하지만 헤이다는 오래된 토템을 품에 안고 마을 입구로 걸어간다. 그녀가 밀어내는 것은 돌조각이 아니라, 사라지려는 기억을 붙잡는 마지막 손길이다.", "assets/story2.png"],
+  ["Scene 3", "토템의 노래", "같은 문양이 이어지는 순간 숲의 빛이 되살아난다. 토템은 길을 만들고, 길은 사람들을 불러 모은다. 콤보가 이어질수록 침묵하던 마을은 다시 노래하기 시작한다.", "assets/story3.png"],
+  ["Final Scene", "도와줘, 헤이다", "마지막 대치의 순간, 헤이다는 불도저를 부수지 않는다. 대신 마을 사람들이 살아온 길과 이름을 보여준다. 이 싸움은 파괴가 아니라 기억을 지키는 이야기다.", "assets/story4.png"]
 ];
 
 class Sound {
@@ -89,6 +90,9 @@ class Game2026 {
     this.stageCache = new Map();
     this.stage = 1;
     this.stageClear = false;
+    this.gameOver = false;
+    this.resultState = null;
+    this.stageResult = null;
     this.clearAdvanceAt = 0;
     this.board = this.emptyBoard();
     this.actorY = 10;
@@ -97,9 +101,13 @@ class Game2026 {
     this.stoneFlag = 4;
     this.score = 0;
     this.combo = 0;
+    this.stageStartScore = 0;
+    this.stageBestCombo = 0;
+    this.stageResult = null;
     this.mistakes = 0;
     this.message = "Ready";
     this.storyTime = 900;
+    this.storyTimeMax = 900;
     this.clearBlastUntil = 0;
     this.debug = false;
     this.pointer = null;
@@ -133,9 +141,18 @@ class Game2026 {
       blockWave: "assets/block-wave.png",
       blockMountain: "assets/block-mountain.png",
       blockFire: "assets/block-fire.png",
+      blockCloud: "assets/block-cloud.png",
+      blockMoon: "assets/block-moon.png",
+      blockRain: "assets/block-rain.png",
+      blockSnow: "assets/block-snow.png",
+      blockWind: "assets/block-wind.png",
       background: "assets/background-forest-2026.png",
+      clearScreen: "assets/clear-screen.png",
+      gameOverScreen: "assets/ChatGPT Image 2026년 5월 22일 오후 01_30_42 (2).png",
       totems: "assets/totem-block-sheet-source.png",
-      villain: "assets/villain-bulldozer-sheet-source.png"
+      villain: "assets/asu.png",
+      bulldozer: "assets/buldoder.png",
+      tent: "assets/tent.png"
     };
     for (const [key, src] of Object.entries(files)) {
       const img = new Image();
@@ -144,7 +161,8 @@ class Game2026 {
         img.onload = resolve;
         img.onerror = resolve;
       });
-      this.sprites[key] = key === "background" ? img : this.stripBackground(img);
+      const keepFullImage = key === "background" || key === "clearScreen" || key === "gameOverScreen";
+      this.sprites[key] = keepFullImage ? img : this.stripBackground(img);
     }
   }
 
@@ -187,7 +205,7 @@ class Game2026 {
     const res = await fetch(`../../help-me-heyda/public/legacy/data/${file}`);
     const text = await res.text();
     const board = text.trim().split(/\n/).map((line) => {
-      const row = line.split(",").map((value) => this.normalizeBlock(Number.parseInt(value, 10) || 0));
+      const row = line.split(",").map((value) => this.normalizeBlock(Number.parseInt(value, 10) || 0, number));
       while (row.length < COLS) row.push(0);
       return row.slice(0, COLS);
     });
@@ -208,9 +226,21 @@ class Game2026 {
     this.canvas.addEventListener("pointerdown", (event) => {
       const rect = this.canvas.getBoundingClientRect();
       this.pointer = this.screenToBoard(event.clientX - rect.left, event.clientY - rect.top);
-      if (this.pointer.row >= 1 && this.pointer.row <= 11) this.selectRow(this.pointer.row - 1);
+      if (this.handleResultTap(event.clientX - rect.left, event.clientY - rect.top)) return;
+      if (this.gameOver) {
+        this.openMenu();
+        return;
+      }
+      if (this.pointer.row >= 1 && this.pointer.row <= 11) this.tapRow(this.pointer.row - 1);
     });
     window.addEventListener("keydown", async (event) => {
+      if (this.screen === "menu") {
+        const menuMap = { ArrowUp: "story", ArrowRight: "survival", ArrowDown: "help", ArrowLeft: "option" };
+        if (menuMap[event.code]) {
+          event.preventDefault();
+          return this.handle(menuMap[event.code]);
+        }
+      }
       const map = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "push", Space: "push", Enter: "push", KeyD: "debug", Escape: "menu" };
       if (!map[event.code]) return;
       event.preventDefault();
@@ -237,7 +267,7 @@ class Game2026 {
     if (action === "prev-chapter") return this.setChapter(Math.max(0, this.chapter - 1));
     if (action === "next-chapter") {
       if (this.chapter < chapters.length - 1) return this.setChapter(this.chapter + 1);
-      return this.startStory(1);
+      return this.startStory(this.getSavedStage());
     }
     if (action === "move-up" || action === "up") return this.move(-1);
     if (action === "move-down" || action === "down") return this.move(1);
@@ -256,10 +286,12 @@ class Game2026 {
 
   setChapter(index) {
     this.chapter = index;
-    const [kicker, title, text] = chapters[index];
+    const [kicker, title, text, image] = chapters[index];
     document.querySelector("#chapterKicker").textContent = kicker;
     document.querySelector("#chapterTitle").textContent = title;
     document.querySelector("#chapterText").textContent = text;
+    const chapterImage = document.querySelector("#chapterImage");
+    if (chapterImage) chapterImage.src = image;
     this.sound.cue("menu");
   }
 
@@ -273,17 +305,22 @@ class Game2026 {
     this.mode = "story";
     this.stage = stage;
     this.stageClear = false;
+    this.gameOver = false;
+    this.resultState = null;
     this.clearAdvanceAt = 0;
     this.board = await this.loadStage(stage);
     this.actorY = 10;
     this.pendingPush = null;
     this.stoneFlag = stage < 7 ? 4 : stage < 10 ? 3 : stage < 14 ? 2 : 1;
-    this.storyTime = 900;
+    this.storyTimeMax = this.stageTime(stage);
+    this.storyTime = this.storyTimeMax;
     this.clearBlastUntil = 0;
     if (stage === 1) this.score = 0;
+    this.stageStartScore = this.score;
+    this.stageBestCombo = 0;
     this.combo = 0;
     this.mistakes = 0;
-    this.message = `Stage ${stage}: 같은 토템을 바닥에 모으세요`;
+    this.message = `Stage ${stage}: 줄 터치 이동, 같은 줄 다시 터치 Push`;
     this.pulse(1.08, 0);
     this.sound.cue("start");
     this.updateHud();
@@ -293,6 +330,8 @@ class Game2026 {
   async startSurvival() {
     this.mode = "survival";
     this.stageClear = false;
+    this.gameOver = false;
+    this.resultState = null;
     this.clearAdvanceAt = 0;
     this.board = this.emptyBoard();
     for (let row = 9; row <= 11; row += 1) {
@@ -335,17 +374,68 @@ class Game2026 {
     return board;
   }
 
-  randomBlock() {
-    return Math.floor(Math.random() * 5) + 1;
+  randomBlock(limit = this.availableBlockCount(this.stage)) {
+    return Math.floor(Math.random() * limit) + 1;
   }
 
-  normalizeBlock(value) {
+  normalizeBlock(value, stage = this.stage) {
     if (!value) return 0;
-    return ((value - 1) % 5) + 1;
+    return ((value - 1) % this.availableBlockCount(stage)) + 1;
+  }
+
+  availableBlockCount(stage) {
+    if (stage <= 3) return 3;
+    if (stage <= 5) return 4;
+    if (stage <= 7) return 5;
+    if (stage <= 9) return 6;
+    if (stage <= 11) return 7;
+    if (stage <= 13) return 8;
+    if (stage <= 15) return 9;
+    return 10;
+  }
+
+  stageTime(stage) {
+    const times = [980, 950, 920, 890, 860, 830, 800, 770, 740, 710, 680, 650, 620, 600, 580, 560, 545, 540];
+    return times[Math.min(stage - 1, times.length - 1)] || 540;
+  }
+
+  getTotalStages() {
+    return this.stageFiles.length || 18;
+  }
+
+  getSavedStage() {
+    try {
+      const saved = Number.parseInt(localStorage.getItem(SAVE_KEY), 10);
+      if (Number.isFinite(saved)) return Math.max(1, Math.min(this.getTotalStages(), saved));
+    } catch {
+      return 1;
+    }
+    return 1;
+  }
+
+  saveProgress(stage) {
+    try {
+      const current = this.getSavedStage();
+      localStorage.setItem(SAVE_KEY, String(Math.max(current, Math.min(this.getTotalStages(), stage))));
+    } catch {
+      // Storage may be unavailable in private browsing or locked-down webviews.
+    }
+  }
+
+  tapRow(row) {
+    if (this.screen !== "play" || this.pendingPush || this.stageClear || this.gameOver) return;
+    const nextY = Math.max(0, Math.min(ACTOR_MAX, row));
+    if (nextY === this.actorY) {
+      this.push();
+      return;
+    }
+    this.actorY = nextY;
+    this.message = `R${this.actorY + 1}: 한 번 더 터치하면 Push`;
+    this.pulse(1.02, 0);
   }
 
   selectRow(row) {
-    if (this.screen !== "play" || this.pendingPush) return;
+    if (this.screen !== "play" || this.pendingPush || this.stageClear || this.gameOver) return;
     this.actorY = Math.max(0, Math.min(ACTOR_MAX, row));
     this.pulse(1.02, 0);
   }
@@ -355,7 +445,7 @@ class Game2026 {
   }
 
   push() {
-    if (this.stageClear) {
+    if (this.stageClear || this.gameOver) {
       return;
     }
     if (this.screen !== "play" || this.pendingPush) return;
@@ -413,6 +503,7 @@ class Game2026 {
     if (values.every((v) => v === values[0])) {
       for (let col = 0; col <= lastCol; col += 1) this.board[12][col] = 0;
       this.combo += 1;
+      this.stageBestCombo = Math.max(this.stageBestCombo, this.combo);
       this.score += 120 * this.combo;
       this.message = this.combo > 1 ? `콤보 ${this.combo}` : "바닥 클리어";
       this.pulse(1.18, 1);
@@ -436,9 +527,28 @@ class Game2026 {
     }
     if (this.board[12].some(Boolean)) return;
     this.stageClear = true;
-    this.clearAdvanceAt = performance.now() + 1900;
-    this.score += Math.max(300, 1000 - this.mistakes * 80);
-    this.message = `Stage ${this.stage} Clear! 다음 단계로 이동`;
+    this.resultState = this.isFinalStage() ? "ending" : "clear";
+    this.clearAdvanceAt = 0;
+    const boardScore = this.score - this.stageStartScore;
+    const clearBonus = Math.max(300, 1000 - this.mistakes * 80);
+    const timeLeft = Math.ceil(this.storyTime);
+    const timeBonus = timeLeft * 5;
+    const comboBonus = this.stageBestCombo * 100;
+    const stageScore = boardScore + clearBonus + timeBonus + comboBonus;
+    this.score += clearBonus + timeBonus + comboBonus;
+    this.stageResult = {
+      stage: this.stage,
+      boardScore,
+      clearBonus,
+      timeLeft,
+      timeBonus,
+      bestCombo: this.stageBestCombo,
+      comboBonus,
+      stageScore,
+      totalScore: this.score
+    };
+    this.saveProgress(this.isFinalStage() ? this.stage : this.stage + 1);
+    this.message = this.resultState === "ending" ? "Ending: 마을의 길이 지켜졌습니다" : `Stage ${this.stage} Clear!`;
     this.clearBlastUntil = performance.now() + 1600;
     this.burst(this.width * 0.76, 128, "#f7c15f", 42);
     this.pulse(1.2, 1);
@@ -447,12 +557,16 @@ class Game2026 {
 
   async nextStage() {
     const next = this.stage + 1;
-    if (this.stageFiles.length && next > this.stageFiles.length) {
-      this.message = "엔딩: 마을의 길이 지켜졌습니다";
-      this.stageClear = true;
+    if (this.isFinalStage()) {
+      this.resultState = "ending";
+      this.message = "Ending: 마을의 길이 지켜졌습니다";
       return;
     }
     await this.startStory(next);
+  }
+
+  isFinalStage() {
+    return this.stageFiles.length ? this.stage >= this.stageFiles.length : this.stage >= 18;
   }
 
   checkSurvivalBottom() {
@@ -504,10 +618,21 @@ class Game2026 {
   }
 
   updateHud() {
-    document.querySelector("#modeLabel").textContent = this.mode === "story" ? "Story" : "Survival";
     document.querySelector("#timeLabel").textContent = this.mode === "story" ? String(Math.max(0, Math.ceil(this.storyTime))) : String(Math.ceil(this.survivalDelay / 1000));
     document.querySelector("#scoreLabel").textContent = String(this.score);
     document.querySelector("#comboLabel").textContent = String(this.combo);
+  }
+
+  endGame(reason) {
+    if (this.gameOver || this.stageClear) return;
+    this.gameOver = true;
+    this.resultState = "gameover";
+    this.pendingPush = null;
+    this.message = reason;
+    this.clearBlastUntil = 0;
+    this.pulse(1.06, 4);
+    this.sound.cue("fail");
+    this.updateHud();
   }
 
   tick(now) {
@@ -519,15 +644,14 @@ class Game2026 {
       this.clearAdvanceAt = 0;
       this.nextStage();
     }
-    if (this.screen === "play" && this.mode === "story" && !this.stageClear) {
+    if (this.screen === "play" && this.mode === "story" && !this.stageClear && !this.gameOver) {
       this.storyTime = Math.max(0, this.storyTime - delta / 100);
       if (Math.floor(this.time / 120) !== Math.floor((this.time - delta) / 120)) this.updateHud();
       if (this.storyTime <= 0) {
-        this.message = "불도저가 마을에 도달했습니다";
-        this.pulse(1.08, 4);
+        this.endGame("Game Over: 불도저가 마을에 도달했습니다");
       }
     }
-    if (this.screen === "play" && this.mode === "survival") {
+    if (this.screen === "play" && this.mode === "survival" && !this.gameOver) {
       this.survivalTimer += delta;
       if (this.survivalTimer > this.survivalDelay) {
         this.survivalTimer = 0;
@@ -554,6 +678,7 @@ class Game2026 {
     this.drawWorld(ctx);
     if (this.screen === "play") this.drawGame(ctx);
     this.drawParticles(ctx);
+    if (this.screen === "play") this.drawResultOverlay(ctx);
     if (this.screen === "play") this.drawDebug(ctx);
   }
 
@@ -630,6 +755,101 @@ class Game2026 {
     ctx.drawImage(image, cx - drawW / 2, cy - drawH / 2, drawW, drawH);
   }
 
+  handleResultTap(x, y) {
+    if (!this.resultState) return false;
+    const nx = x / this.width;
+    const ny = y / this.height;
+    if (this.resultState === "gameover") {
+      if (nx >= 0.1 && nx <= 0.9 && ny >= 0.76 && ny <= 0.87) {
+        this.startStory(this.stage);
+        return true;
+      }
+      if (nx >= 0.14 && nx <= 0.86 && ny >= 0.89 && ny <= 0.98) {
+        this.openMenu();
+        return true;
+      }
+      return true;
+    }
+    if (this.resultState === "clear") {
+      if (nx >= 0.05 && nx <= 0.62 && ny >= 0.84 && ny <= 0.98) {
+        this.nextStage();
+        return true;
+      }
+      if (nx >= 0.62 && nx <= 0.97 && ny >= 0.84 && ny <= 0.98) {
+        this.openMenu();
+        return true;
+      }
+      return true;
+    }
+    if (this.resultState === "ending") {
+      if (ny >= 0.78) this.openMenu();
+      return true;
+    }
+    return false;
+  }
+
+  drawResultOverlay(ctx) {
+    if (!this.resultState) return;
+    const image = this.resultState === "gameover" ? this.sprites.gameOverScreen : this.sprites.clearScreen;
+    ctx.save();
+    ctx.fillStyle = "rgba(0, 0, 0, 0.72)";
+    ctx.fillRect(0, 0, this.width, this.height);
+    if (image?.complete && image.naturalWidth) {
+      this.drawCoverImage(ctx, image, this.width / 2, this.height / 2, this.width, this.height);
+    }
+    if (this.resultState === "clear" || this.resultState === "ending") {
+      const result = this.stageResult || {
+        stage: this.stage,
+        boardScore: this.score,
+        timeLeft: Math.ceil(this.storyTime),
+        timeBonus: 0,
+        bestCombo: this.stageBestCombo,
+        comboBonus: 0,
+        stageScore: this.score,
+        totalScore: this.score
+      };
+      const panelX = this.width * 0.16;
+      const panelY = this.height * 0.47;
+      const panelW = this.width * 0.68;
+      const lineH = Math.max(19, this.height * 0.023);
+      ctx.fillStyle = "rgba(5, 8, 7, 0.56)";
+      this.roundRect(ctx, panelX, panelY, panelW, lineH * 5.7, 8);
+      ctx.fill();
+      ctx.fillStyle = "#fff7d8";
+      ctx.textAlign = "center";
+      ctx.font = "900 18px Arial";
+      ctx.fillText(this.resultState === "ending" ? "모든 스테이지 클리어" : `Stage ${result.stage} Clear`, this.width / 2, panelY + lineH * 1.05);
+      ctx.font = "800 14px Arial";
+      ctx.fillText(`스테이지 점수  ${result.stageScore.toLocaleString()}`, this.width / 2, panelY + lineH * 2.15);
+      ctx.fillText(`남은 시간  ${result.timeLeft}s   보너스  ${result.timeBonus.toLocaleString()}`, this.width / 2, panelY + lineH * 3.15);
+      ctx.fillText(`최대 콤보  ${result.bestCombo}   보너스  ${result.comboBonus.toLocaleString()}`, this.width / 2, panelY + lineH * 4.15);
+      ctx.fillStyle = "#f7c15f";
+      ctx.font = "900 16px Arial";
+      ctx.fillText(`총 점수  ${result.totalScore.toLocaleString()}`, this.width / 2, panelY + lineH * 5.2);
+    }
+    if (this.resultState === "gameover") {
+      ctx.fillStyle = "rgba(5, 8, 7, 0.42)";
+      this.roundRect(ctx, this.width * 0.14, this.height * 0.62, this.width * 0.72, 42, 8);
+      ctx.fill();
+      ctx.fillStyle = "#fff7d8";
+      ctx.textAlign = "center";
+      ctx.font = "900 17px Arial";
+      ctx.fillText(`Stage ${this.stage}  Score ${this.score}`, this.width / 2, this.height * 0.62 + 27);
+    }
+    if (this.resultState === "ending") {
+      ctx.fillStyle = "rgba(5, 8, 7, 0.72)";
+      this.roundRect(ctx, this.width * 0.1, this.height * 0.78, this.width * 0.8, 72, 8);
+      ctx.fill();
+      ctx.fillStyle = "#f7c15f";
+      ctx.textAlign = "center";
+      ctx.font = "900 20px Arial";
+      ctx.fillText("마을은 다시 숲의 노래를 되찾았습니다", this.width / 2, this.height * 0.78 + 31);
+      ctx.font = "800 14px Arial";
+      ctx.fillText("터치하면 메뉴로 돌아갑니다", this.width / 2, this.height * 0.78 + 55);
+    }
+    ctx.restore();
+  }
+
   drawGame(ctx) {
     const center = this.center();
     const shakeX = (Math.random() - 0.5) * this.camera.shake;
@@ -653,19 +873,21 @@ class Game2026 {
   }
 
   drawVillain(ctx) {
-    const sheet = this.sprites.villain;
+    const villain = this.sprites.villain;
+    const bulldozer = this.sprites.bulldozer;
     const clearPhase = this.clearBlastUntil ? Math.max(0, (this.clearBlastUntil - performance.now()) / 1600) : 0;
-    const timeProgress = this.mode === "story" ? 1 - Math.max(0, this.storyTime) / 900 : Math.min(1, this.survivalTimer / this.survivalDelay);
+    const storyLimit = this.storyTimeMax || 900;
+    const timeProgress = this.mode === "story" ? 1 - Math.max(0, this.storyTime) / storyLimit : Math.min(1, this.survivalTimer / this.survivalDelay);
     const progress = this.stageClear ? 0.72 : Math.min(1, timeProgress + this.mistakes * 0.04);
     const blastPush = clearPhase > 0 ? (1 - clearPhase) * 260 : 0;
-    const x = this.width - 18 - progress * 126 + blastPush + Math.sin(this.time * 0.004) * 3;
-    const y = 128 - (clearPhase > 0 ? Math.sin((1 - clearPhase) * Math.PI) * 42 : 0);
-    this.drawVillageTent(ctx, 48, 130);
+    const yBase = Math.max(88, Math.min(106, this.height * 0.108));
+    const x = this.width - 30 - progress * 138 + blastPush + Math.sin(this.time * 0.004) * 3;
+    const y = yBase - (clearPhase > 0 ? Math.sin((1 - clearPhase) * Math.PI) * 38 : 0);
+    this.drawVillageTent(ctx, 42, yBase + 4);
     this.drawTimeRoad(ctx, progress);
     if (clearPhase > 0) this.drawClearBeam(ctx, x, y, clearPhase);
-    if (sheet) {
-      this.drawSpriteContain(ctx, sheet, 0, 0, sheet.width * 0.56, sheet.height, x, y, 112, 74);
-      this.drawSpriteContain(ctx, sheet, sheet.width * 0.56, 0, sheet.width * 0.44, sheet.height, 42, 146, 58, 76);
+    if (bulldozer) {
+      this.drawSpriteContain(ctx, bulldozer, 0, 0, bulldozer.width, bulldozer.height, x, y, 96, 64);
     } else {
       ctx.fillStyle = "#d9a323";
       this.roundRect(ctx, x - 48, y - 20, 92, 38, 8);
@@ -673,9 +895,16 @@ class Game2026 {
       ctx.fillStyle = "#3b3326";
       ctx.fillRect(x - 34, y + 12, 70, 12);
     }
+    if (villain) this.drawSpriteContain(ctx, villain, 0, 0, villain.width, villain.height, 38, yBase + 18, 44, 58);
   }
 
   drawVillageTent(ctx, x, y) {
+    const tent = this.sprites.tent;
+    if (tent) {
+      this.drawSpriteContain(ctx, tent, 0, 0, tent.width, tent.height, x, y, 66, 64);
+      return;
+    }
+
     ctx.save();
     ctx.fillStyle = "rgba(0, 0, 0, 0.22)";
     ctx.beginPath();
@@ -721,7 +950,7 @@ class Game2026 {
   drawTimeRoad(ctx, progress) {
     const x0 = 78;
     const x1 = this.width - 42;
-    const y = 148;
+    const y = Math.max(108, Math.min(126, this.height * 0.13));
     ctx.save();
     ctx.strokeStyle = "rgba(247, 241, 223, 0.22)";
     ctx.lineWidth = 4;
@@ -828,11 +1057,12 @@ class Game2026 {
 
   drawActor(ctx) {
     const row = this.board[this.actorY + 1];
-    let empty = row.findIndex((value) => value === 0);
-    if (empty < 1) empty = 1;
-    const point = this.boardToScreen(this.actorY + 1, empty - 0.68);
+    const lastBlockCol = row.reduce((last, value, index) => (value ? index : last), -1);
+    const actorCol = lastBlockCol >= 0 ? Math.min(COLS - 0.22, lastBlockCol + 0.82) : 0.62;
+    const point = this.boardToScreen(this.actorY + 1, actorCol);
     const pose = this.pendingPush || performance.now() < this.actorPushUntil ? 1 : this.mode === "survival" ? 2 : 0;
-    this.drawHero(ctx, point.x, point.y + point.size * 0.08, point.size * 1.45, pose, pose === 1);
+    const pushLean = pose === 1 ? -point.size * 0.1 : 0;
+    this.drawHero(ctx, point.x + pushLean, point.y - point.size * 0.04, point.size * 1.24, pose, pose === 1);
   }
 
   drawHero(ctx, x, y, size, pose, flip = false) {
@@ -860,9 +1090,14 @@ class Game2026 {
       this.sprites.blockSun,
       this.sprites.blockWave,
       this.sprites.blockMountain,
-      this.sprites.blockFire
+      this.sprites.blockFire,
+      this.sprites.blockCloud,
+      this.sprites.blockMoon,
+      this.sprites.blockRain,
+      this.sprites.blockSnow,
+      this.sprites.blockWind
     ];
-    const blockImage = blockImages[((value - 1) % 5)];
+    const blockImage = blockImages[((value - 1) % blockImages.length)];
     if (blockImage) {
       this.drawSpriteContain(ctx, blockImage, 0, 0, blockImage.width, blockImage.height, x, y, size, size);
       return;
@@ -974,6 +1209,18 @@ class Game2026 {
   }
 
   drawGoalTotem(ctx, x, y, size) {
+    const guardian = this.sprites.guardian;
+    if (guardian) {
+      this.drawSpriteContain(ctx, guardian, 0, 0, guardian.width, guardian.height, x, y - size * 0.04, size * 0.82, size * 0.96);
+      return;
+    }
+
+    const sheet = this.sprites.totems;
+    if (sheet) {
+      this.drawSpriteContain(ctx, sheet, 0, 0, sheet.width * 0.42, sheet.height, x, y - size * 0.04, size * 0.82, size * 0.96);
+      return;
+    }
+
     const w = size * 0.58;
     const h = size * 0.82;
     const top = y - h * 0.48;

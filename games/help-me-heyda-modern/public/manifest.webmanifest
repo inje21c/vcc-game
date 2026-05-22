@@ -1,0 +1,19 @@
+{
+  "name": "도와줘 헤이다 2026",
+  "short_name": "헤이다 2026",
+  "description": "원작 모바일 게임 도와줘 헤이다를 현대 모바일 화면으로 재탄생시킨 버전",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#050807",
+  "theme_color": "#050807",
+  "icons": [
+    {
+      "src": "assets/menu_storymode.png",
+      "sizes": "1254x1254",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

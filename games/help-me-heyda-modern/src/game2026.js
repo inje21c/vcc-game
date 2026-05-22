@@ -864,12 +864,13 @@ class Game2026 {
     this.drawPushBlock(ctx);
     this.drawActor(ctx);
     ctx.restore();
-    ctx.fillStyle = "rgba(5, 8, 7, 0.56)";
-    this.roundRect(ctx, 14, this.height - 104, this.width - 28, 38, 8);
+    const messageY = this.height - Math.max(54, Math.round(this.height * 0.058));
+    ctx.fillStyle = "rgba(5, 8, 7, 0.64)";
+    this.roundRect(ctx, 14, messageY, this.width - 28, 38, 8);
     ctx.fill();
     ctx.fillStyle = "#f7f1df";
     ctx.font = "700 13px Arial";
-    ctx.fillText(this.message, 28, this.height - 80);
+    ctx.fillText(this.message, 28, messageY + 24);
   }
 
   drawVillain(ctx) {
@@ -880,7 +881,7 @@ class Game2026 {
     const timeProgress = this.mode === "story" ? 1 - Math.max(0, this.storyTime) / storyLimit : Math.min(1, this.survivalTimer / this.survivalDelay);
     const progress = this.stageClear ? 0.72 : Math.min(1, timeProgress + this.mistakes * 0.04);
     const blastPush = clearPhase > 0 ? (1 - clearPhase) * 260 : 0;
-    const yBase = Math.max(88, Math.min(106, this.height * 0.108));
+    const yBase = Math.max(122, Math.min(146, this.height * 0.148));
     const x = this.width - 30 - progress * 138 + blastPush + Math.sin(this.time * 0.004) * 3;
     const y = yBase - (clearPhase > 0 ? Math.sin((1 - clearPhase) * Math.PI) * 38 : 0);
     this.drawVillageTent(ctx, 42, yBase + 4);
@@ -950,7 +951,7 @@ class Game2026 {
   drawTimeRoad(ctx, progress) {
     const x0 = 78;
     const x1 = this.width - 42;
-    const y = Math.max(108, Math.min(126, this.height * 0.13));
+    const y = Math.max(142, Math.min(164, this.height * 0.168));
     ctx.save();
     ctx.strokeStyle = "rgba(247, 241, 223, 0.22)";
     ctx.lineWidth = 4;
@@ -976,7 +977,7 @@ class Game2026 {
     ctx.lineWidth = 5 + Math.sin(this.time * 0.04) * 2;
     ctx.beginPath();
     ctx.moveTo(start.x, start.y);
-    ctx.quadraticCurveTo(this.width * 0.55, 170, bulldozerX, bulldozerY);
+      ctx.quadraticCurveTo(this.width * 0.55, Math.max(180, this.height * 0.2), bulldozerX, bulldozerY);
     ctx.stroke();
     ctx.strokeStyle = "#79ddbf";
     ctx.lineWidth = 2;
@@ -1340,11 +1341,13 @@ class Game2026 {
   }
 
   metrics() {
-    const tile = Math.floor(Math.min((this.width - 44) / 9.35, (this.height - 226) / ROWS));
+    const tile = Math.floor(Math.min((this.width - 28) / 9.05, (this.height - 202) / ROWS));
+    const desiredY = Math.round(Math.max(164, this.height * 0.205));
+    const maxY = Math.round(this.height - 72 - tile * ROWS);
     this.boardMetrics = {
       tile,
       originX: Math.round((this.width - tile * COLS) / 2 + tile * 0.28),
-      originY: Math.round(Math.max(96, (this.height - tile * ROWS) / 2 + 8))
+      originY: Math.max(126, Math.min(desiredY, maxY))
     };
   }
 

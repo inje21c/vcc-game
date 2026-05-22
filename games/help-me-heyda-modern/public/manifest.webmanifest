@@ -10,7 +10,7 @@
   "theme_color": "#050807",
   "icons": [
     {
-      "src": "assets/menu_storymode.png",
+      "src": "assets/icon.png",
       "sizes": "1254x1254",
       "type": "image/png",
       "purpose": "any maskable"

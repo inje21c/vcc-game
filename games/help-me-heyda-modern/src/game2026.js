@@ -203,17 +203,22 @@ class Game2026 {
     if (this.stageCache.has(number)) return this.cloneBoard(this.stageCache.get(number));
     if (!this.stageFiles.length) return this.fallbackStage();
     const file = this.stageFiles[number - 1] || this.stageFiles[0];
-    const res = await fetch(`../../help-me-heyda/public/legacy/data/${file}`);
-    const text = await res.text();
-    const board = text.trim().split(/\n/).map((line) => {
-      const row = line.split(",").map((value) => this.normalizeBlock(Number.parseInt(value, 10) || 0, number));
-      while (row.length < COLS) row.push(0);
-      return row.slice(0, COLS);
-    });
-    while (board.length < ROWS) board.unshift(Array(COLS).fill(0));
-    const normalized = board.slice(0, ROWS);
-    this.stageCache.set(number, this.cloneBoard(normalized));
-    return this.cloneBoard(normalized);
+    try {
+      const res = await fetch(`../../help-me-heyda/public/legacy/data/${file}`);
+      if (!res.ok) throw new Error(`Stage ${number} load failed`);
+      const text = await res.text();
+      const board = text.trim().split(/\n/).map((line) => {
+        const row = line.split(",").map((value) => this.normalizeBlock(Number.parseInt(value, 10) || 0, number));
+        while (row.length < COLS) row.push(0);
+        return row.slice(0, COLS);
+      });
+      while (board.length < ROWS) board.unshift(Array(COLS).fill(0));
+      const normalized = board.slice(0, ROWS);
+      this.stageCache.set(number, this.cloneBoard(normalized));
+      return this.cloneBoard(normalized);
+    } catch {
+      return this.fallbackStage();
+    }
   }
 
   bind() {

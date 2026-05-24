@@ -2,6 +2,21 @@
 
 `vcc-game` is the shared workspace for vibe-coded game development.
 
+## Project Vision
+
+`vcc-game` records and modernizes the mobile games originally created from 2003 onward. The project keeps original materials and modern remakes side by side, then presents them as a playable portfolio that can grow into open beta testing, installable mobile web apps, sponsorship, optional ad consent, and lightweight monetization.
+
+Key planning docs:
+
+- [Portfolio and operating plan](docs/portfolio-operating-plan.md)
+- [Beta feedback board plan](docs/beta-feedback-board.md)
+- [Workspace conventions](docs/workspace_conventions.md)
+- [Help Me Heyda 2026 roadmap](games/help-me-heyda-modern/docs/roadmap-2026.md)
+
+Beta links:
+
+- [Report a beta issue](https://github.com/vibecoding001/vcc-game/issues/new?template=beta-game-report.yml)
+
 ## Working Rule
 
 - Common assets, shared tooling, and reusable docs live in the root workspace.

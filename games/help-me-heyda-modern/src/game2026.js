@@ -275,6 +275,7 @@ class Game2026 {
     if (action === "dev-clear") return this.showResultShortcut("clear");
     if (action === "dev-gameover") return this.showResultShortcut("gameover");
     if (action === "prev-chapter") return this.setChapter(Math.max(0, this.chapter - 1));
+    if (action === "skip-story") return this.startStory(this.getSavedStage());
     if (action === "next-chapter") {
       if (this.chapter < chapters.length - 1) return this.setChapter(this.chapter + 1);
       return this.startStory(this.getSavedStage());

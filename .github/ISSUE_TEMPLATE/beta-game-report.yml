@@ -1,97 +1,57 @@
-name: Beta game report
-description: Closed beta report for vcc-game builds
+name: 베타 오류/개선 제보
+description: 게임하다가 불편하거나 이상한 점을 간단히 남겨주세요
 title: "[Beta] "
 labels:
   - beta
-  - bug
 body:
   - type: markdown
     attributes:
       value: |
-        베타 테스트 리포트 감사합니다. 재현 가능한 정보일수록 빠르게 고칠 수 있습니다.
+        어렵게 쓰지 않아도 됩니다. 기억나는 만큼만 적어주세요.
   - type: dropdown
-    id: game
+    id: type
     attributes:
-      label: Game
+      label: 어떤 제보인가요?
       options:
-        - 도와줘 헤이다 2026
-        - 도와줘 헤이다 원작 복원
-        - 기타
+        - 오류가 있어요
+        - 불편해요
+        - 개선 아이디어가 있어요
+        - 잘 모르겠지만 이상해요
     validations:
       required: true
   - type: input
-    id: version
+    id: where
     attributes:
-      label: Version or URL
-      description: 플레이한 주소나 버전을 적어주세요.
-      placeholder: "https://... 또는 beta-2026-05-24"
+      label: 어디에서 그랬나요?
+      placeholder: "예: 타이틀, 메뉴, 스토리, Stage 1, 서바이벌"
     validations:
       required: true
+  - type: textarea
+    id: what_happened
+    attributes:
+      label: 무슨 일이 있었나요?
+      placeholder: |
+        예: 스토리 화면에서 메뉴로 돌아갈 수 없어서 불편했습니다.
+        예: Stage 1에서 블록을 밀었는데 화면이 멈췄습니다.
+    validations:
+      required: true
+  - type: textarea
+    id: wanted
+    attributes:
+      label: 어떻게 바뀌면 좋을까요?
+      placeholder: "예: 스토리 화면에 Menu와 Skip 버튼이 있으면 좋겠습니다."
   - type: input
     id: device
     attributes:
-      label: Device
-      placeholder: "예: iPhone 15, Galaxy S24, Windows PC"
-    validations:
-      required: true
+      label: 사용한 기기/브라우저
+      placeholder: "예: 아이폰 Safari, 갤럭시 Chrome, 맥북 Chrome"
   - type: input
-    id: browser
+    id: url
     attributes:
-      label: Browser
-      placeholder: "예: Safari, Chrome, Edge"
-    validations:
-      required: true
-  - type: dropdown
-    id: severity
-    attributes:
-      label: Severity
-      options:
-        - P0 - 시작 불가 또는 진행 불가
-        - P1 - 스테이지/조작/결과 화면 핵심 오류
-        - P2 - UI 깨짐, 사운드, 성능 문제
-        - P3 - 개선 제안 또는 밸런스 의견
-    validations:
-      required: true
-  - type: input
-    id: screen
-    attributes:
-      label: Screen or mode
-      placeholder: "예: 타이틀, 메뉴, 스토리, Stage 1, 서바이벌, 게임오버"
-    validations:
-      required: true
+      label: 플레이한 주소
+      placeholder: "Vercel 게임 URL"
   - type: textarea
-    id: steps
+    id: screenshot
     attributes:
-      label: Steps to reproduce
-      description: 어떤 순서로 하면 문제가 생기는지 적어주세요.
-      placeholder: |
-        1. 메뉴에서 스토리 선택
-        2. Stage 1 시작
-        3. 세 번째 줄을 두 번 터치
-        4. ...
-    validations:
-      required: true
-  - type: textarea
-    id: expected
-    attributes:
-      label: Expected result
-      description: 원래 기대한 동작을 적어주세요.
-    validations:
-      required: true
-  - type: textarea
-    id: actual
-    attributes:
-      label: Actual result
-      description: 실제로 일어난 일을 적어주세요.
-    validations:
-      required: true
-  - type: textarea
-    id: media
-    attributes:
-      label: Screenshot or recording
-      description: 가능하면 스크린샷이나 화면 녹화를 첨부해주세요.
-  - type: textarea
-    id: notes
-    attributes:
-      label: Additional notes
-      description: 그 외 느낌, 개선 아이디어, 반복 빈도 등을 적어주세요.
+      label: 스크린샷이 있으면 첨부해주세요
+      description: 없어도 괜찮습니다.

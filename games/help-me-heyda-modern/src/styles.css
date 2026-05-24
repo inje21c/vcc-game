@@ -260,8 +260,14 @@ button:active {
 
 .story-actions {
   display: grid;
-  grid-template-columns: 1fr 1.35fr;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
+}
+
+.story-actions button {
+  min-width: 0;
+  padding: 0 8px;
+  font-size: 14px;
 }
 
 .settings-grid {
@@ -360,5 +366,13 @@ button:active {
   .help-screen p {
     min-height: 118px;
     font-size: 15px;
+  }
+
+  .story-actions {
+    gap: 8px;
+  }
+
+  .story-actions button {
+    font-size: 12px;
   }
 }

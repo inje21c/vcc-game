@@ -1,6 +1,7 @@
 const DPR = Math.min(window.devicePixelRatio || 1, 2);
 const ROWS = 13;
 const COLS = 8;
+const ACTOR_MIN = -1;
 const ACTOR_MAX = 10;
 const SAVE_KEY = "help-me-heyda-2026-story-progress";
 
@@ -239,7 +240,7 @@ class Game2026 {
         this.openMenu();
         return;
       }
-      if (this.pointer.row >= 1 && this.pointer.row <= 11) this.tapRow(this.pointer.row - 1);
+      if (this.pointer.row >= 0 && this.pointer.row <= 11) this.tapRow(this.pointer.row - 1);
     });
     window.addEventListener("keydown", async (event) => {
       if (this.screen === "menu") {
@@ -271,6 +272,8 @@ class Game2026 {
     if (action === "pause-play") return this.openPause();
     if (action === "resume-play") return this.resumePlay();
     if (action === "story") return this.openStory();
+    if (action === "continue-story") return this.startStory(this.getSavedStage());
+    if (action === "restart-story") return this.restartStory();
     if (action === "survival") return this.startSurvival();
     if (action === "help") return this.show("help");
     if (action === "option") return this.openSettings();
@@ -300,6 +303,17 @@ class Game2026 {
       this.openPause("Story paused");
       return;
     }
+    if (this.getSavedStage() > 1) {
+      this.show("story-choice");
+      return;
+    }
+    this.setChapter(0);
+    this.show("story");
+  }
+
+  restartStory() {
+    this.resetProgress();
+    this.score = 0;
     this.setChapter(0);
     this.show("story");
   }
@@ -514,21 +528,29 @@ class Game2026 {
     }
   }
 
+  resetProgress() {
+    try {
+      localStorage.setItem(SAVE_KEY, "1");
+    } catch {
+      // Storage may be unavailable in private browsing or locked-down webviews.
+    }
+  }
+
   tapRow(row) {
     if (this.screen !== "play" || this.isCountingDown() || this.pendingPush || this.stageClear || this.gameOver) return;
-    const nextY = Math.max(0, Math.min(ACTOR_MAX, row));
+    const nextY = Math.max(ACTOR_MIN, Math.min(ACTOR_MAX, row));
     if (nextY === this.actorY) {
       this.push();
       return;
     }
     this.actorY = nextY;
-    this.message = `R${this.actorY + 1}: 한 번 더 터치하면 Push`;
+    this.message = `${this.rowLabel(this.actorY + 1)}: 한 번 더 터치하면 Push`;
     this.pulse(1.02, 0);
   }
 
   selectRow(row) {
     if (this.screen !== "play" || this.isCountingDown() || this.pendingPush || this.stageClear || this.gameOver) return;
-    this.actorY = Math.max(0, Math.min(ACTOR_MAX, row));
+    this.actorY = Math.max(ACTOR_MIN, Math.min(ACTOR_MAX, row));
     this.pulse(1.02, 0);
   }
 
@@ -552,7 +574,7 @@ class Game2026 {
     this.board[row][COLS - 1] = 0;
     this.pendingPush = { block, row, start: performance.now(), duration: 280 };
     this.actorPushUntil = performance.now() + 190;
-    this.message = `R${row} 토템 밀기`;
+    this.message = `${this.rowLabel(row)} 토템 밀기`;
     const point = this.boardToScreen(row, 0);
     this.burst(point.x, point.y, this.color(block), 12);
     this.pulse(1.1, 2.5);
@@ -720,6 +742,10 @@ class Game2026 {
     document.querySelector("#timeLabel").textContent = this.mode === "story" ? String(Math.max(0, Math.ceil(this.storyTime))) : String(Math.ceil(this.survivalDelay / 1000));
     document.querySelector("#scoreLabel").textContent = String(this.score);
     document.querySelector("#comboLabel").textContent = String(this.combo);
+  }
+
+  rowLabel(row) {
+    return row === 0 ? "TOP" : `R${row}`;
   }
 
   endGame(reason) {

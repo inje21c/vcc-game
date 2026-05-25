@@ -211,6 +211,7 @@ button:active {
 }
 
 .story-screen,
+.story-choice-screen,
 .help-screen,
 .settings-screen,
 .pause-screen {
@@ -246,6 +247,7 @@ button:active {
 }
 
 .story-screen h1,
+.story-choice-screen h1,
 .help-screen h1,
 .settings-screen h1,
 .pause-screen h1 {
@@ -255,6 +257,7 @@ button:active {
 }
 
 .story-screen p,
+.story-choice-screen p,
 .help-screen p,
 .settings-screen p,
 .pause-screen p {
@@ -272,7 +275,19 @@ button:active {
   gap: 10px;
 }
 
+.story-choice-actions {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr 0.75fr;
+  gap: 10px;
+}
+
 .story-actions button {
+  min-width: 0;
+  padding: 0 8px;
+  font-size: 14px;
+}
+
+.story-choice-actions button {
   min-width: 0;
   padding: 0 8px;
   font-size: 14px;
@@ -402,11 +417,13 @@ button:active {
   }
 
   .story-screen h1,
+  .story-choice-screen h1,
   .help-screen h1 {
     font-size: 30px;
   }
 
   .story-screen p,
+  .story-choice-screen p,
   .help-screen p {
     min-height: 118px;
     font-size: 15px;

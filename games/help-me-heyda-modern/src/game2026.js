@@ -1271,14 +1271,16 @@ class Game2026 {
   drawHero(ctx, x, y, size, pose, flip = false) {
     const poses = [this.sprites.heroIdle, this.sprites.heroPush, this.sprites.heroAction];
     const poseImage = poses[pose];
+    const renderW = pose === 0 ? size : size * 1.58;
+    const renderH = size * 1.18;
     if (poseImage) {
-      this.drawSpriteContain(ctx, poseImage, 0, 0, poseImage.width, poseImage.height, x, y - size * 0.08, size, size * 1.18, flip);
+      this.drawSpriteContain(ctx, poseImage, 0, 0, poseImage.width, poseImage.height, x, y - size * 0.08, renderW, renderH, flip);
       return;
     }
     const sheet = this.sprites.hero;
     if (sheet) {
       const sw = sheet.width / 3;
-      this.drawSpriteContain(ctx, sheet, sw * pose, 0, sw, sheet.height, x, y - size * 0.08, size, size * 1.18, flip);
+      this.drawSpriteContain(ctx, sheet, sw * pose, 0, sw, sheet.height, x, y - size * 0.08, renderW, renderH, flip);
       return;
     }
     ctx.fillStyle = "#f7c15f";

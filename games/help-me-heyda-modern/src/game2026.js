@@ -375,12 +375,12 @@ class Game2026 {
       stage: this.stage,
       boardScore: 1200,
       clearBonus: 800,
-      timeLeft: Math.ceil(this.storyTime),
-      timeBonus: Math.ceil(this.storyTime) * 5,
+      timeLeft: this.storySecondsLeft(),
+      timeBonus: this.storySecondsLeft() * 50,
       bestCombo: this.stageBestCombo,
       comboBonus: this.stageBestCombo * 100,
-      stageScore: 2000 + Math.ceil(this.storyTime) * 5 + this.stageBestCombo * 100,
-      totalScore: this.score + 2000 + Math.ceil(this.storyTime) * 5 + this.stageBestCombo * 100
+      stageScore: 2000 + this.storySecondsLeft() * 50 + this.stageBestCombo * 100,
+      totalScore: this.score + 2000 + this.storySecondsLeft() * 50 + this.stageBestCombo * 100
     };
     this.message = type === "ending" ? "Ending Test" : "Clear Test";
     this.sound.cue("clear");
@@ -635,7 +635,7 @@ class Game2026 {
 
   checkStageClear() {
     if (this.mode !== "story") return;
-    for (let row = 1; row <= 11; row += 1) {
+    for (let row = 0; row <= 11; row += 1) {
       for (let col = 0; col < COLS; col += 1) {
         if (this.board[row][col]) return;
       }
@@ -648,8 +648,8 @@ class Game2026 {
     this.clearAdvanceAt = 0;
     const boardScore = this.score - this.stageStartScore;
     const clearBonus = Math.max(300, 1000 - this.mistakes * 80);
-    const timeLeft = Math.ceil(this.storyTime);
-    const timeBonus = timeLeft * 5;
+    const timeLeft = this.storySecondsLeft();
+    const timeBonus = timeLeft * 50;
     const comboBonus = this.stageBestCombo * 100;
     const stageScore = boardScore + clearBonus + timeBonus + comboBonus;
     this.score += clearBonus + timeBonus + comboBonus;
@@ -741,9 +741,13 @@ class Game2026 {
   }
 
   updateHud() {
-    document.querySelector("#timeLabel").textContent = this.mode === "story" ? String(Math.max(0, Math.ceil(this.storyTime))) : String(Math.ceil(this.survivalDelay / 1000));
+    document.querySelector("#timeLabel").textContent = this.mode === "story" ? String(this.storySecondsLeft()) : String(Math.ceil(this.survivalDelay / 1000));
     document.querySelector("#scoreLabel").textContent = String(this.score);
     document.querySelector("#comboLabel").textContent = String(this.combo);
+  }
+
+  storySecondsLeft() {
+    return Math.max(0, Math.ceil(this.storyTime / 10));
   }
 
   pushBackBulldozer() {

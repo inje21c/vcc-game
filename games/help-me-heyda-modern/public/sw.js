@@ -1,4 +1,4 @@
-const CACHE_NAME = "help-me-heyda-2026-v25";
+const CACHE_NAME = "help-me-heyda-2026-v26";
 const ASSETS = [
   "./index.html",
   "../src/styles.css",

@@ -771,6 +771,7 @@ class Game2026 {
 
   draw() {
     const ctx = this.ctx;
+    this.app.classList.toggle("has-result", Boolean(this.resultState));
     ctx.clearRect(0, 0, this.width, this.height);
     this.drawWorld(ctx);
     if (this.screen === "play") this.drawGame(ctx);
@@ -909,11 +910,11 @@ class Game2026 {
         stageScore: this.score,
         totalScore: this.score
       };
-      const panelX = this.width * 0.11;
-      const panelY = this.height * 0.405;
-      const panelW = this.width * 0.78;
-      const panelH = Math.min(this.height * 0.285, 230);
-      const lineH = panelH / 7;
+      const panelX = this.width * 0.16;
+      const panelY = this.height * 0.43;
+      const panelW = this.width * 0.68;
+      const panelH = Math.min(this.height * 0.235, 186);
+      const lineH = panelH / 6.25;
       ctx.fillStyle = "rgba(5, 8, 7, 0.74)";
       this.roundRect(ctx, panelX, panelY, panelW, panelH, 8);
       ctx.fill();
@@ -923,17 +924,16 @@ class Game2026 {
 
       ctx.fillStyle = "#fff7d8";
       ctx.textAlign = "center";
-      ctx.font = "900 20px Arial";
+      ctx.font = "900 17px Arial";
       ctx.fillText(this.resultState === "ending" ? "모든 스테이지 클리어" : `Stage ${result.stage} Clear`, this.width / 2, panelY + lineH * 0.9);
 
       const rows = [
-        ["Board", result.boardScore],
-        ["Clear", result.clearBonus],
-        ["Time", `${result.timeLeft}s  +${result.timeBonus.toLocaleString()}`],
-        ["Combo", `${result.bestCombo}  +${result.comboBonus.toLocaleString()}`],
-        ["Stage", result.stageScore]
+        ["Stage", result.stageScore],
+        ["Time", `${result.timeLeft}s / +${result.timeBonus.toLocaleString()}`],
+        ["Combo", `${result.bestCombo} / +${result.comboBonus.toLocaleString()}`],
+        ["Clear", `+${result.clearBonus.toLocaleString()}`]
       ];
-      ctx.font = "800 14px Arial";
+      ctx.font = "800 12px Arial";
       for (let i = 0; i < rows.length; i += 1) {
         const y = panelY + lineH * (1.75 + i);
         ctx.fillStyle = i % 2 ? "rgba(255, 255, 255, 0.04)" : "rgba(247, 193, 95, 0.06)";
@@ -950,8 +950,8 @@ class Game2026 {
 
       ctx.fillStyle = "#f7c15f";
       ctx.textAlign = "center";
-      ctx.font = "900 18px Arial";
-      ctx.fillText(`Total  ${result.totalScore.toLocaleString()}`, this.width / 2, panelY + panelH - lineH * 0.45);
+      ctx.font = "900 16px Arial";
+      ctx.fillText(`Total ${result.totalScore.toLocaleString()}`, this.width / 2, panelY + panelH - lineH * 0.38);
     }
     if (this.resultState === "gameover") {
       ctx.fillStyle = "rgba(5, 8, 7, 0.42)";

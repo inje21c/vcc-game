@@ -87,7 +87,11 @@ button:active {
 }
 
 .app.is-playing .report-link {
-  top: max(88px, calc(env(safe-area-inset-top) + 86px));
+  top: max(78px, calc(env(safe-area-inset-top) + 76px));
+  min-width: 48px;
+  min-height: 26px;
+  padding: 0 8px;
+  font-size: 9px;
 }
 
 .screen,
@@ -329,27 +333,33 @@ button:active {
 }
 
 .play-actions {
-  top: max(88px, calc(env(safe-area-inset-top) + 86px));
+  top: max(78px, calc(env(safe-area-inset-top) + 76px));
   left: 14px;
   display: none;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 6px;
 }
 
 .play-actions button {
-  min-width: 58px;
-  min-height: 34px;
-  padding: 0 10px;
+  min-width: 48px;
+  min-height: 26px;
+  padding: 0 7px;
   border-color: rgba(247, 241, 223, 0.2);
   background: rgba(5, 8, 7, 0.58);
   color: rgba(247, 241, 223, 0.9);
-  font-size: 11px;
+  font-size: 9px;
   text-transform: uppercase;
   backdrop-filter: blur(10px);
 }
 
 .app.is-playing .play-actions {
   display: grid;
+}
+
+.app.has-result .hud,
+.app.has-result .play-actions,
+.app.has-result .report-link {
+  display: none;
 }
 
 @keyframes titleRise {

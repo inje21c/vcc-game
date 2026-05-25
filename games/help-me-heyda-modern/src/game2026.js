@@ -59,6 +59,9 @@ class Sound {
   createMedia() {
     if (typeof Audio === "undefined") return {};
     const files = {
+      titleBgm: ["assets/title_bgm.mp3", 0.36, true],
+      menuBgm: ["assets/main_menu_bgm.mp3", 0.34, true],
+      normalGameBgm: ["assets/nomal_game_bgm.mp3", 0.32, true],
       bossBgm: ["assets/bgm-chapter1-boss.mp3", 0.34, true],
       bossWarning: ["assets/sfx-boss-warning.mp3", 0.78, false],
       bossDefeat: ["assets/sfx-boss-defeat.mp3", 0.82, false]
@@ -215,6 +218,7 @@ class Game2026 {
     this.resize();
     this.boot();
     this.show("intro");
+    this.sound.startMusic("titleBgm");
     requestAnimationFrame((time) => this.tick(time));
   }
 
@@ -387,7 +391,7 @@ class Game2026 {
 
   openMenu() {
     this.resumeCountdownUntil = 0;
-    this.sound.stopMusic();
+    this.sound.startMusic("menuBgm");
     this.sound.cue("menu");
     this.show("menu");
   }
@@ -583,7 +587,7 @@ class Game2026 {
     this.pulse(1.08, 0);
     this.sound.cue("start");
     if (this.bossState) this.sound.startMusic("bossBgm");
-    else this.sound.stopMusic();
+    else this.sound.startMusic("normalGameBgm");
     this.updateHud();
     this.show("play");
   }

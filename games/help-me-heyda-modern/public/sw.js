@@ -1,13 +1,16 @@
-const CACHE_NAME = "help-me-heyda-2026-v33";
+const CACHE_NAME = "help-me-heyda-2026-v35";
 const ASSETS = [
   "./index.html",
   "../src/styles.css",
   "../src/game2026.js",
   "./manifest.webmanifest",
   "./assets/title_modi.png",
+  "./assets/title_bgm.mp3",
   "./assets/icon.png",
   "./assets/background-forest-2026.png",
+  "./assets/nomal_game_bgm.mp3",
   "./assets/menu-dial-2026.png",
+  "./assets/main_menu_bgm.mp3",
   "./assets/ChatGPT Image 2026년 5월 22일 오후 12_00_32.png",
   "./assets/menu_storymode.png",
   "./assets/menu_survivalmode.png",

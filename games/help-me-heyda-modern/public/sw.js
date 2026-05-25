@@ -1,10 +1,10 @@
-const CACHE_NAME = "help-me-heyda-2026-v28";
+const CACHE_NAME = "help-me-heyda-2026-v29";
 const ASSETS = [
   "./index.html",
   "../src/styles.css",
   "../src/game2026.js",
   "./manifest.webmanifest",
-  "./assets/title-2026-source.png",
+  "./assets/title_modi.png",
   "./assets/icon.png",
   "./assets/background-forest-2026.png",
   "./assets/menu-dial-2026.png",

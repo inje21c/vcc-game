@@ -415,7 +415,7 @@ class Game2026 {
     this.board = await this.loadStage(stage);
     this.actorY = 10;
     this.pendingPush = null;
-    this.stoneFlag = stage < 7 ? 4 : stage < 10 ? 3 : stage < 14 ? 2 : 1;
+    this.stoneFlag = this.storyStoneFlag(stage);
     this.storyTimeMax = this.stageTime(stage);
     this.storyTime = this.storyTimeMax;
     this.clearBlastUntil = 0;
@@ -490,19 +490,25 @@ class Game2026 {
   }
 
   availableBlockCount(stage) {
-    if (stage <= 3) return 3;
-    if (stage <= 5) return 4;
-    if (stage <= 7) return 5;
-    if (stage <= 9) return 6;
-    if (stage <= 11) return 7;
-    if (stage <= 13) return 8;
-    if (stage <= 15) return 9;
-    return 10;
+    if (stage <= 4) return 3;
+    if (stage <= 7) return 4;
+    if (stage <= 10) return 5;
+    if (stage <= 13) return 6;
+    if (stage <= 15) return 7;
+    if (stage <= 17) return 8;
+    return 9;
+  }
+
+  storyStoneFlag(stage) {
+    if (stage <= 6) return 4;
+    if (stage <= 9) return 3;
+    if (stage <= 13) return 2;
+    return 1;
   }
 
   stageTime(stage) {
-    const times = [980, 950, 920, 890, 860, 830, 800, 770, 740, 710, 680, 650, 620, 600, 580, 560, 545, 540];
-    return times[Math.min(stage - 1, times.length - 1)] || 540;
+    const times = [980, 970, 960, 950, 930, 910, 890, 870, 850, 830, 810, 790, 770, 750, 730, 710, 690, 670];
+    return times[Math.min(stage - 1, times.length - 1)] || 670;
   }
 
   getTotalStages() {

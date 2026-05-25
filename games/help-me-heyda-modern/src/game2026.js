@@ -5,11 +5,34 @@ const ACTOR_MIN = -1;
 const ACTOR_MAX = 10;
 const SAVE_KEY = "help-me-heyda-2026-story-progress";
 
-const chapters = [
-  ["Scene 1", "숲이 숨을 멈춘 날", "새벽 안개가 걷히자 숲의 심장부에 붉은 깃발이 꽂혀 있었다. 수목족 마을은 지도 위에서 이미 사라진 이름이 되었고, 멀리서는 쇳소리를 품은 불도저가 천천히 깨어났다.", "assets/story1.png"],
-  ["Scene 2", "헤이다의 첫 걸음", "어른들은 포기했고 아이들은 숨었다. 하지만 헤이다는 오래된 토템을 품에 안고 마을 입구로 걸어간다. 그녀가 밀어내는 것은 돌조각이 아니라, 사라지려는 기억을 붙잡는 마지막 손길이다.", "assets/story2.png"],
-  ["Scene 3", "토템의 노래", "같은 문양이 이어지는 순간 숲의 빛이 되살아난다. 토템은 길을 만들고, 길은 사람들을 불러 모은다. 콤보가 이어질수록 침묵하던 마을은 다시 노래하기 시작한다.", "assets/story3.png"],
-  ["Final Scene", "도와줘, 헤이다", "마지막 대치의 순간, 헤이다는 불도저를 부수지 않는다. 대신 마을 사람들이 살아온 길과 이름을 보여준다. 이 싸움은 파괴가 아니라 기억을 지키는 이야기다.", "assets/story4.png"]
+const storyChapters = [
+  {
+    label: "Chapter 1",
+    title: "숲이 숨을 멈춘 날",
+    stages: [1, 6],
+    bossStage: 6,
+    boss: "붉은 깃발의 감독관",
+    image: "assets/story1.png",
+    text: "새벽 안개가 걷히자 숲의 심장부에 붉은 깃발이 꽂혀 있었다. 헤이다는 오래된 토템을 품고 마을 입구로 걸어간다."
+  },
+  {
+    label: "Chapter 2",
+    title: "토템의 노래",
+    stages: [7, 12],
+    bossStage: 12,
+    boss: "철길을 여는 굴착기",
+    image: "assets/story2.png",
+    text: "같은 문양이 이어지는 순간 숲의 빛이 되살아난다. 헤이다는 흩어진 토템의 힘을 모아 마을 사람들의 용기를 깨운다."
+  },
+  {
+    label: "Final Chapter",
+    title: "마지막 길",
+    stages: [13, 18],
+    bossStage: 18,
+    boss: "거대한 불도저",
+    image: "assets/story4.png",
+    text: "마지막 대치의 순간이 다가온다. 헤이다는 파괴가 아니라 기억을 지키기 위해, 마을이 살아온 길을 토템으로 다시 잇는다."
+  }
 ];
 
 class Sound {
@@ -87,6 +110,7 @@ class Game2026 {
     this.screen = "intro";
     this.mode = "story";
     this.chapter = 0;
+    this.chapterTargetStage = 1;
     this.stageFiles = [];
     this.stageCache = new Map();
     this.stage = 1;
@@ -282,10 +306,10 @@ class Game2026 {
     if (action === "dev-clear") return this.showResultShortcut("clear");
     if (action === "dev-gameover") return this.showResultShortcut("gameover");
     if (action === "prev-chapter") return this.setChapter(Math.max(0, this.chapter - 1));
-    if (action === "skip-story") return this.startStory(this.getSavedStage());
+    if (action === "skip-story") return this.startStory(this.chapterTargetStage || this.getSavedStage());
+    if (action === "start-chapter") return this.startStory(this.chapterTargetStage || this.getSavedStage());
     if (action === "next-chapter") {
-      if (this.chapter < chapters.length - 1) return this.setChapter(this.chapter + 1);
-      return this.startStory(this.getSavedStage());
+      return this.setChapter(Math.min(this.maxUnlockedChapterIndex(), this.chapter + 1));
     }
     if (action === "move-up" || action === "up") return this.move(-1);
     if (action === "move-down" || action === "down") return this.move(1);
@@ -307,15 +331,13 @@ class Game2026 {
       this.show("story-choice");
       return;
     }
-    this.setChapter(0);
-    this.show("story");
+    this.openChapterIntro(1);
   }
 
   restartStory() {
     this.resetProgress();
     this.score = 0;
-    this.setChapter(0);
-    this.show("story");
+    this.openChapterIntro(1);
   }
 
   openPause(message = "Paused") {
@@ -387,14 +409,55 @@ class Game2026 {
   }
 
   setChapter(index) {
-    this.chapter = index;
-    const [kicker, title, text, image] = chapters[index];
-    document.querySelector("#chapterKicker").textContent = kicker;
-    document.querySelector("#chapterTitle").textContent = title;
-    document.querySelector("#chapterText").textContent = text;
-    const chapterImage = document.querySelector("#chapterImage");
-    if (chapterImage) chapterImage.src = image;
+    this.chapter = Math.max(0, Math.min(this.maxUnlockedChapterIndex(), index));
+    const chapter = storyChapters[this.chapter];
+    this.chapterTargetStage = chapter.stages[0];
+    this.renderChapter(chapter);
     this.sound.cue("menu");
+  }
+
+  openChapterIntro(stage) {
+    this.hasActiveRun = false;
+    this.resumeCountdownUntil = 0;
+    this.stageClear = false;
+    this.gameOver = false;
+    this.resultState = null;
+    this.clearBlastUntil = 0;
+    const index = this.chapterIndexForStage(stage);
+    this.chapter = index;
+    this.chapterTargetStage = Math.max(1, Math.min(this.getTotalStages(), stage));
+    this.renderChapter(storyChapters[index]);
+    this.sound.cue("menu");
+    this.show("story");
+  }
+
+  renderChapter(chapter) {
+    const [start, end] = chapter.stages;
+    const targetStage = this.chapterTargetStage || start;
+    const bossText = chapter.bossStage ? ` / Boss ${chapter.bossStage}: ${chapter.boss}` : "";
+    const kicker = `${chapter.label} / Stage ${start}-${end}${bossText}`;
+    document.querySelector("#chapterKicker").textContent = kicker;
+    document.querySelector("#chapterTitle").textContent = chapter.title;
+    document.querySelector("#chapterText").textContent = `${chapter.text}\nStage ${targetStage}부터 시작합니다.`;
+    const chapterImage = document.querySelector("#chapterImage");
+    if (chapterImage) chapterImage.src = chapter.image;
+    const prevButton = document.querySelector('[data-action="prev-chapter"]');
+    const nextButton = document.querySelector('[data-action="next-chapter"]');
+    if (prevButton) prevButton.disabled = this.chapter <= 0;
+    if (nextButton) nextButton.disabled = this.chapter >= this.maxUnlockedChapterIndex();
+  }
+
+  chapterIndexForStage(stage) {
+    const index = storyChapters.findIndex((chapter) => stage >= chapter.stages[0] && stage <= chapter.stages[1]);
+    return index >= 0 ? index : storyChapters.length - 1;
+  }
+
+  chapterForStage(stage) {
+    return storyChapters[this.chapterIndexForStage(stage)];
+  }
+
+  maxUnlockedChapterIndex() {
+    return this.chapterIndexForStage(this.getSavedStage());
   }
 
   show(name) {
@@ -408,6 +471,8 @@ class Game2026 {
     this.resumeCountdownUntil = 0;
     this.mode = "story";
     this.stage = stage;
+    this.chapter = this.chapterIndexForStage(stage);
+    this.chapterTargetStage = stage;
     this.stageClear = false;
     this.gameOver = false;
     this.resultState = null;
@@ -424,7 +489,7 @@ class Game2026 {
     this.stageBestCombo = 0;
     this.combo = 0;
     this.mistakes = 0;
-    this.message = `Stage ${stage}: 줄 터치 이동, 같은 줄 다시 터치 Push`;
+    this.message = `${this.chapterForStage(stage).label} / Stage ${stage}: 줄 터치 이동, 같은 줄 다시 터치 Push`;
     this.pulse(1.08, 0);
     this.sound.cue("start");
     this.updateHud();
@@ -683,6 +748,10 @@ class Game2026 {
     if (this.isFinalStage()) {
       this.resultState = "ending";
       this.message = "Ending: 마을의 길이 지켜졌습니다";
+      return;
+    }
+    if (this.chapterIndexForStage(next) !== this.chapterIndexForStage(this.stage)) {
+      this.openChapterIntro(next);
       return;
     }
     await this.startStory(next);

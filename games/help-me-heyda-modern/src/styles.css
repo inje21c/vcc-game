@@ -42,6 +42,12 @@ button:active {
   transform: translateY(1px) scale(0.99);
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+  transform: none;
+}
+
 .app {
   position: relative;
   width: min(100vw, 430px);
@@ -244,6 +250,7 @@ button:active {
   color: #79ddbf;
   font-size: 13px;
   font-weight: 900;
+  line-height: 1.35;
   text-transform: uppercase;
 }
 
@@ -267,6 +274,7 @@ button:active {
   color: rgba(247, 241, 223, 0.86);
   font-size: 17px;
   line-height: 1.58;
+  white-space: pre-line;
   word-break: keep-all;
 }
 

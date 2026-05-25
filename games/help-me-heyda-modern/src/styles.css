@@ -124,6 +124,7 @@ button:active {
   height: 100%;
   justify-items: center;
   align-items: stretch;
+  overflow: hidden;
   padding: 0;
   border: 0;
   border-radius: 0;
@@ -138,6 +139,7 @@ button:active {
   height: 100%;
   object-fit: cover;
   object-position: center;
+  transform: scale(1.08);
   filter: drop-shadow(0 18px 20px rgba(0, 0, 0, 0.55));
 }
 

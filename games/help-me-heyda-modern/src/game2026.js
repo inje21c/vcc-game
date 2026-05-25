@@ -63,6 +63,12 @@ class Sound {
       menuBgm: ["assets/main_menu_bgm.mp3", 0.34, true],
       normalGameBgm: ["assets/nomal_game_bgm.mp3", 0.32, true],
       bossBgm: ["assets/bgm-chapter1-boss.mp3", 0.34, true],
+      buttonClick: ["assets/button_click.mp3", 0.7, false],
+      menuSelect: ["assets/menu_select.mp3", 0.72, false],
+      push: ["assets/block_sliding.mp3", 0.76, false],
+      clear: ["assets/block_matching.mp3", 0.76, false],
+      stageClear: ["assets/nomal_stage_clear.mp3", 0.82, false],
+      gameover: ["assets/game_over.mp3", 0.82, false],
       bossWarning: ["assets/sfx-boss-warning.mp3", 0.78, false],
       bossDefeat: ["assets/sfx-boss-defeat.mp3", 0.82, false]
     };
@@ -104,7 +110,17 @@ class Sound {
 
   cue(name) {
     this.unlock();
-    if ((name === "bossWarning" || name === "bossDefeat") && this.playMedia(name)) return;
+    const mediaCue = {
+      button: "buttonClick",
+      menu: "menuSelect",
+      push: "push",
+      clear: "clear",
+      stageClear: "stageClear",
+      gameover: "gameover",
+      bossWarning: "bossWarning",
+      bossDefeat: "bossDefeat"
+    }[name];
+    if (mediaCue && this.playMedia(mediaCue)) return;
     if (!this.ctx) return;
     const cues = {
       start: [[392, 0, 0.1], [523, 0.08, 0.14], [784, 0.22, 0.18]],
@@ -327,6 +343,7 @@ class Game2026 {
       const action = event.target.closest("[data-action]")?.dataset.action;
       if (!action) return;
       this.sound.unlock();
+      this.sound.cue("button");
       await this.handle(action);
     });
     this.canvas.addEventListener("pointerdown", (event) => {
@@ -479,7 +496,7 @@ class Game2026 {
       totalScore: this.score + 2000 + this.storySecondsLeft() * 50 + this.stageBestCombo * 100
     };
     this.message = type === "ending" ? "Ending Test" : "Clear Test";
-    this.sound.cue("clear");
+    this.sound.cue("stageClear");
   }
 
   setChapter(index) {
@@ -842,7 +859,7 @@ class Game2026 {
     this.clearBlastUntil = performance.now() + 1600;
     this.burst(this.width * 0.76, 128, "#f7c15f", 42);
     this.pulse(1.2, 1);
-    this.sound.cue("clear");
+    this.sound.cue("stageClear");
   }
 
   updateBoss(now) {
@@ -1037,7 +1054,7 @@ class Game2026 {
     this.message = reason;
     this.clearBlastUntil = 0;
     this.pulse(1.06, 4);
-    this.sound.cue("fail");
+    this.sound.cue("gameover");
     this.updateHud();
   }
 

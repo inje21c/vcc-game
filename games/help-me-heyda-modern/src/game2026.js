@@ -94,6 +94,8 @@ class Game2026 {
     this.resultState = null;
     this.stageResult = null;
     this.clearAdvanceAt = 0;
+    this.hasActiveRun = false;
+    this.resumeCountdownUntil = 0;
     this.board = this.emptyBoard();
     this.actorY = 10;
     this.pendingPush = null;
@@ -247,7 +249,7 @@ class Game2026 {
           return this.handle(menuMap[event.code]);
         }
       }
-      const map = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "push", Space: "push", Enter: "push", KeyD: "debug", Escape: "menu" };
+      const map = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "push", Space: "push", Enter: "push", KeyD: "debug", Escape: "pause-play" };
       if (!map[event.code]) return;
       event.preventDefault();
       await this.handle(map[event.code]);
@@ -266,6 +268,8 @@ class Game2026 {
 
   async handle(action) {
     if (action === "open-menu" || action === "menu") return this.openMenu();
+    if (action === "pause-play") return this.openPause();
+    if (action === "resume-play") return this.resumePlay();
     if (action === "story") return this.openStory();
     if (action === "survival") return this.startSurvival();
     if (action === "help") return this.show("help");
@@ -286,13 +290,39 @@ class Game2026 {
   }
 
   openMenu() {
+    this.resumeCountdownUntil = 0;
     this.sound.cue("menu");
     this.show("menu");
   }
 
   openStory() {
+    if (this.canResumeStory()) {
+      this.openPause("Story paused");
+      return;
+    }
     this.setChapter(0);
     this.show("story");
+  }
+
+  openPause(message = "Paused") {
+    if (!this.hasActiveRun || this.gameOver || this.stageClear) return;
+    this.resumeCountdownUntil = 0;
+    this.message = message;
+    this.sound.cue("menu");
+    this.updateHud();
+    this.show("pause");
+  }
+
+  resumePlay() {
+    if (!this.hasActiveRun || this.gameOver || this.stageClear) return;
+    this.resumeCountdownUntil = performance.now() + 3000;
+    this.message = "Ready";
+    this.sound.cue("start");
+    this.show("play");
+  }
+
+  canResumeStory() {
+    return this.hasActiveRun && this.mode === "story" && !this.stageClear && !this.gameOver;
   }
 
   openSettings() {
@@ -323,6 +353,8 @@ class Game2026 {
       return;
     }
     this.stageClear = true;
+    this.hasActiveRun = false;
+    this.resumeCountdownUntil = 0;
     this.resultState = type === "ending" ? "ending" : "clear";
     this.stageBestCombo = Math.max(this.stageBestCombo, 2);
     this.stageResult = {
@@ -358,6 +390,8 @@ class Game2026 {
   }
 
   async startStory(stage) {
+    this.hasActiveRun = true;
+    this.resumeCountdownUntil = 0;
     this.mode = "story";
     this.stage = stage;
     this.stageClear = false;
@@ -384,6 +418,8 @@ class Game2026 {
   }
 
   async startSurvival() {
+    this.hasActiveRun = true;
+    this.resumeCountdownUntil = 0;
     this.mode = "survival";
     this.stageClear = false;
     this.gameOver = false;
@@ -479,7 +515,7 @@ class Game2026 {
   }
 
   tapRow(row) {
-    if (this.screen !== "play" || this.pendingPush || this.stageClear || this.gameOver) return;
+    if (this.screen !== "play" || this.isCountingDown() || this.pendingPush || this.stageClear || this.gameOver) return;
     const nextY = Math.max(0, Math.min(ACTOR_MAX, row));
     if (nextY === this.actorY) {
       this.push();
@@ -491,7 +527,7 @@ class Game2026 {
   }
 
   selectRow(row) {
-    if (this.screen !== "play" || this.pendingPush || this.stageClear || this.gameOver) return;
+    if (this.screen !== "play" || this.isCountingDown() || this.pendingPush || this.stageClear || this.gameOver) return;
     this.actorY = Math.max(0, Math.min(ACTOR_MAX, row));
     this.pulse(1.02, 0);
   }
@@ -504,7 +540,7 @@ class Game2026 {
     if (this.stageClear || this.gameOver) {
       return;
     }
-    if (this.screen !== "play" || this.pendingPush) return;
+    if (this.screen !== "play" || this.isCountingDown() || this.pendingPush) return;
     const row = this.actorY + 1;
     const block = this.board[row][0];
     if (!block) {
@@ -583,6 +619,8 @@ class Game2026 {
     }
     if (this.board[12].some(Boolean)) return;
     this.stageClear = true;
+    this.hasActiveRun = false;
+    this.resumeCountdownUntil = 0;
     this.resultState = this.isFinalStage() ? "ending" : "clear";
     this.clearAdvanceAt = 0;
     const boardScore = this.score - this.stageStartScore;
@@ -681,6 +719,8 @@ class Game2026 {
 
   endGame(reason) {
     if (this.gameOver || this.stageClear) return;
+    this.hasActiveRun = false;
+    this.resumeCountdownUntil = 0;
     this.gameOver = true;
     this.resultState = "gameover";
     this.pendingPush = null;
@@ -700,14 +740,15 @@ class Game2026 {
       this.clearAdvanceAt = 0;
       this.nextStage();
     }
-    if (this.screen === "play" && this.mode === "story" && !this.stageClear && !this.gameOver) {
+    const countdown = this.isCountingDown(now);
+    if (this.screen === "play" && this.mode === "story" && !countdown && !this.stageClear && !this.gameOver) {
       this.storyTime = Math.max(0, this.storyTime - delta / 100);
       if (Math.floor(this.time / 120) !== Math.floor((this.time - delta) / 120)) this.updateHud();
       if (this.storyTime <= 0) {
         this.endGame("Game Over: 불도저가 마을에 도달했습니다");
       }
     }
-    if (this.screen === "play" && this.mode === "survival" && !this.gameOver) {
+    if (this.screen === "play" && this.mode === "survival" && !countdown && !this.gameOver) {
       this.survivalTimer += delta;
       if (this.survivalTimer > this.survivalDelay) {
         this.survivalTimer = 0;
@@ -735,7 +776,12 @@ class Game2026 {
     if (this.screen === "play") this.drawGame(ctx);
     this.drawParticles(ctx);
     if (this.screen === "play") this.drawResultOverlay(ctx);
+    if (this.screen === "play") this.drawCountdown(ctx);
     if (this.screen === "play") this.drawDebug(ctx);
+  }
+
+  isCountingDown(now = performance.now()) {
+    return this.resumeCountdownUntil && now < this.resumeCountdownUntil;
   }
 
   drawWorld(ctx) {
@@ -762,7 +808,6 @@ class Game2026 {
       }
       ctx.restore();
 
-      if (this.screen === "intro") this.drawTotem(ctx, this.width * 0.5, this.height * 0.42, 150);
       return;
     }
 
@@ -801,7 +846,6 @@ class Game2026 {
     ctx.moveTo(this.width * 0.12, this.height);
     ctx.bezierCurveTo(this.width * 0.4, this.height * 0.78, this.width * 0.56, this.height * 0.94, this.width * 0.88, this.height * 0.75);
     ctx.stroke();
-    if (this.screen === "intro") this.drawTotem(ctx, this.width * 0.5, this.height * 0.42, 150);
   }
 
   drawCoverImage(ctx, image, cx, cy, width, height) {
@@ -857,6 +901,7 @@ class Game2026 {
       const result = this.stageResult || {
         stage: this.stage,
         boardScore: this.score,
+        clearBonus: 0,
         timeLeft: Math.ceil(this.storyTime),
         timeBonus: 0,
         bestCombo: this.stageBestCombo,
@@ -864,24 +909,49 @@ class Game2026 {
         stageScore: this.score,
         totalScore: this.score
       };
-      const panelX = this.width * 0.16;
-      const panelY = this.height * 0.47;
-      const panelW = this.width * 0.68;
-      const lineH = Math.max(19, this.height * 0.023);
-      ctx.fillStyle = "rgba(5, 8, 7, 0.56)";
-      this.roundRect(ctx, panelX, panelY, panelW, lineH * 5.7, 8);
+      const panelX = this.width * 0.11;
+      const panelY = this.height * 0.405;
+      const panelW = this.width * 0.78;
+      const panelH = Math.min(this.height * 0.285, 230);
+      const lineH = panelH / 7;
+      ctx.fillStyle = "rgba(5, 8, 7, 0.74)";
+      this.roundRect(ctx, panelX, panelY, panelW, panelH, 8);
       ctx.fill();
+      ctx.strokeStyle = "rgba(247, 193, 95, 0.4)";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
       ctx.fillStyle = "#fff7d8";
       ctx.textAlign = "center";
-      ctx.font = "900 18px Arial";
-      ctx.fillText(this.resultState === "ending" ? "모든 스테이지 클리어" : `Stage ${result.stage} Clear`, this.width / 2, panelY + lineH * 1.05);
+      ctx.font = "900 20px Arial";
+      ctx.fillText(this.resultState === "ending" ? "모든 스테이지 클리어" : `Stage ${result.stage} Clear`, this.width / 2, panelY + lineH * 0.9);
+
+      const rows = [
+        ["Board", result.boardScore],
+        ["Clear", result.clearBonus],
+        ["Time", `${result.timeLeft}s  +${result.timeBonus.toLocaleString()}`],
+        ["Combo", `${result.bestCombo}  +${result.comboBonus.toLocaleString()}`],
+        ["Stage", result.stageScore]
+      ];
       ctx.font = "800 14px Arial";
-      ctx.fillText(`스테이지 점수  ${result.stageScore.toLocaleString()}`, this.width / 2, panelY + lineH * 2.15);
-      ctx.fillText(`남은 시간  ${result.timeLeft}s   보너스  ${result.timeBonus.toLocaleString()}`, this.width / 2, panelY + lineH * 3.15);
-      ctx.fillText(`최대 콤보  ${result.bestCombo}   보너스  ${result.comboBonus.toLocaleString()}`, this.width / 2, panelY + lineH * 4.15);
+      for (let i = 0; i < rows.length; i += 1) {
+        const y = panelY + lineH * (1.75 + i);
+        ctx.fillStyle = i % 2 ? "rgba(255, 255, 255, 0.04)" : "rgba(247, 193, 95, 0.06)";
+        this.roundRect(ctx, panelX + 12, y - lineH * 0.58, panelW - 24, lineH * 0.82, 6);
+        ctx.fill();
+        ctx.fillStyle = "rgba(247, 241, 223, 0.78)";
+        ctx.textAlign = "left";
+        ctx.fillText(rows[i][0], panelX + 26, y);
+        ctx.fillStyle = "#fff7d8";
+        ctx.textAlign = "right";
+        const value = typeof rows[i][1] === "number" ? rows[i][1].toLocaleString() : rows[i][1];
+        ctx.fillText(value, panelX + panelW - 26, y);
+      }
+
       ctx.fillStyle = "#f7c15f";
-      ctx.font = "900 16px Arial";
-      ctx.fillText(`총 점수  ${result.totalScore.toLocaleString()}`, this.width / 2, panelY + lineH * 5.2);
+      ctx.textAlign = "center";
+      ctx.font = "900 18px Arial";
+      ctx.fillText(`Total  ${result.totalScore.toLocaleString()}`, this.width / 2, panelY + panelH - lineH * 0.45);
     }
     if (this.resultState === "gameover") {
       ctx.fillStyle = "rgba(5, 8, 7, 0.42)";
@@ -903,6 +973,31 @@ class Game2026 {
       ctx.font = "800 14px Arial";
       ctx.fillText("터치하면 메뉴로 돌아갑니다", this.width / 2, this.height * 0.78 + 55);
     }
+    ctx.restore();
+  }
+
+  drawCountdown(ctx) {
+    if (!this.isCountingDown()) return;
+    const remaining = Math.max(1, Math.ceil((this.resumeCountdownUntil - performance.now()) / 1000));
+    ctx.save();
+    ctx.fillStyle = "rgba(0, 0, 0, 0.56)";
+    ctx.fillRect(0, 0, this.width, this.height);
+    const size = Math.min(148, this.width * 0.34);
+    const x = this.width / 2;
+    const y = this.height / 2;
+    ctx.fillStyle = "rgba(5, 8, 7, 0.76)";
+    this.roundRect(ctx, x - size / 2, y - size / 2, size, size, 8);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(247, 193, 95, 0.54)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = "#f7c15f";
+    ctx.textAlign = "center";
+    ctx.font = "900 58px Arial";
+    ctx.fillText(String(remaining), x, y + 16);
+    ctx.fillStyle = "#fff7d8";
+    ctx.font = "900 15px Arial";
+    ctx.fillText("READY", x, y + size * 0.34);
     ctx.restore();
   }
 

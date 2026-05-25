@@ -579,7 +579,7 @@ class Game2026 {
         return;
       }
     }
-    this.shiftUp();
+    if (!this.shiftUp()) return;
     this.board[12][lastCol] = block;
   }
 
@@ -697,14 +697,19 @@ class Game2026 {
   }
 
   shiftUp() {
+    if (this.board[0].some(Boolean)) {
+      this.endGame("토템이 마을 끝까지 밀렸습니다");
+      return false;
+    }
     for (let row = 0; row < ROWS - 1; row += 1) this.board[row] = [...this.board[row + 1]];
     this.board[12] = Array(COLS).fill(0);
     this.pulse(1.1, 3);
+    return true;
   }
 
   survivalRise() {
     if (this.pendingPush) return;
-    this.shiftUp();
+    if (!this.shiftUp()) return;
     for (let col = 0; col <= 6; col += 1) this.board[12][col] = this.randomBlock();
     this.survivalDelay = Math.max(5200, this.survivalDelay - 80);
     this.message = "불도저 압박";
@@ -911,10 +916,10 @@ class Game2026 {
         totalScore: this.score
       };
       const panelX = this.width * 0.16;
-      const panelY = this.height * 0.43;
+      const panelY = this.height * 0.555;
       const panelW = this.width * 0.68;
-      const panelH = Math.min(this.height * 0.235, 186);
-      const lineH = panelH / 6.25;
+      const panelH = Math.min(this.height * 0.205, 170);
+      const lineH = panelH / 6.15;
       ctx.fillStyle = "rgba(5, 8, 7, 0.74)";
       this.roundRect(ctx, panelX, panelY, panelW, panelH, 8);
       ctx.fill();

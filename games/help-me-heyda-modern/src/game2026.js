@@ -716,11 +716,16 @@ class Game2026 {
   }
 
   settleOneStep() {
-    for (let row = ROWS - 3; row >= 1; row -= 1) {
-      for (let col = 0; col < COLS; col += 1) {
-        if (this.board[row][col] && !this.board[row + 1][col]) {
-          this.board[row + 1][col] = this.board[row][col];
-          this.board[row][col] = 0;
+    let moved = true;
+    while (moved) {
+      moved = false;
+      for (let row = ROWS - 3; row >= 0; row -= 1) {
+        for (let col = 0; col < COLS; col += 1) {
+          if (this.board[row][col] && !this.board[row + 1][col]) {
+            this.board[row + 1][col] = this.board[row][col];
+            this.board[row][col] = 0;
+            moved = true;
+          }
         }
       }
     }

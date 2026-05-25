@@ -4,6 +4,17 @@ const COLS = 8;
 const ACTOR_MIN = -1;
 const ACTOR_MAX = 10;
 const SAVE_KEY = "help-me-heyda-2026-story-progress";
+const CHAPTER1_BOSS = {
+  stage: 6,
+  name: "붉은 깃발의 감독관",
+  hp: 3,
+  firstDelay: 5000,
+  interval: 20000,
+  warningDuration: 5000,
+  penaltyTime: 50,
+  responseScore: 80,
+  defeatBonusTime: 80
+};
 
 const storyChapters = [
   {
@@ -79,7 +90,9 @@ class Sound {
       clear: [[523, 0, 0.08], [659, 0.08, 0.08], [880, 0.16, 0.16]],
       fail: [[139, 0, 0.16], [92, 0.13, 0.2]],
       menu: [[196, 0, 0.1], [294, 0.08, 0.12]],
-      villain: [[73, 0, 0.12], [55, 0.1, 0.16]]
+      villain: [[73, 0, 0.12], [55, 0.1, 0.16]],
+      bossWarning: [[220, 0, 0.05], [330, 0.06, 0.08], [110, 0.15, 0.11]],
+      bossDefeat: [[392, 0, 0.07], [523, 0.08, 0.08], [659, 0.16, 0.1], [880, 0.26, 0.14]]
     };
     for (const [freq, delay, length] of cues[name] || cues.menu) {
       this.tone(freq, this.ctx.currentTime + delay, length, name === "push" ? "sawtooth" : "triangle", 0.055);
@@ -136,6 +149,7 @@ class Game2026 {
     this.storyTime = 900;
     this.storyTimeMax = 900;
     this.clearBlastUntil = 0;
+    this.bossState = null;
     this.debug = false;
     this.pointer = null;
     this.camera = { zoom: 1, target: 1, shake: 0 };
@@ -180,7 +194,9 @@ class Game2026 {
       totems: "assets/totem-block-sheet-source.png",
       villain: "assets/asu.png",
       bulldozer: "assets/buldoder.png",
-      tent: "assets/tent.png"
+      tent: "assets/tent.png",
+      bossFlagSupervisor: "assets/boss-flag-supervisor.png",
+      bossRedFlag: "assets/boss-red-flag-marker.png"
     };
     for (const [key, src] of Object.entries(files)) {
       const img = new Image();
@@ -423,6 +439,7 @@ class Game2026 {
     this.gameOver = false;
     this.resultState = null;
     this.clearBlastUntil = 0;
+    this.bossState = null;
     const index = this.chapterIndexForStage(stage);
     this.chapter = index;
     this.chapterTargetStage = Math.max(1, Math.min(this.getTotalStages(), stage));
@@ -460,6 +477,21 @@ class Game2026 {
     return this.chapterIndexForStage(this.getSavedStage());
   }
 
+  createBossState(stage) {
+    if (stage !== CHAPTER1_BOSS.stage) return null;
+    return {
+      active: true,
+      defeated: false,
+      name: CHAPTER1_BOSS.name,
+      hpMax: CHAPTER1_BOSS.hp,
+      hp: CHAPTER1_BOSS.hp,
+      warningRow: null,
+      warningStartedAt: 0,
+      warningUntil: 0,
+      nextAttackAt: performance.now() + CHAPTER1_BOSS.firstDelay
+    };
+  }
+
   show(name) {
     this.screen = name;
     document.querySelectorAll(".screen").forEach((screen) => screen.classList.toggle("is-active", screen.dataset.screen === name));
@@ -481,6 +513,7 @@ class Game2026 {
     this.actorY = 10;
     this.pendingPush = null;
     this.stoneFlag = this.storyStoneFlag(stage);
+    this.bossState = this.createBossState(stage);
     this.storyTimeMax = this.stageTime(stage);
     this.storyTime = this.storyTimeMax;
     this.clearBlastUntil = 0;
@@ -489,7 +522,7 @@ class Game2026 {
     this.stageBestCombo = 0;
     this.combo = 0;
     this.mistakes = 0;
-    this.message = `${this.chapterForStage(stage).label} / Stage ${stage}: 줄 터치 이동, 같은 줄 다시 터치 Push`;
+    this.message = this.bossState ? `Boss Stage ${stage}: ${this.bossState.name}` : `${this.chapterForStage(stage).label} / Stage ${stage}: 줄 터치 이동, 같은 줄 다시 터치 Push`;
     this.pulse(1.08, 0);
     this.sound.cue("start");
     this.updateHud();
@@ -510,6 +543,7 @@ class Game2026 {
     }
     this.actorY = 10;
     this.pendingPush = null;
+    this.bossState = null;
     this.stoneFlag = 0;
     this.storyTime = 0;
     this.clearBlastUntil = 0;
@@ -646,6 +680,7 @@ class Game2026 {
     this.pendingPush = { block, row, start: performance.now(), duration: 280 };
     this.actorPushUntil = performance.now() + 190;
     this.message = `${this.rowLabel(row)} 토템 밀기`;
+    this.resolveBossWarning(row);
     const point = this.boardToScreen(row, 0);
     this.burst(point.x, point.y, this.color(block), 12);
     this.pulse(1.1, 2.5);
@@ -692,6 +727,7 @@ class Game2026 {
       this.score += 120 * this.combo;
       const bonus = this.pushBackBulldozer();
       this.message = this.combo > 1 ? `콤보 ${this.combo} +${bonus}s` : `바닥 클리어 +${bonus}s`;
+      this.hitBoss();
       this.pulse(1.18, 1);
       this.sound.cue("clear");
       this.checkStageClear();
@@ -741,6 +777,83 @@ class Game2026 {
     this.burst(this.width * 0.76, 128, "#f7c15f", 42);
     this.pulse(1.2, 1);
     this.sound.cue("clear");
+  }
+
+  updateBoss(now) {
+    const boss = this.bossState;
+    if (!boss?.active || boss.defeated || this.mode !== "story") return;
+    if (boss.warningRow !== null) {
+      if (now < boss.warningUntil) return;
+      this.storyTime = Math.max(0, this.storyTime - CHAPTER1_BOSS.penaltyTime);
+      const row = boss.warningRow;
+      boss.warningRow = null;
+      boss.warningStartedAt = 0;
+      boss.warningUntil = 0;
+      boss.nextAttackAt = now + CHAPTER1_BOSS.interval;
+      this.message = `${this.rowLabel(row)} 개발 구역 확정 -5s`;
+      this.pulse(1.08, 4);
+      this.sound.cue("fail");
+      this.updateHud();
+      return;
+    }
+    if (now < boss.nextAttackAt) return;
+    const row = this.pickBossWarningRow();
+    if (row === null) {
+      boss.nextAttackAt = now + 3000;
+      return;
+    }
+    boss.warningRow = row;
+    boss.warningStartedAt = now;
+    boss.warningUntil = now + CHAPTER1_BOSS.warningDuration;
+    this.message = `${this.rowLabel(row)} 붉은 깃발 경고`;
+    this.pulse(1.04, 1.8);
+    this.sound.cue("bossWarning");
+  }
+
+  pickBossWarningRow() {
+    const rows = [];
+    for (let row = 0; row <= 11; row += 1) {
+      if (this.board[row].some(Boolean)) rows.push(row);
+    }
+    if (!rows.length) return null;
+    const current = this.actorY + 1;
+    const currentIndex = rows.indexOf(current);
+    if (currentIndex >= 0 && rows.length > 1) rows.splice(currentIndex, 1);
+    return rows[Math.floor(Math.random() * rows.length)];
+  }
+
+  resolveBossWarning(row) {
+    const boss = this.bossState;
+    if (!boss?.active || boss.defeated || boss.warningRow !== row) return;
+    boss.warningRow = null;
+    boss.warningStartedAt = 0;
+    boss.warningUntil = 0;
+    boss.nextAttackAt = performance.now() + CHAPTER1_BOSS.interval;
+    this.score += CHAPTER1_BOSS.responseScore;
+    this.message = `붉은 깃발 제거 +${CHAPTER1_BOSS.responseScore}`;
+    const point = this.boardToScreen(row, 0);
+    this.burst(point.x, point.y, "#e85c5c", 18);
+    this.sound.cue("clear");
+  }
+
+  hitBoss() {
+    const boss = this.bossState;
+    if (!boss?.active || boss.defeated || boss.hp <= 0) return;
+    boss.hp = Math.max(0, boss.hp - 1);
+    if (boss.hp > 0) {
+      this.message = `${boss.name} HP ${boss.hp}/${boss.hpMax}`;
+      return;
+    }
+    boss.defeated = true;
+    boss.active = false;
+    boss.warningRow = null;
+    boss.warningUntil = 0;
+    this.storyTime = Math.min(this.storyTimeMax, this.storyTime + CHAPTER1_BOSS.defeatBonusTime);
+    this.message = "붉은 깃발이 걷혔습니다 +8s";
+    this.burst(this.width * 0.5, Math.max(120, this.height * 0.18), "#f7c15f", 36);
+    this.pulse(1.18, 1.2);
+    this.sound.cue("bossDefeat");
+    this.updateHud();
   }
 
   async nextStage() {
@@ -872,6 +985,7 @@ class Game2026 {
     if (this.screen === "play" && this.mode === "story" && !countdown && !this.stageClear && !this.gameOver) {
       this.storyTime = Math.max(0, this.storyTime - delta / 100);
       if (Math.floor(this.time / 120) !== Math.floor((this.time - delta) / 120)) this.updateHud();
+      this.updateBoss(now);
       if (this.storyTime <= 0) {
         this.endGame("Game Over: 불도저가 마을에 도달했습니다");
       }
@@ -1143,6 +1257,7 @@ class Game2026 {
     this.drawPushBlock(ctx);
     this.drawActor(ctx);
     ctx.restore();
+    this.drawBossHud(ctx);
     const messageY = this.height - Math.max(54, Math.round(this.height * 0.058));
     ctx.fillStyle = "rgba(5, 8, 7, 0.64)";
     this.roundRect(ctx, 14, messageY, this.width - 28, 38, 8);
@@ -1312,6 +1427,7 @@ class Game2026 {
   }
 
   drawBoard(ctx) {
+    this.drawBossWarningRow(ctx);
     for (let row = 0; row < ROWS; row += 1) {
       for (let col = 0; col < COLS; col += 1) {
         const cell = this.boardToScreen(row, col);
@@ -1327,6 +1443,121 @@ class Game2026 {
         this.drawGoalTotem(ctx, cell.x, cell.y, cell.size * 0.74);
       }
     }
+  }
+
+  drawBossWarningRow(ctx) {
+    const boss = this.bossState;
+    if (!boss?.active || boss.warningRow === null) return;
+    const { originX, tile } = this.boardMetrics;
+    const cell = this.boardToScreen(boss.warningRow, 0);
+    const phase = Math.max(0, Math.min(1, (boss.warningUntil - performance.now()) / CHAPTER1_BOSS.warningDuration));
+    const pulse = 0.45 + Math.sin(this.time * 0.018) * 0.18;
+    ctx.save();
+    ctx.fillStyle = `rgba(232, 92, 92, ${pulse})`;
+    this.roundRect(ctx, originX - tile * 0.1, cell.y - tile * 0.48, tile * COLS + tile * 0.2, tile * 0.96, 8);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255, 215, 114, 0.82)";
+    ctx.lineWidth = Math.max(2, tile * 0.06);
+    ctx.stroke();
+    const flagX = originX + tile * COLS + tile * 0.5;
+    this.drawRedFlagMarker(ctx, flagX, cell.y, tile * 0.86);
+    ctx.fillStyle = "rgba(5, 8, 7, 0.72)";
+    this.roundRect(ctx, originX + tile * 0.12, cell.y - tile * 0.38, tile * Math.max(0.2, 2.2 * phase), tile * 0.12, 4);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  drawBossHud(ctx) {
+    const boss = this.bossState;
+    if (!boss || (boss.defeated && !boss.active)) return;
+    const { originY } = this.boardMetrics;
+    const x = 14;
+    const y = Math.max(92, originY - 58);
+    const w = Math.min(this.width - 28, 260);
+    const h = 48;
+    ctx.save();
+    ctx.fillStyle = "rgba(5, 8, 7, 0.72)";
+    this.roundRect(ctx, x, y, w, h, 8);
+    ctx.fill();
+    ctx.strokeStyle = boss.active ? "rgba(232, 92, 92, 0.7)" : "rgba(247, 193, 95, 0.62)";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    this.drawBossPortrait(ctx, x + 26, y + h / 2, 34);
+    ctx.fillStyle = "#fff7d8";
+    ctx.textAlign = "left";
+    ctx.font = "900 12px Arial";
+    ctx.fillText(boss.name, x + 50, y + 18);
+    ctx.font = "800 10px Arial";
+    ctx.fillStyle = boss.warningRow !== null ? "#e85c5c" : "rgba(247, 241, 223, 0.72)";
+    const warning = boss.warningRow !== null ? `${this.rowLabel(boss.warningRow)} FLAG WARNING` : boss.defeated ? "FLAGS CLEARED" : "WATCH THE FLAGS";
+    ctx.fillText(warning, x + 50, y + 34);
+
+    for (let i = 0; i < boss.hpMax; i += 1) {
+      const fx = x + w - 18 - i * 18;
+      ctx.globalAlpha = i < boss.hp ? 1 : 0.28;
+      this.drawRedFlagMarker(ctx, fx, y + 23, 16);
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  drawBossPortrait(ctx, x, y, size) {
+    const portrait = this.sprites.bossFlagSupervisor;
+    if (portrait) {
+      this.drawSpriteContain(ctx, portrait, 0, 0, portrait.width, portrait.height, x, y, size, size);
+      return;
+    }
+    ctx.save();
+    ctx.fillStyle = "#f7c15f";
+    ctx.beginPath();
+    ctx.arc(x, y - size * 0.12, size * 0.22, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#d9a323";
+    this.roundRect(ctx, x - size * 0.25, y + size * 0.02, size * 0.5, size * 0.34, 5);
+    ctx.fill();
+    ctx.strokeStyle = "#e85c5c";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x + size * 0.18, y + size * 0.3);
+    ctx.lineTo(x + size * 0.18, y - size * 0.34);
+    ctx.stroke();
+    ctx.fillStyle = "#e85c5c";
+    ctx.beginPath();
+    ctx.moveTo(x + size * 0.2, y - size * 0.32);
+    ctx.lineTo(x + size * 0.52, y - size * 0.22);
+    ctx.lineTo(x + size * 0.2, y - size * 0.1);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  drawRedFlagMarker(ctx, x, y, size) {
+    const marker = this.sprites.bossRedFlag;
+    if (marker) {
+      this.drawSpriteContain(ctx, marker, 0, 0, marker.width, marker.height, x, y, size, size);
+      return;
+    }
+    ctx.save();
+    ctx.strokeStyle = "#3b2318";
+    ctx.lineWidth = Math.max(2, size * 0.1);
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.18, y + size * 0.38);
+    ctx.lineTo(x - size * 0.18, y - size * 0.42);
+    ctx.stroke();
+    ctx.fillStyle = "#e85c5c";
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.16, y - size * 0.42);
+    ctx.lineTo(x + size * 0.42, y - size * 0.26);
+    ctx.lineTo(x - size * 0.16, y - size * 0.06);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "rgba(247, 193, 95, 0.72)";
+    ctx.beginPath();
+    ctx.arc(x - size * 0.18, y + size * 0.4, size * 0.18, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
   }
 
   drawPushBlock(ctx) {

@@ -1,4 +1,4 @@
-const CACHE_NAME = "help-me-heyda-2026-v32";
+const CACHE_NAME = "help-me-heyda-2026-v33";
 const ASSETS = [
   "./index.html",
   "../src/styles.css",
@@ -17,6 +17,7 @@ const ASSETS = [
   "./assets/story2.png",
   "./assets/story3.png",
   "./assets/story4.png",
+  "./assets/chapter1-boss-intro.png",
   "./assets/heyda-idle.png",
   "./assets/heyda-push.png",
   "./assets/heyda-action.png",
@@ -35,7 +36,12 @@ const ASSETS = [
   "./assets/totem-guardian.png",
   "./assets/tent.png",
   "./assets/buldoder.png",
-  "./assets/asu.png"
+  "./assets/asu.png",
+  "./assets/boss-flag-supervisor.png",
+  "./assets/boss-red-flag-marker.png",
+  "./assets/bgm-chapter1-boss.mp3",
+  "./assets/sfx-boss-warning.mp3",
+  "./assets/sfx-boss-defeat.mp3"
 ];
 
 self.addEventListener("install", (event) => {

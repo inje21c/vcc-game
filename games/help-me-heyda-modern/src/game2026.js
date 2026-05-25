@@ -52,6 +52,24 @@ class Sound {
     this.master = null;
     this.enabled = true;
     this.next = 0;
+    this.music = null;
+    this.media = this.createMedia();
+  }
+
+  createMedia() {
+    if (typeof Audio === "undefined") return {};
+    const files = {
+      bossBgm: ["assets/bgm-chapter1-boss.mp3", 0.34, true],
+      bossWarning: ["assets/sfx-boss-warning.mp3", 0.78, false],
+      bossDefeat: ["assets/sfx-boss-defeat.mp3", 0.82, false]
+    };
+    return Object.fromEntries(Object.entries(files).map(([name, [src, volume, loop]]) => {
+      const audio = new Audio(src);
+      audio.preload = "auto";
+      audio.volume = volume;
+      audio.loop = loop;
+      return [name, audio];
+    }));
   }
 
   unlock() {
@@ -83,6 +101,7 @@ class Sound {
 
   cue(name) {
     this.unlock();
+    if ((name === "bossWarning" || name === "bossDefeat") && this.playMedia(name)) return;
     if (!this.ctx) return;
     const cues = {
       start: [[392, 0, 0.1], [523, 0.08, 0.14], [784, 0.22, 0.18]],
@@ -97,6 +116,38 @@ class Sound {
     for (const [freq, delay, length] of cues[name] || cues.menu) {
       this.tone(freq, this.ctx.currentTime + delay, length, name === "push" ? "sawtooth" : "triangle", 0.055);
     }
+  }
+
+  playMedia(name) {
+    const audio = this.media[name];
+    if (!audio) return false;
+    try {
+      audio.currentTime = 0;
+      audio.play().catch(() => {});
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  startMusic(name) {
+    const audio = this.media[name];
+    if (!audio || this.music === audio) return;
+    this.stopMusic();
+    this.music = audio;
+    try {
+      audio.currentTime = 0;
+      audio.play().catch(() => {});
+    } catch {
+      this.music = null;
+    }
+  }
+
+  stopMusic() {
+    if (!this.music) return;
+    this.music.pause();
+    this.music.currentTime = 0;
+    this.music = null;
   }
 
   tone(freq, start, length, type, volume) {
@@ -150,6 +201,7 @@ class Game2026 {
     this.storyTimeMax = 900;
     this.clearBlastUntil = 0;
     this.bossState = null;
+    this.bossIntroUntil = 0;
     this.debug = false;
     this.pointer = null;
     this.camera = { zoom: 1, target: 1, shake: 0 };
@@ -196,7 +248,8 @@ class Game2026 {
       bulldozer: "assets/buldoder.png",
       tent: "assets/tent.png",
       bossFlagSupervisor: "assets/boss-flag-supervisor.png",
-      bossRedFlag: "assets/boss-red-flag-marker.png"
+      bossRedFlag: "assets/boss-red-flag-marker.png",
+      chapter1BossIntro: "assets/chapter1-boss-intro.png"
     };
     for (const [key, src] of Object.entries(files)) {
       const img = new Image();
@@ -205,7 +258,7 @@ class Game2026 {
         img.onload = resolve;
         img.onerror = resolve;
       });
-      const keepFullImage = key === "background" || key === "clearScreen" || key === "gameOverScreen";
+      const keepFullImage = key === "background" || key === "clearScreen" || key === "gameOverScreen" || key === "chapter1BossIntro";
       this.sprites[key] = keepFullImage ? img : this.stripBackground(img);
     }
   }
@@ -334,6 +387,7 @@ class Game2026 {
 
   openMenu() {
     this.resumeCountdownUntil = 0;
+    this.sound.stopMusic();
     this.sound.cue("menu");
     this.show("menu");
   }
@@ -440,6 +494,8 @@ class Game2026 {
     this.resultState = null;
     this.clearBlastUntil = 0;
     this.bossState = null;
+    this.bossIntroUntil = 0;
+    this.sound.stopMusic();
     const index = this.chapterIndexForStage(stage);
     this.chapter = index;
     this.chapterTargetStage = Math.max(1, Math.min(this.getTotalStages(), stage));
@@ -514,6 +570,7 @@ class Game2026 {
     this.pendingPush = null;
     this.stoneFlag = this.storyStoneFlag(stage);
     this.bossState = this.createBossState(stage);
+    this.bossIntroUntil = this.bossState ? performance.now() + 2400 : 0;
     this.storyTimeMax = this.stageTime(stage);
     this.storyTime = this.storyTimeMax;
     this.clearBlastUntil = 0;
@@ -525,6 +582,8 @@ class Game2026 {
     this.message = this.bossState ? `Boss Stage ${stage}: ${this.bossState.name}` : `${this.chapterForStage(stage).label} / Stage ${stage}: 줄 터치 이동, 같은 줄 다시 터치 Push`;
     this.pulse(1.08, 0);
     this.sound.cue("start");
+    if (this.bossState) this.sound.startMusic("bossBgm");
+    else this.sound.stopMusic();
     this.updateHud();
     this.show("play");
   }
@@ -544,6 +603,7 @@ class Game2026 {
     this.actorY = 10;
     this.pendingPush = null;
     this.bossState = null;
+    this.bossIntroUntil = 0;
     this.stoneFlag = 0;
     this.storyTime = 0;
     this.clearBlastUntil = 0;
@@ -554,6 +614,7 @@ class Game2026 {
     this.message = "4개 이상 같은 토템을 모으세요";
     this.pulse(1.08, 0);
     this.sound.cue("start");
+    this.sound.stopMusic();
     this.updateHud();
     this.show("play");
   }
@@ -751,6 +812,7 @@ class Game2026 {
     this.stageClear = true;
     this.hasActiveRun = false;
     this.resumeCountdownUntil = 0;
+    this.sound.stopMusic();
     this.resultState = this.isFinalStage() ? "ending" : "clear";
     this.clearAdvanceAt = 0;
     const boardScore = this.score - this.stageStartScore;
@@ -848,6 +910,7 @@ class Game2026 {
     boss.active = false;
     boss.warningRow = null;
     boss.warningUntil = 0;
+    this.sound.stopMusic();
     this.storyTime = Math.min(this.storyTimeMax, this.storyTime + CHAPTER1_BOSS.defeatBonusTime);
     this.message = "붉은 깃발이 걷혔습니다 +8s";
     this.burst(this.width * 0.5, Math.max(120, this.height * 0.18), "#f7c15f", 36);
@@ -965,6 +1028,8 @@ class Game2026 {
     this.gameOver = true;
     this.resultState = "gameover";
     this.pendingPush = null;
+    this.bossIntroUntil = 0;
+    this.sound.stopMusic();
     this.message = reason;
     this.clearBlastUntil = 0;
     this.pulse(1.06, 4);
@@ -1258,6 +1323,7 @@ class Game2026 {
     this.drawActor(ctx);
     ctx.restore();
     this.drawBossHud(ctx);
+    this.drawBossIntro(ctx);
     const messageY = this.height - Math.max(54, Math.round(this.height * 0.058));
     ctx.fillStyle = "rgba(5, 8, 7, 0.64)";
     this.roundRect(ctx, 14, messageY, this.width - 28, 38, 8);
@@ -1294,6 +1360,36 @@ class Game2026 {
       ctx.fillRect(x - 34, y + 12, 70, 12);
     }
     if (villain) this.drawSpriteContain(ctx, villain, 0, 0, villain.width, villain.height, 38, yBase + 18, 44, 58);
+  }
+
+  drawBossIntro(ctx) {
+    if (!this.bossIntroUntil || performance.now() >= this.bossIntroUntil) return;
+    const image = this.sprites.chapter1BossIntro;
+    const phase = Math.max(0, Math.min(1, (this.bossIntroUntil - performance.now()) / 2400));
+    const alpha = Math.min(1, phase * 3, (1 - phase) * 3);
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, alpha);
+    ctx.fillStyle = "rgba(5, 8, 7, 0.7)";
+    ctx.fillRect(0, 0, this.width, this.height);
+    if (image?.complete && image.naturalWidth) {
+      this.drawCoverImage(ctx, image, this.width / 2, this.height / 2, this.width, this.height);
+      ctx.fillStyle = "rgba(5, 8, 7, 0.38)";
+      ctx.fillRect(0, 0, this.width, this.height);
+    }
+    ctx.fillStyle = "rgba(5, 8, 7, 0.76)";
+    this.roundRect(ctx, 22, this.height * 0.68, this.width - 44, 84, 8);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(232, 92, 92, 0.72)";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.fillStyle = "#e85c5c";
+    ctx.textAlign = "center";
+    ctx.font = "900 15px Arial";
+    ctx.fillText("BOSS STAGE", this.width / 2, this.height * 0.68 + 28);
+    ctx.fillStyle = "#fff7d8";
+    ctx.font = "900 23px Arial";
+    ctx.fillText(CHAPTER1_BOSS.name, this.width / 2, this.height * 0.68 + 58);
+    ctx.restore();
   }
 
   drawVillageTent(ctx, x, y) {

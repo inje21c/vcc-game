@@ -619,7 +619,8 @@ class Game2026 {
       this.combo += 1;
       this.stageBestCombo = Math.max(this.stageBestCombo, this.combo);
       this.score += 120 * this.combo;
-      this.message = this.combo > 1 ? `콤보 ${this.combo}` : "바닥 클리어";
+      const bonus = this.pushBackBulldozer();
+      this.message = this.combo > 1 ? `콤보 ${this.combo} +${bonus}s` : `바닥 클리어 +${bonus}s`;
       this.pulse(1.18, 1);
       this.sound.cue("clear");
       this.checkStageClear();
@@ -697,7 +698,8 @@ class Game2026 {
       for (let col = 0; col <= 6; col += 1) if (this.board[12][col] === target) this.board[12][col] = 0;
       this.combo += 1;
       this.score += 2 ** this.combo;
-      this.message = `서바이벌 콤보 ${this.combo}`;
+      const bonus = this.pushBackBulldozer();
+      this.message = `서바이벌 콤보 ${this.combo} +${bonus}s`;
       this.pulse(1.18, 1);
       this.sound.cue("clear");
     } else if (this.board[12][0]) {
@@ -742,6 +744,17 @@ class Game2026 {
     document.querySelector("#timeLabel").textContent = this.mode === "story" ? String(Math.max(0, Math.ceil(this.storyTime))) : String(Math.ceil(this.survivalDelay / 1000));
     document.querySelector("#scoreLabel").textContent = String(this.score);
     document.querySelector("#comboLabel").textContent = String(this.combo);
+  }
+
+  pushBackBulldozer() {
+    const bonus = this.mode === "story" ? Math.min(8, 4 + this.combo) : Math.min(5, 2 + Math.floor(this.combo / 2));
+    if (this.mode === "story") {
+      this.storyTime = Math.min(this.storyTimeMax, this.storyTime + bonus * 10);
+    } else {
+      this.survivalTimer = Math.max(0, this.survivalTimer - bonus * 1000);
+    }
+    this.updateHud();
+    return bonus;
   }
 
   rowLabel(row) {
@@ -1065,7 +1078,7 @@ class Game2026 {
     const blastPush = clearPhase > 0 ? (1 - clearPhase) * 260 : 0;
     const yBase = Math.max(122, Math.min(146, this.height * 0.148));
     const tentX = 42;
-    const startX = this.width + 56;
+    const startX = this.width - 48;
     const hitX = tentX + 52;
     const x = startX + (hitX - startX) * progress + blastPush + Math.sin(this.time * 0.004) * 3;
     const y = yBase - (clearPhase > 0 ? Math.sin((1 - clearPhase) * Math.PI) * 38 : 0);

@@ -63,14 +63,14 @@ class Sound {
       menuBgm: ["assets/main_menu_bgm.mp3", 0.34, true],
       normalGameBgm: ["assets/nomal_game_bgm.mp3", 0.32, true],
       bossBgm: ["assets/bgm-chapter1-boss.mp3", 0.34, true],
-      buttonClick: ["assets/button_click.mp3", 0.7, false],
-      menuSelect: ["assets/menu_select.mp3", 0.72, false],
-      push: ["assets/block_sliding.mp3", 0.76, false],
-      clear: ["assets/block_matching.mp3", 0.76, false],
-      stageClear: ["assets/nomal_stage_clear.mp3", 0.82, false],
-      gameover: ["assets/game_over.mp3", 0.82, false],
-      bossWarning: ["assets/sfx-boss-warning.mp3", 0.78, false],
-      bossDefeat: ["assets/sfx-boss-defeat.mp3", 0.82, false]
+      buttonClick: ["assets/button_click.mp3", 0.32, false],
+      menuSelect: ["assets/menu_select.mp3", 0.34, false],
+      push: ["assets/block_sliding.mp3", 0.36, false],
+      clear: ["assets/block_matching.mp3", 0.36, false],
+      stageClear: ["assets/nomal_stage_clear.mp3", 0.42, false],
+      gameover: ["assets/game_over.mp3", 0.42, false],
+      bossWarning: ["assets/sfx-boss-warning.mp3", 0.38, false],
+      bossDefeat: ["assets/sfx-boss-defeat.mp3", 0.42, false]
     };
     return Object.fromEntries(Object.entries(files).map(([name, [src, volume, loop]]) => {
       const audio = new Audio(src);
@@ -167,6 +167,14 @@ class Sound {
     this.music.pause();
     this.music.currentTime = 0;
     this.music = null;
+  }
+
+  stopEffects() {
+    for (const audio of Object.values(this.media)) {
+      if (audio.loop || audio === this.music) continue;
+      audio.pause();
+      audio.currentTime = 0;
+    }
   }
 
   tone(freq, start, length, type, volume) {
@@ -408,6 +416,7 @@ class Game2026 {
 
   openMenu() {
     this.resumeCountdownUntil = 0;
+    this.sound.stopEffects();
     this.sound.startMusic("menuBgm");
     this.sound.cue("menu");
     this.show("menu");
@@ -516,6 +525,7 @@ class Game2026 {
     this.clearBlastUntil = 0;
     this.bossState = null;
     this.bossIntroUntil = 0;
+    this.sound.stopEffects();
     this.sound.stopMusic();
     const index = this.chapterIndexForStage(stage);
     this.chapter = index;
@@ -590,6 +600,7 @@ class Game2026 {
     this.actorY = 10;
     this.pendingPush = null;
     this.stoneFlag = this.storyStoneFlag(stage);
+    this.sound.stopEffects();
     this.bossState = this.createBossState(stage);
     this.bossIntroUntil = this.bossState ? performance.now() + 2400 : 0;
     this.storyTimeMax = this.stageTime(stage);
@@ -625,6 +636,7 @@ class Game2026 {
     this.pendingPush = null;
     this.bossState = null;
     this.bossIntroUntil = 0;
+    this.sound.stopEffects();
     this.stoneFlag = 0;
     this.storyTime = 0;
     this.clearBlastUntil = 0;

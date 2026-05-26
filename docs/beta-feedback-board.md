@@ -62,9 +62,9 @@ GitHub에 커밋하면 Vercel에 자동 배포되는 흐름을 베타 운영의 
 - P2: 특정 기기 UI 깨짐, 사운드 불편, 성능 저하
 - P3: 문구, 밸런스, 연출, 편의성 개선
 
-## 2차 확장안: 사이트 내 오류 보고 버튼
+## 2차 적용안: 사이트 내 오류 보고 버튼
 
-포트폴리오 허브와 게임 화면에 `오류 보고` 버튼을 넣는다. 버튼은 처음에는 GitHub Issue 작성 페이지나 외부 폼으로 연결한다.
+포트폴리오 허브와 게임 화면에 `오류 보고` 버튼을 넣는다. `도와줘 헤이다 2026`은 GitHub 로그인 없이 작성 가능한 `report.html` 폼을 사용하고, Vercel Function이 GitHub Issue를 대신 생성한다.
 
 필드:
 
@@ -84,6 +84,18 @@ GitHub에 커밋하면 Vercel에 자동 배포되는 흐름을 베타 운영의 
 - userAgent
 - 최근 게임 상태
 - 최근 콘솔 오류
+
+필요한 Vercel 환경변수:
+
+- `GITHUB_ISSUES_TOKEN`: GitHub Issues 생성 권한이 있는 fine-grained token 또는 classic token
+- `BETA_REPORT_CODE`: 허가된 테스터에게만 공유하는 초대코드
+- `GITHUB_REPOSITORY`: 기본값은 `vibecoding001/vcc-game`, 다른 저장소로 보낼 때만 설정
+
+보안 기준:
+
+- GitHub 토큰은 브라우저 코드에 넣지 않는다.
+- 초대코드를 모르는 사용자는 API에서 거부한다.
+- 텍스트 리포트만 먼저 받으며, 스크린샷 업로드는 추후 저장소 구조를 정한 뒤 추가한다.
 
 ## 3차 확장안: 자체 게시판
 

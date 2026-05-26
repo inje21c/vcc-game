@@ -1,6 +1,7 @@
-const CACHE_NAME = "help-me-heyda-2026-v37";
+const CACHE_NAME = "help-me-heyda-2026-v38";
 const ASSETS = [
   "./index.html",
+  "./report.html",
   "../src/styles.css",
   "../src/game2026.js",
   "./manifest.webmanifest",

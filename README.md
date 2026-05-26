@@ -15,7 +15,7 @@ Key planning docs:
 
 Beta links:
 
-- [Report a beta issue](https://github.com/vibecoding001/vcc-game/issues/new?template=beta-game-report.yml)
+- [Report a beta issue](games/help-me-heyda-modern/public/report.html)
 
 ## Working Rule
 

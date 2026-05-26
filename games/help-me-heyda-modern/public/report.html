@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#050807">
+    <title>베타 리포트 - 도와줘 헤이다 2026</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Inter, Arial, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+        background: #050807;
+        color: #f7f1df;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        min-height: 100svh;
+        margin: 0;
+        background:
+          linear-gradient(180deg, rgba(5, 8, 7, 0.82), rgba(5, 8, 7, 0.98)),
+          url("assets/background-forest-2026.png") center / cover;
+      }
+
+      main {
+        width: min(100%, 560px);
+        min-height: 100svh;
+        margin: 0 auto;
+        padding: max(28px, env(safe-area-inset-top)) 18px max(24px, env(safe-area-inset-bottom));
+      }
+
+      header {
+        margin-bottom: 18px;
+      }
+
+      a {
+        color: #79ddbf;
+        font-weight: 900;
+        text-decoration: none;
+      }
+
+      h1 {
+        margin: 18px 0 8px;
+        color: #fff7d8;
+        font-size: 30px;
+        line-height: 1.08;
+      }
+
+      p {
+        margin: 0;
+        color: rgba(247, 241, 223, 0.78);
+        line-height: 1.55;
+      }
+
+      form {
+        display: grid;
+        gap: 12px;
+      }
+
+      label {
+        display: grid;
+        gap: 7px;
+        color: rgba(247, 241, 223, 0.9);
+        font-size: 13px;
+        font-weight: 900;
+      }
+
+      input,
+      select,
+      textarea,
+      button {
+        width: 100%;
+        border: 1px solid rgba(247, 241, 223, 0.18);
+        border-radius: 8px;
+        background: rgba(5, 8, 7, 0.72);
+        color: #f7f1df;
+        font: inherit;
+        letter-spacing: 0;
+      }
+
+      input,
+      select,
+      textarea {
+        min-height: 46px;
+        padding: 11px 12px;
+      }
+
+      textarea {
+        min-height: 116px;
+        resize: vertical;
+      }
+
+      button {
+        min-height: 52px;
+        background: linear-gradient(180deg, rgba(255, 203, 98, 0.96), rgba(205, 85, 56, 0.96));
+        color: #1b100b;
+        font-weight: 1000;
+      }
+
+      button:disabled {
+        opacity: 0.55;
+      }
+
+      .honeypot {
+        position: absolute;
+        left: -9999px;
+        opacity: 0;
+      }
+
+      .status {
+        min-height: 24px;
+        color: #79ddbf;
+        font-weight: 900;
+      }
+
+      .status.is-error {
+        color: #ff9a8a;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <a href="index.html">← 게임으로 돌아가기</a>
+        <h1>베타 리포트</h1>
+        <p>GitHub 계정 없이 오류와 개선 의견을 보낼 수 있습니다.</p>
+      </header>
+
+      <form id="reportForm">
+        <label>
+          초대코드
+          <input name="inviteCode" autocomplete="off" required>
+        </label>
+        <label>
+          닉네임
+          <input name="nickname" autocomplete="nickname" placeholder="예: heyda-tester">
+        </label>
+        <label>
+          제보 종류
+          <select name="kind">
+            <option>오류</option>
+            <option>개선</option>
+            <option>밸런스</option>
+            <option>사운드</option>
+            <option>화면</option>
+          </select>
+        </label>
+        <label>
+          어디에서 그랬나요?
+          <input name="area" placeholder="예: Stage 6 보스, 클리어 화면, 메인 메뉴">
+        </label>
+        <label>
+          무슨 일이 있었나요?
+          <textarea name="description" required placeholder="가능하면 어떤 순서로 발생했는지 적어주세요."></textarea>
+        </label>
+        <label>
+          어떻게 바뀌면 좋을까요?
+          <textarea name="expected" placeholder="원하는 동작이나 느낌을 적어주세요."></textarea>
+        </label>
+        <label>
+          사용한 기기/브라우저
+          <input name="device" placeholder="예: iPhone Safari, Android Chrome, PC Chrome">
+        </label>
+        <label class="honeypot">
+          Website
+          <input name="website" tabindex="-1" autocomplete="off">
+        </label>
+        <button type="submit">리포트 보내기</button>
+        <div class="status" id="status" role="status"></div>
+      </form>
+    </main>
+
+    <script>
+      const form = document.querySelector("#reportForm");
+      const status = document.querySelector("#status");
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        status.classList.remove("is-error");
+        status.textContent = "전송 중입니다...";
+        const button = form.querySelector("button");
+        button.disabled = true;
+
+        const formData = new FormData(form);
+        const payload = Object.fromEntries(formData.entries());
+        payload.url = document.referrer || location.href;
+        payload.userAgent = navigator.userAgent;
+        payload.viewport = `${window.innerWidth}x${window.innerHeight}`;
+
+        try {
+          const response = await fetch("/api/beta-report", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          const result = await response.json();
+          if (!response.ok || !result.ok) throw new Error(result.message || "전송에 실패했습니다.");
+          form.reset();
+          status.textContent = "접수되었습니다. 테스트 감사합니다.";
+        } catch (error) {
+          status.classList.add("is-error");
+          status.textContent = error.message || "전송에 실패했습니다.";
+        } finally {
+          button.disabled = false;
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -102,7 +102,8 @@ button:disabled {
 
 .screen,
 .hud,
-.play-actions {
+.play-actions,
+.power-actions {
   position: absolute;
   z-index: 2;
 }
@@ -602,8 +603,72 @@ button:disabled {
   display: grid;
 }
 
+.power-actions {
+  right: 14px;
+  bottom: max(54px, calc(env(safe-area-inset-bottom) + 44px));
+  display: none;
+}
+
+.power-button {
+  display: grid;
+  grid-template-columns: 24px auto 18px;
+  gap: 6px;
+  align-items: center;
+  min-width: 104px;
+  min-height: 38px;
+  padding: 0 9px;
+  border-color: rgba(121, 221, 191, 0.46);
+  background:
+    linear-gradient(180deg, rgba(24, 75, 55, 0.82), rgba(5, 18, 14, 0.78)),
+    radial-gradient(circle at 14px 12px, rgba(121, 221, 191, 0.42), transparent 44%);
+  color: #f7f1df;
+  font-size: 10px;
+  text-transform: uppercase;
+  backdrop-filter: blur(10px);
+}
+
+.power-button span {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 55% 35%, #dfffd3 0 12%, transparent 13%),
+    linear-gradient(135deg, transparent 44%, rgba(5, 18, 14, 0.54) 45% 51%, transparent 52%),
+    #79ddbf;
+  box-shadow: 0 0 16px rgba(121, 221, 191, 0.45);
+  transform: rotate(-24deg);
+}
+
+.power-button b,
+.power-button em {
+  font-style: normal;
+  line-height: 1;
+}
+
+.power-button em {
+  display: grid;
+  min-width: 18px;
+  height: 18px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(247, 193, 95, 0.18);
+  color: #f7c15f;
+}
+
+.app.is-playing.has-leaf-power .power-actions {
+  display: block;
+}
+
+.app.is-cleansing .power-button {
+  border-color: rgba(247, 193, 95, 0.72);
+  box-shadow:
+    0 0 0 2px rgba(247, 193, 95, 0.16),
+    0 0 22px rgba(121, 221, 191, 0.28);
+}
+
 .app.has-result .hud,
 .app.has-result .play-actions,
+.app.has-result .power-actions,
 .app.has-result .report-link {
   display: none;
 }

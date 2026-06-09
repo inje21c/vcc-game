@@ -4,6 +4,8 @@ const COLS = 8;
 const ACTOR_MIN = -1;
 const ACTOR_MAX = 10;
 const SAVE_KEY = "help-me-heyda-2026-story-progress";
+const POWER_SAVE_KEY = "help-me-heyda-2026-powers";
+const OBSTACLE_DEVELOPMENT = 99;
 const CHAPTER1_BOSS = {
   stage: 6,
   name: "붉은 깃발의 감독관",
@@ -229,6 +231,8 @@ class Game2026 {
     this.clearBlastUntil = 0;
     this.bossState = null;
     this.bossIntroUntil = 0;
+    this.leafCleanseSelecting = false;
+    this.leafCleanseUses = 0;
     this.debug = false;
     this.pointer = null;
     this.camera = { zoom: 1, target: 1, shake: 0 };
@@ -362,6 +366,10 @@ class Game2026 {
         this.openMenu();
         return;
       }
+      if (this.leafCleanseSelecting) {
+        if (this.pointer.row >= 0 && this.pointer.row <= 11) this.useLeafCleanse(this.pointer.row);
+        return;
+      }
       if (this.pointer.row >= 0 && this.pointer.row <= 11) this.tapRow(this.pointer.row - 1);
     });
     window.addEventListener("keydown", async (event) => {
@@ -399,6 +407,7 @@ class Game2026 {
     if (action === "survival") return this.startSurvival();
     if (action === "help") return this.show("help");
     if (action === "option") return this.openSettings();
+    if (action === "leaf-cleanse") return this.toggleLeafCleanse();
     if (action === "debug") return this.toggleDebug();
     if (action.startsWith("dev-stage-")) return this.startStory(Number.parseInt(action.replace("dev-stage-", ""), 10) || 1);
     if (action === "dev-clear") return this.showResultShortcut("clear");
@@ -525,6 +534,8 @@ class Game2026 {
     this.clearBlastUntil = 0;
     this.bossState = null;
     this.bossIntroUntil = 0;
+    this.leafCleanseSelecting = false;
+    this.leafCleanseUses = 0;
     this.sound.stopEffects();
     this.sound.stopMusic();
     const index = this.chapterIndexForStage(stage);
@@ -583,6 +594,7 @@ class Game2026 {
     this.screen = name;
     document.querySelectorAll(".screen").forEach((screen) => screen.classList.toggle("is-active", screen.dataset.screen === name));
     this.app.classList.toggle("is-playing", name === "play");
+    this.updatePowerControls();
   }
 
   async startStory(stage) {
@@ -597,12 +609,15 @@ class Game2026 {
     this.resultState = null;
     this.clearAdvanceAt = 0;
     this.board = await this.loadStage(stage);
+    this.applyStageObstacles(stage);
     this.actorY = 10;
     this.pendingPush = null;
     this.stoneFlag = this.storyStoneFlag(stage);
     this.sound.stopEffects();
     this.bossState = this.createBossState(stage);
     this.bossIntroUntil = this.bossState ? performance.now() + 2400 : 0;
+    this.leafCleanseSelecting = false;
+    this.leafCleanseUses = this.leafCleanseUnlocked() && stage >= 7 ? 1 : 0;
     this.storyTimeMax = this.stageTime(stage);
     this.storyTime = this.storyTimeMax;
     this.clearBlastUntil = 0;
@@ -636,6 +651,8 @@ class Game2026 {
     this.pendingPush = null;
     this.bossState = null;
     this.bossIntroUntil = 0;
+    this.leafCleanseSelecting = false;
+    this.leafCleanseUses = 0;
     this.sound.stopEffects();
     this.stoneFlag = 0;
     this.storyTime = 0;
@@ -730,9 +747,110 @@ class Game2026 {
   resetProgress() {
     try {
       localStorage.setItem(SAVE_KEY, "1");
+      localStorage.removeItem(POWER_SAVE_KEY);
     } catch {
       // Storage may be unavailable in private browsing or locked-down webviews.
     }
+  }
+
+  leafCleanseUnlocked() {
+    try {
+      if (localStorage.getItem(POWER_SAVE_KEY)?.includes("leafCleanse")) return true;
+    } catch {
+      // Storage may be unavailable in private browsing or locked-down webviews.
+    }
+    return this.getSavedStage() >= 7;
+  }
+
+  unlockLeafCleanse() {
+    try {
+      localStorage.setItem(POWER_SAVE_KEY, "leafCleanse");
+    } catch {
+      // Storage may be unavailable in private browsing or locked-down webviews.
+    }
+  }
+
+  applyStageObstacles(stage) {
+    if (this.mode !== "story" || stage < 7) return;
+    const counts = stage === 7 ? 1 : stage <= 9 ? 2 : 3;
+    const rows = stage === 7 ? [7] : stage <= 9 ? [4, 8] : [3, 6, 9];
+    for (let i = 0; i < counts; i += 1) {
+      const row = rows[i % rows.length];
+      if (!this.board[row]) continue;
+      const col = this.board[row][0] ? Math.min(1, COLS - 1) : 0;
+      this.board[row][col] = OBSTACLE_DEVELOPMENT;
+    }
+  }
+
+  toggleLeafCleanse() {
+    if (!this.canUseLeafCleanse()) {
+      this.leafCleanseSelecting = false;
+      this.message = this.leafCleanseUnlocked() ? "잎의 정화를 사용할 수 없습니다" : "잎 토템은 아직 잠들어 있습니다";
+      this.sound.cue("fail");
+      this.updatePowerControls();
+      return;
+    }
+    this.leafCleanseSelecting = !this.leafCleanseSelecting;
+    this.message = this.leafCleanseSelecting ? "정화할 줄을 선택하세요" : "잎의 정화 취소";
+    this.sound.cue("menu");
+    this.updatePowerControls();
+  }
+
+  canUseLeafCleanse() {
+    return this.screen === "play"
+      && this.mode === "story"
+      && this.stage >= 7
+      && this.leafCleanseUnlocked()
+      && this.leafCleanseUses > 0
+      && !this.stageClear
+      && !this.gameOver
+      && !this.pendingPush
+      && !this.isCountingDown();
+  }
+
+  useLeafCleanse(row) {
+    if (!this.canUseLeafCleanse()) {
+      this.leafCleanseSelecting = false;
+      this.updatePowerControls();
+      return;
+    }
+    const col = this.firstCleanseTarget(row);
+    if (col < 0) {
+      this.message = "정화할 대상이 없습니다";
+      this.sound.cue("fail");
+      this.updatePowerControls();
+      return;
+    }
+    const value = this.board[row][col];
+    this.board[row][col] = 0;
+    this.leafCleanseUses -= 1;
+    this.leafCleanseSelecting = false;
+    this.score += value === OBSTACLE_DEVELOPMENT ? 120 : 40;
+    const point = this.boardToScreen(row, col);
+    this.burst(point.x, point.y, "#79ddbf", value === OBSTACLE_DEVELOPMENT ? 28 : 16);
+    this.message = value === OBSTACLE_DEVELOPMENT ? "개발의 흔적 정화 +120" : "잎의 정화 +40";
+    this.sound.cue("clear");
+    this.settleOneStep();
+    this.checkStageClear();
+    this.updateHud();
+    this.updatePowerControls();
+  }
+
+  firstCleanseTarget(row) {
+    if (!this.board[row]) return -1;
+    const obstacle = this.board[row].indexOf(OBSTACLE_DEVELOPMENT);
+    if (obstacle >= 0) return obstacle;
+    return this.board[row].findIndex(Boolean);
+  }
+
+  updatePowerControls() {
+    const available = this.screen === "play" && this.mode === "story" && this.stage >= 7 && this.leafCleanseUnlocked();
+    this.app.classList.toggle("has-leaf-power", available);
+    this.app.classList.toggle("is-cleansing", this.leafCleanseSelecting);
+    const button = document.querySelector('[data-action="leaf-cleanse"]');
+    const count = document.querySelector("#leafPowerCount");
+    if (button) button.disabled = !this.canUseLeafCleanse();
+    if (count) count.textContent = String(Math.max(0, this.leafCleanseUses));
   }
 
   tapRow(row) {
@@ -767,6 +885,12 @@ class Game2026 {
     if (!block) {
       this.message = "이 줄에는 밀 블록이 없습니다";
       this.sound.cue("fail");
+      return;
+    }
+    if (block === OBSTACLE_DEVELOPMENT) {
+      this.message = "개발의 흔적이 길을 막고 있습니다";
+      this.sound.cue("fail");
+      this.pulse(1.04, 2);
       return;
     }
     for (let col = 0; col < COLS - 1; col += 1) this.board[row][col] = this.board[row][col + 1];
@@ -866,6 +990,7 @@ class Game2026 {
       stageScore,
       totalScore: this.score
     };
+    if (this.stage === 6) this.unlockLeafCleanse();
     this.saveProgress(this.isFinalStage() ? this.stage : this.stage + 1);
     this.message = this.resultState === "ending" ? "Ending: 마을의 길이 지켜졌습니다" : `Stage ${this.stage} Clear!`;
     this.clearBlastUntil = performance.now() + 1600;
@@ -999,7 +1124,7 @@ class Game2026 {
       moved = false;
       for (let row = ROWS - 3; row >= 0; row -= 1) {
         for (let col = 0; col < COLS; col += 1) {
-          if (this.board[row][col] && !this.board[row + 1][col]) {
+          if (this.board[row][col] && this.board[row][col] !== OBSTACLE_DEVELOPMENT && !this.board[row + 1][col]) {
             this.board[row + 1][col] = this.board[row][col];
             this.board[row][col] = 0;
             moved = true;
@@ -1033,6 +1158,7 @@ class Game2026 {
     document.querySelector("#timeLabel").textContent = this.mode === "story" ? String(this.storySecondsLeft()) : String(Math.ceil(this.survivalDelay / 1000));
     document.querySelector("#scoreLabel").textContent = String(this.score);
     document.querySelector("#comboLabel").textContent = String(this.combo);
+    this.updatePowerControls();
   }
 
   storySecondsLeft() {
@@ -1062,6 +1188,7 @@ class Game2026 {
     this.resultState = "gameover";
     this.pendingPush = null;
     this.bossIntroUntil = 0;
+    this.leafCleanseSelecting = false;
     this.sound.stopMusic();
     this.message = reason;
     this.clearBlastUntil = 0;
@@ -1730,6 +1857,10 @@ class Game2026 {
   }
 
   drawBlock(ctx, x, y, size, value) {
+    if (value === OBSTACLE_DEVELOPMENT) {
+      this.drawDevelopmentObstacle(ctx, x, y, size);
+      return;
+    }
     const blockImages = [
       this.sprites.blockLeaf,
       this.sprites.blockSun,
@@ -1782,6 +1913,52 @@ class Game2026 {
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     this.drawBlockSymbol(ctx, x, y, size * 0.58, ((value - 1) % 5) + 1);
+    ctx.restore();
+  }
+
+  drawDevelopmentObstacle(ctx, x, y, size) {
+    const left = x - size / 2;
+    const top = y - size / 2;
+    ctx.save();
+    ctx.fillStyle = "rgba(0, 0, 0, 0.26)";
+    ctx.beginPath();
+    ctx.ellipse(x, y + size * 0.35, size * 0.38, size * 0.11, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    const dirt = ctx.createLinearGradient(left, top, left, top + size);
+    dirt.addColorStop(0, "#8a6a4a");
+    dirt.addColorStop(0.5, "#4f3b32");
+    dirt.addColorStop(1, "#211a18");
+    ctx.fillStyle = dirt;
+    this.roundRect(ctx, left + size * 0.08, top + size * 0.18, size * 0.84, size * 0.66, Math.max(5, size * 0.14));
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(247, 241, 223, 0.36)";
+    ctx.lineWidth = Math.max(1, size * 0.04);
+    ctx.stroke();
+
+    ctx.strokeStyle = "#e85c5c";
+    ctx.lineWidth = Math.max(2, size * 0.08);
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(x + size * 0.18, y + size * 0.27);
+    ctx.lineTo(x + size * 0.18, y - size * 0.36);
+    ctx.stroke();
+
+    ctx.fillStyle = "#e85c5c";
+    ctx.beginPath();
+    ctx.moveTo(x + size * 0.2, y - size * 0.35);
+    ctx.lineTo(x + size * 0.44, y - size * 0.25);
+    ctx.lineTo(x + size * 0.2, y - size * 0.14);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(247, 193, 95, 0.72)";
+    ctx.lineWidth = Math.max(1, size * 0.045);
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.34, y - size * 0.08);
+    ctx.lineTo(x + size * 0.32, y + size * 0.08);
+    ctx.stroke();
     ctx.restore();
   }
 
@@ -2026,6 +2203,7 @@ class Game2026 {
   }
 
   color(value) {
+    if (value === OBSTACLE_DEVELOPMENT) return "#8a6a4a";
     return ["#000", "#79ddbf", "#f7c15f", "#e85c5c", "#7ba8ff", "#d783e6"][value] || "#f7f1df";
   }
 

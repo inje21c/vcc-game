@@ -776,21 +776,16 @@ class Game2026 {
 
   startMessageForStage(stage) {
     if (stage >= 7 && this.leafCleanseUnlocked()) {
-      return `${this.chapterForStage(stage).label} / Stage ${stage}: 정화 버튼으로 개발의 흔적을 지우세요`;
+      return `${this.chapterForStage(stage).label} / Stage ${stage}: 정화 버튼으로 줄 앞 토템을 지울 수 있습니다`;
     }
     return this.bossState ? `Boss Stage ${stage}: ${this.bossState.name}` : `${this.chapterForStage(stage).label} / Stage ${stage}: 줄 터치 이동, 같은 줄 다시 터치 Push`;
   }
 
   applyStageObstacles(stage) {
-    if (this.mode !== "story" || stage < 7) return;
-    const counts = stage === 7 ? 1 : stage <= 9 ? 2 : 3;
-    const rows = stage === 7 ? [7] : stage <= 9 ? [4, 8] : [3, 6, 9];
-    for (let i = 0; i < counts; i += 1) {
-      const row = rows[i % rows.length];
-      if (!this.board[row]) continue;
-      const col = this.board[row][0] ? Math.min(1, COLS - 1) : 0;
-      this.board[row][col] = OBSTACLE_DEVELOPMENT;
-    }
+    // Keep Chapter 2 playable while the obstacle rules are redesigned.
+    // Development-mark blocks need a fuller stage/balance pass before they can
+    // safely affect clear conditions.
+    void stage;
   }
 
   toggleLeafCleanse() {
@@ -839,7 +834,7 @@ class Game2026 {
     this.score += value === OBSTACLE_DEVELOPMENT ? 120 : 40;
     const point = this.boardToScreen(row, col);
     this.burst(point.x, point.y, "#79ddbf", value === OBSTACLE_DEVELOPMENT ? 28 : 16);
-    this.message = value === OBSTACLE_DEVELOPMENT ? "개발의 흔적 정화 +120" : "잎의 정화 +40";
+    this.message = value === OBSTACLE_DEVELOPMENT ? "개발의 흔적 정화 +120" : "앞 토템 정화 +40";
     this.sound.cue("clear");
     this.settleOneStep();
     this.checkStageClear();
@@ -849,8 +844,6 @@ class Game2026 {
 
   firstCleanseTarget(row) {
     if (!this.board[row]) return -1;
-    const obstacle = this.board[row].indexOf(OBSTACLE_DEVELOPMENT);
-    if (obstacle >= 0) return obstacle;
     return this.board[row].findIndex(Boolean);
   }
 

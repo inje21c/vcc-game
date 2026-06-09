@@ -224,6 +224,7 @@ class Game2026 {
     this.stageStartScore = 0;
     this.stageBestCombo = 0;
     this.stageResult = null;
+    this.rewardUnlocked = null;
     this.mistakes = 0;
     this.message = "Ready";
     this.storyTime = 900;
@@ -594,6 +595,7 @@ class Game2026 {
     this.screen = name;
     document.querySelectorAll(".screen").forEach((screen) => screen.classList.toggle("is-active", screen.dataset.screen === name));
     this.app.classList.toggle("is-playing", name === "play");
+    this.app.classList.toggle("has-result", Boolean(this.resultState));
     this.updatePowerControls();
   }
 
@@ -607,6 +609,7 @@ class Game2026 {
     this.stageClear = false;
     this.gameOver = false;
     this.resultState = null;
+    this.rewardUnlocked = null;
     this.clearAdvanceAt = 0;
     this.board = await this.loadStage(stage);
     this.applyStageObstacles(stage);
@@ -626,7 +629,7 @@ class Game2026 {
     this.stageBestCombo = 0;
     this.combo = 0;
     this.mistakes = 0;
-    this.message = this.bossState ? `Boss Stage ${stage}: ${this.bossState.name}` : `${this.chapterForStage(stage).label} / Stage ${stage}: 줄 터치 이동, 같은 줄 다시 터치 Push`;
+    this.message = this.startMessageForStage(stage);
     this.pulse(1.08, 0);
     this.sound.cue("start");
     if (this.bossState) this.sound.startMusic("bossBgm");
@@ -642,6 +645,7 @@ class Game2026 {
     this.stageClear = false;
     this.gameOver = false;
     this.resultState = null;
+    this.rewardUnlocked = null;
     this.clearAdvanceAt = 0;
     this.board = this.emptyBoard();
     for (let row = 9; row <= 11; row += 1) {
@@ -768,6 +772,13 @@ class Game2026 {
     } catch {
       // Storage may be unavailable in private browsing or locked-down webviews.
     }
+  }
+
+  startMessageForStage(stage) {
+    if (stage >= 7 && this.leafCleanseUnlocked()) {
+      return `${this.chapterForStage(stage).label} / Stage ${stage}: 정화 버튼으로 개발의 흔적을 지우세요`;
+    }
+    return this.bossState ? `Boss Stage ${stage}: ${this.bossState.name}` : `${this.chapterForStage(stage).label} / Stage ${stage}: 줄 터치 이동, 같은 줄 다시 터치 Push`;
   }
 
   applyStageObstacles(stage) {
@@ -990,7 +1001,10 @@ class Game2026 {
       stageScore,
       totalScore: this.score
     };
-    if (this.stage === 6) this.unlockLeafCleanse();
+    if (this.stage === 6) {
+      this.unlockLeafCleanse();
+      this.rewardUnlocked = "leafCleanse";
+    }
     this.saveProgress(this.isFinalStage() ? this.stage : this.stage + 1);
     this.message = this.resultState === "ending" ? "Ending: 마을의 길이 지켜졌습니다" : `Stage ${this.stage} Clear!`;
     this.clearBlastUntil = performance.now() + 1600;
@@ -1186,6 +1200,7 @@ class Game2026 {
     this.resumeCountdownUntil = 0;
     this.gameOver = true;
     this.resultState = "gameover";
+    this.rewardUnlocked = null;
     this.pendingPush = null;
     this.bossIntroUntil = 0;
     this.leafCleanseSelecting = false;
@@ -1419,6 +1434,24 @@ class Game2026 {
       ctx.textAlign = "center";
       ctx.font = "900 16px Arial";
       ctx.fillText(`Total ${result.totalScore.toLocaleString()}`, this.width / 2, panelY + panelH - lineH * 0.38);
+
+      if (this.rewardUnlocked === "leafCleanse") {
+        const rewardY = panelY + panelH + 12;
+        const rewardH = 58;
+        ctx.fillStyle = "rgba(5, 28, 20, 0.82)";
+        this.roundRect(ctx, this.width * 0.14, rewardY, this.width * 0.72, rewardH, 8);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(121, 221, 191, 0.68)";
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.fillStyle = "#79ddbf";
+        ctx.textAlign = "center";
+        ctx.font = "900 14px Arial";
+        ctx.fillText("잎 토템이 깨어났습니다", this.width / 2, rewardY + 23);
+        ctx.fillStyle = "#fff7d8";
+        ctx.font = "800 12px Arial";
+        ctx.fillText("Stage 7부터 정화 버튼을 사용할 수 있습니다", this.width / 2, rewardY + 43);
+      }
     }
     if (this.resultState === "gameover") {
       ctx.fillStyle = "rgba(5, 8, 7, 0.42)";

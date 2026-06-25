@@ -1,4 +1,4 @@
-const CACHE_NAME = "help-me-heyda-2026-v42";
+const CACHE_NAME = "help-me-heyda-2026-v43";
 const ASSETS = [
   "./index.html",
   "./report.html",
@@ -12,7 +12,7 @@ const ASSETS = [
   "./assets/nomal_game_bgm.mp3",
   "./assets/menu-dial-2026.png",
   "./assets/main_menu_bgm.mp3",
-  "./assets/ChatGPT Image 2026년 5월 22일 오후 12_00_32.png",
+  "./assets/menu-art-2026.png",
   "./assets/menu_storymode.png",
   "./assets/menu_survivalmode.png",
   "./assets/menu_guide.png",
@@ -36,7 +36,7 @@ const ASSETS = [
   "./assets/block-snow.png",
   "./assets/block-wind.png",
   "./assets/clear-screen.png",
-  "./assets/ChatGPT Image 2026년 5월 22일 오후 01_30_42 (2).png",
+  "./assets/gameover-screen.png",
   "./assets/totem-guardian.png",
   "./assets/tent.png",
   "./assets/buldoder.png",

@@ -275,7 +275,7 @@ class Game2026 {
       blockWind: "assets/block-wind.png",
       background: "assets/background-forest-2026.png",
       clearScreen: "assets/clear-screen.png",
-      gameOverScreen: "assets/ChatGPT Image 2026년 5월 22일 오후 01_30_42 (2).png",
+      gameOverScreen: "assets/gameover-screen.png",
       totems: "assets/totem-block-sheet-source.png",
       villain: "assets/asu.png",
       bulldozer: "assets/buldoder.png",

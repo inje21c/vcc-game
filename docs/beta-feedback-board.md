@@ -89,7 +89,7 @@ GitHub에 커밋하면 Vercel에 자동 배포되는 흐름을 베타 운영의 
 
 - `GITHUB_ISSUES_TOKEN`: GitHub Issues 생성 권한이 있는 fine-grained token 또는 classic token
 - `BETA_REPORT_CODE`: 허가된 테스터에게만 공유하는 초대코드
-- `GITHUB_REPOSITORY`: 기본값은 `vibecoding001/vcc-game`, 다른 저장소로 보낼 때만 설정
+- `GITHUB_REPOSITORY`: 기본값은 `inje21c/vcc-game`, 다른 저장소로 보낼 때만 설정
 
 보안 기준:
 

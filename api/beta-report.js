@@ -1,6 +1,24 @@
-const REPO = process.env.GITHUB_REPOSITORY || "vibecoding001/vcc-game";
-const TOKEN = process.env.GITHUB_ISSUES_TOKEN;
-const INVITE_CODE = process.env.BETA_REPORT_CODE;
+function envValue(value) {
+  const trimmed = String(value || "").trim();
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1).trim();
+  }
+  return trimmed;
+}
+
+const REPO = envValue(process.env.GITHUB_REPOSITORY) || "inje21c/vcc-game";
+const TOKEN = envValue(process.env.GITHUB_ISSUES_TOKEN);
+const INVITE_CODE = envValue(process.env.BETA_REPORT_CODE);
+const LABEL_SOURCE = Object.prototype.hasOwnProperty.call(process.env, "BETA_REPORT_LABELS")
+  ? envValue(process.env.BETA_REPORT_LABELS)
+  : "beta";
+const LABELS = LABEL_SOURCE
+  .split(",")
+  .map((label) => label.trim())
+  .filter(Boolean);
 const recentSubmissions = new Map();
 
 function send(res, status, body) {
@@ -58,6 +76,31 @@ async function readJson(req) {
   return JSON.parse(raw || "{}");
 }
 
+function githubHeaders() {
+  return {
+    "Accept": "application/vnd.github+json",
+    "Authorization": `Bearer ${TOKEN}`,
+    "Content-Type": "application/json",
+    "User-Agent": "vcc-game-beta-report",
+    "X-GitHub-Api-Version": "2022-11-28"
+  };
+}
+
+async function createIssue(issue) {
+  const response = await fetch(`https://api.github.com/repos/${REPO}/issues`, {
+    method: "POST",
+    headers: githubHeaders(),
+    body: JSON.stringify(issue)
+  });
+  const result = await response.json().catch(() => ({}));
+  return { response, result };
+}
+
+function isLabelError(response, result) {
+  const text = JSON.stringify(result || {}).toLowerCase();
+  return response.status === 422 && text.includes("label");
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
     send(res, 405, { ok: false, message: "POST only" });
@@ -74,11 +117,6 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  if (rateLimited(req)) {
-    send(res, 429, { ok: false, message: "잠시 후 다시 보내주세요." });
-    return;
-  }
-
   let data;
   try {
     data = await readJson(req);
@@ -92,7 +130,7 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  if (clean(data.inviteCode, 120) !== INVITE_CODE) {
+  if (clean(data.inviteCode, 120) !== clean(INVITE_CODE, 120)) {
     send(res, 403, { ok: false, message: "초대코드가 맞지 않습니다." });
     return;
   }
@@ -102,23 +140,24 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  const response = await fetch(`https://api.github.com/repos/${REPO}/issues`, {
-    method: "POST",
-    headers: {
-      "Accept": "application/vnd.github+json",
-      "Authorization": `Bearer ${TOKEN}`,
-      "Content-Type": "application/json",
-      "User-Agent": "vcc-game-beta-report",
-      "X-GitHub-Api-Version": "2022-11-28"
-    },
-    body: JSON.stringify({
-      title: titleFor(data),
-      body: bodyFor(data),
-      labels: ["beta"]
-    })
-  });
+  if (rateLimited(req)) {
+    send(res, 429, { ok: false, message: "잠시 후 다시 보내주세요." });
+    return;
+  }
 
-  const result = await response.json().catch(() => ({}));
+  const issue = {
+    title: titleFor(data),
+    body: bodyFor(data)
+  };
+  if (LABELS.length) issue.labels = LABELS;
+
+  let { response, result } = await createIssue(issue);
+  if (!response.ok && issue.labels && isLabelError(response, result)) {
+    const fallbackIssue = { ...issue };
+    delete fallbackIssue.labels;
+    ({ response, result } = await createIssue(fallbackIssue));
+  }
+
   if (!response.ok) {
     send(res, 502, { ok: false, message: "GitHub 이슈 생성에 실패했습니다.", detail: result.message || response.statusText });
     return;

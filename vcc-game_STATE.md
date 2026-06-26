@@ -6,7 +6,7 @@
 ---
 
 ## 마지막 업데이트
-- 날짜: 2026-06-26
+- 날짜: 2026-06-27
 - 장소/도구: 집 · 맥북 · ~/dev/vcc-game
 
 ## 지금까지
@@ -20,9 +20,10 @@
   - Production URL: https://vcc-game-iota.vercel.app (URL 유지)
   - Vercel 대시보드: https://vercel.com/inje21cs-projects/vcc-game
 - 맥북 clone 완료 (`~/dev/vcc-game`).
+- **맥북 로컬 테스트 완료 (2026-06-27)**: `vercel link` → `vercel env pull` → `npx vercel dev --local` 순서 확립.
+  메뉴 아트, 게임오버 화면, beta-report 흐름 모두 정상 확인.
 
 ## 다음에 할 차례
-- [ ] 맥북에서 `npx vercel dev --local` 실행 검증
 - [ ] Vercel Production URL 최종 확인 (메뉴 아트, 게임오버 화면, beta-report 흐름)
 
 ## 막힌 것 / 결정 대기

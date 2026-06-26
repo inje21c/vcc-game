@@ -8,10 +8,12 @@
 
 Key planning docs:
 
+- [Project philosophy](docs/project-philosophy.md)
 - [Portfolio and operating plan](docs/portfolio-operating-plan.md)
 - [Beta feedback board plan](docs/beta-feedback-board.md)
 - [Workspace conventions](docs/workspace_conventions.md)
 - [Help Me Heyda 2026 roadmap](games/help-me-heyda-modern/docs/roadmap-2026.md)
+- [v1.0 closing plan](games/help-me-heyda-modern/docs/closing-plan-v1.md)
 
 Beta links:
 

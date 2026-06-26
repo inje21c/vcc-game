@@ -69,6 +69,12 @@ function bodyFor(data) {
 }
 
 async function readJson(req) {
+  if (req.body && typeof req.body === "object") return req.body;
+  if (typeof req.body === "string") {
+    if (req.body.length > 20000) throw new Error("Payload too large");
+    return JSON.parse(req.body || "{}");
+  }
+
   const chunks = [];
   for await (const chunk of req) chunks.push(chunk);
   const raw = Buffer.concat(chunks).toString("utf8");

@@ -7,36 +7,29 @@
 
 ## 마지막 업데이트
 - 날짜: 2026-06-26
-- 장소/도구: 회사 · 윈도우 · C:\dev\vcc-game · Codex
+- 장소/도구: 집 · 맥북 · ~/dev/vcc-game
 
 ## 지금까지
 - EC2 → 로컬 이전 검증 **완료**. 회사 윈도우에서 `npx vercel dev --local`로 정상 실행 확인.
-- vibecoding001(동호회) Vercel 계정으로 link 완료. 게임 화면 정상 렌더링 확인.
 - 깨진 이미지 2종 수정 완료:
   - `ChatGPT Image...12_00_32.png` → `menu-art-2026.png` (메뉴 아트, index.html 수정)
   - `ChatGPT Image...01_30_42 (2).png` → `gameover-screen.png` (게임오버, game2026.js 수정)
-- beta-report API 원인 분석/수정 완료:
-  - `.env.local` 값의 따옴표를 서버 함수에서 정규화
-  - GitHub `beta` 라벨이 없어도 이슈 생성이 되도록 라벨 없이 자동 재시도
-  - Vercel dev에서 이미 파싱된 `req.body`를 처리하도록 수정
+- beta-report API 원인 분석/수정 완료 (따옴표 정규화, 라벨 없이 재시도, req.body 처리).
 - beta-report 로컬 테스트 **성공 완료**. 초대코드 검증 및 실제 제출 흐름 확인.
-- GitHub `inje21c/vcc-game` main 최신 커밋을 Vercel Production에 수동 배포 완료:
-  - Production URL: https://vcc-game-iota.vercel.app
-  - Vercel Git 연결도 `inje21c/vcc-game` + Production branch `main`으로 복구 완료.
+- **Vercel 계정 이전 완료 (2026-06-26)**: vibecoding001(동호회) → inje21cs-projects(개인, bethel803과 동일).
+  - Production URL: https://vcc-game-iota.vercel.app (URL 유지)
+  - Vercel 대시보드: https://vercel.com/inje21cs-projects/vcc-game
+- 맥북 clone 완료 (`~/dev/vcc-game`).
 
 ## 다음에 할 차례
-- [ ] 이번 `STATE.md` 커밋 push 후 Vercel 자동 Production 배포가 새 커밋으로 뜨는지 확인
-- [ ] Vercel Production URL에서 메뉴 아트, 게임오버 화면, beta-report 제출 흐름 최종 확인
-- [ ] (선택) 집 맥북에서도 `vercel dev --local`로 검증
+- [ ] 맥북에서 `npx vercel dev --local` 실행 검증
+- [ ] Vercel Production URL 최종 확인 (메뉴 아트, 게임오버 화면, beta-report 흐름)
 
 ## 막힌 것 / 결정 대기
 - 없음
 
 ## 건드리면 안 되는 것 / 주의
-- **로컬 실행 명령: `npx vercel dev --local`** (기존 `vercel dev`는 Vercel팀 인증 강제됨 → 타 계정 브라우저 차단).
-  - `--local` = Vercel 프로젝트 링크 없이 순수 로컬 서버로 실행. 어떤 브라우저에서도 로그인 없이 접근 가능.
-  - `api/beta-report`는 `.env.local` 변수를 그대로 읽으므로 API 기능도 동작.
-- Vercel은 **vibecoding001 계정**으로만 (개인 계정 아님). 프로덕션 배포/링크 시 계정 확인 필수.
+- **로컬 실행: `npx vercel dev --local`** (루트에서 실행. `npx serve`로 하면 경로 깨짐).
 - beta-report 제출 테스트 = 실제 GitHub issue 생성됨. 누르지 말 것.
 - games/help-me-heyda (2003 오리지널) 수정 금지. 아카이브.
 - 한글·공백·괄호 포함 ChatGPT 이미지 원본 파일은 삭제하지 말 것(영문 복사본이 실사용).

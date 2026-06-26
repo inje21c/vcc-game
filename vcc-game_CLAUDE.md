@@ -15,12 +15,13 @@ vcc-game은 **사내 바이브코딩 동호회(VCC)** 프로젝트로,
 
 ---
 
-## 1. 인프라·계정 (중요 — 개인 프로젝트와 분리됨)
+## 1. 인프라·계정
 
 - **GitHub**: `git@github.com:inje21c/vcc-game.git` (개인 핸들과 공유)
-- **Vercel**: **vibecoding001 계정 (동호회 전용)** — 개인 bethel803 Vercel 계정과 다름!
-  - vercel 명령 시 반드시 **vibecoding001** 계정으로 로그인.
-  - 다른 계정으로는 vcc-game 프로젝트가 목록에 안 보임.
+- **Vercel**: **inje21cs-projects 계정** (bethel803과 동일 계정).
+  - 대시보드: https://vercel.com/inje21cs-projects/vcc-game
+  - Production URL: https://vcc-game-iota.vercel.app
+  - ~~vibecoding001(동호회 계정)에서 2026-06-26 개인 계정으로 이전 완료.~~
 - **회사 윈도우**: HTTPS clone 막힘 → **SSH로** clone/push.
 - EC2 없음(2003 원본 포함 GitHub가 단일 진실). 소스 무변경으로 이전됨.
 
@@ -31,11 +32,12 @@ vcc-game은 **사내 바이브코딩 동호회(VCC)** 프로젝트로,
 - **`npx serve`로 띄우면 깨진다.** index.html은 `public/`에,
   styles.css·game2026.js는 `src/`에 분리돼 있어 경로가 안 맞음(404).
 - **반드시 루트에서 `npx vercel dev --local`** 로 띄울 것.
-  → Vercel 팀 인증 없이 src/public 경로 매핑 + api/ 서버리스가 로컬에서 작동.
+  → src/public 경로 매핑 + api/ 서버리스가 로컬에서 작동.
   → http://localhost:3000
 
 ```
-cd C:\dev\vcc-game
+cd ~/dev/vcc-game          # 맥북
+cd C:\dev\vcc-game         # 회사 윈도우
 npx vercel dev --local
 ```
 

@@ -45,6 +45,21 @@ npx vercel dev --local
 - Vercel 프로젝트 link 또는 일반 `vercel dev` 실행 시 `.env.local`(VERCEL_OIDC_TOKEN)·`.vercel/` 자동 생성
   → **둘 다 git에 올리지 말 것** (.gitignore 확인 필수).
 
+### 새 기기에서 처음 실행할 때 순서 (★ 순서 틀리면 실패)
+
+```
+# 1. 프로젝트 링크 먼저 (이걸 빼먹으면 env pull이 "not_linked" 오류 남)
+npx vercel link --scope inje21cs-projects --project vcc-game --yes
+
+# 2. 그 다음 환경변수 pull
+npx vercel env pull .env.local --yes
+
+# 3. 이제 로컬 서버 실행
+npx vercel dev --local
+```
+
+- `vercel link` 없이 `vercel env pull` 하면 `not_linked` 오류. 반드시 link 먼저.
+
 ---
 
 ## 3. 구조

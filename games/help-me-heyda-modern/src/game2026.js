@@ -21,30 +21,48 @@ const CHAPTER1_BOSS = {
 const storyChapters = [
   {
     label: "Chapter 1",
-    title: "숲이 숨을 멈춘 날",
+    title: "토템을 깨우는 길",
     stages: [1, 6],
-    bossStage: 6,
-    boss: "붉은 깃발의 감독관",
+    bossStage: null,
+    boss: null,
     image: "assets/story1.png",
-    text: "새벽 안개가 걷히자 숲의 심장부에 붉은 깃발이 꽂혀 있었다. 헤이다는 오래된 토템을 품고 마을 입구로 걸어간다."
+    text: "새벽 안개 속에서 오래된 토템들이 하나씩 깨어난다. 헤이다는 같은 문양 셋을 모으며 길의 리듬을 익히고, 숲의 첫 숨을 되찾기 시작한다."
   },
   {
     label: "Chapter 2",
-    title: "토템의 노래",
+    title: "이어지는 문양",
     stages: [7, 12],
-    bossStage: 12,
-    boss: "철길을 여는 굴착기",
+    bossStage: null,
+    boss: null,
     image: "assets/story2.png",
-    text: "같은 문양이 이어지는 순간 숲의 빛이 되살아난다. 헤이다는 흩어진 토템의 힘을 모아 마을 사람들의 용기를 깨운다."
+    text: "문양은 더 길게 이어지고, 아래 줄은 더 쉽게 흔들린다. 헤이다는 네 개와 다섯 개의 토템을 정확히 모으며 다음 수를 읽는 법을 배운다."
   },
   {
-    label: "Final Chapter",
-    title: "마지막 길",
+    label: "Chapter 3",
+    title: "여섯 문양의 길",
     stages: [13, 18],
-    bossStage: 18,
-    boss: "거대한 불도저",
+    bossStage: null,
+    boss: null,
     image: "assets/story4.png",
-    text: "마지막 대치의 순간이 다가온다. 헤이다는 파괴가 아니라 기억을 지키기 위해, 마을이 살아온 길을 토템으로 다시 잇는다."
+    text: "이제 숲은 느린 손을 기다려주지 않는다. 헤이다는 여섯 개의 문양을 완성하며 실수를 줄이고, 콤보로 시간을 되찾아야 한다."
+  },
+  {
+    label: "Chapter 4",
+    title: "심화의 숲",
+    stages: [19, 27],
+    bossStage: null,
+    boss: null,
+    image: "assets/background-forest-2026.png",
+    text: "깊은 숲에서는 여섯 문양의 규칙이 계속된다. 처음에는 차분히 새 배치를 읽고, 곧 불어오는 숲의 바람에 맞춰 계획을 고쳐야 한다."
+  },
+  {
+    label: "Chapter 5",
+    title: "흔들리는 길",
+    stages: [28, 36],
+    bossStage: null,
+    boss: null,
+    image: "assets/background-forest-2026.png",
+    text: "마지막 길에서는 토템도, 시간도, 판단도 빠르게 움직인다. 경고를 읽고 흔들린 배치를 다시 세우는 사람만 숲의 끝에 닿을 수 있다."
   }
 ];
 
@@ -226,6 +244,7 @@ class Game2026 {
     this.stageResult = null;
     this.rewardUnlocked = null;
     this.mistakes = 0;
+    this.storyLastChanceUsed = false;
     this.message = "Ready";
     this.storyTime = 900;
     this.storyTimeMax = 900;
@@ -241,6 +260,11 @@ class Game2026 {
     this.time = 0;
     this.survivalTimer = 0;
     this.survivalDelay = 7200;
+    this.survivalLevel = 1;
+    this.lastRightAt = 0;
+    this.nextShuffleAt = 0;
+    this.shuffleConfig = null;
+    this.shuffleWarningShown = false;
     this.sprites = {};
     this.cropCache = new Map();
     this.bind();
@@ -330,24 +354,28 @@ class Game2026 {
 
   async loadStage(number) {
     if (this.stageCache.has(number)) return this.cloneBoard(this.stageCache.get(number));
-    if (!this.stageFiles.length) return this.fallbackStage();
-    const file = this.stageFiles[number - 1] || this.stageFiles[0];
-    try {
-      const res = await fetch(`../../help-me-heyda/public/legacy/data/${file}`);
-      if (!res.ok) throw new Error(`Stage ${number} load failed`);
-      const text = await res.text();
-      const board = text.trim().split(/\n/).map((line) => {
-        const row = line.split(",").map((value) => this.normalizeBlock(Number.parseInt(value, 10) || 0, number));
-        while (row.length < COLS) row.push(0);
-        return row.slice(0, COLS);
-      });
-      while (board.length < ROWS) board.unshift(Array(COLS).fill(0));
-      const normalized = board.slice(0, ROWS);
-      this.stageCache.set(number, this.cloneBoard(normalized));
-      return this.cloneBoard(normalized);
-    } catch {
-      return this.fallbackStage();
+    if (this.stageFiles.length && number <= this.stageFiles.length) {
+      const file = this.stageFiles[number - 1];
+      try {
+        const res = await fetch(`../../help-me-heyda/public/legacy/data/${file}`);
+        if (!res.ok) throw new Error(`Stage ${number} load failed`);
+        const text = await res.text();
+        const board = text.trim().split(/\n/).map((line) => {
+          const row = line.split(",").map((value) => this.normalizeBlock(Number.parseInt(value, 10) || 0, number));
+          while (row.length < COLS) row.push(0);
+          return row.slice(0, COLS);
+        });
+        while (board.length < ROWS) board.unshift(Array(COLS).fill(0));
+        const normalized = this.rebalanceLegacyStage(board.slice(0, ROWS), number);
+        this.stageCache.set(number, this.cloneBoard(normalized));
+        return this.cloneBoard(normalized);
+      } catch {
+        return this.fallbackStage();
+      }
     }
+    const board = this.generateStage(number);
+    this.stageCache.set(number, this.cloneBoard(board));
+    return this.cloneBoard(board);
   }
 
   bind() {
@@ -381,7 +409,7 @@ class Game2026 {
           return this.handle(menuMap[event.code]);
         }
       }
-      const map = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "push", Space: "push", Enter: "push", KeyD: "debug", Escape: "pause-play" };
+      const map = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "push", ArrowRight: "survival-rush-key", Space: "push", Enter: "push", KeyD: "debug", Escape: "pause-play" };
       if (!map[event.code]) return;
       event.preventDefault();
       await this.handle(map[event.code]);
@@ -405,10 +433,13 @@ class Game2026 {
     if (action === "story") return this.openStory();
     if (action === "continue-story") return this.startStory(this.getSavedStage());
     if (action === "restart-story") return this.restartStory();
-    if (action === "survival") return this.startSurvival();
+    if (action === "survival") return this.openSurvivalIntro();
+    if (action === "start-survival") return this.startSurvival();
     if (action === "help") return this.show("help");
     if (action === "option") return this.openSettings();
     if (action === "leaf-cleanse") return this.toggleLeafCleanse();
+    if (action === "survival-rush") return this.survivalRush();
+    if (action === "survival-rush-key") return this.handleSurvivalRushKey();
     if (action === "debug") return this.toggleDebug();
     if (action.startsWith("dev-stage-")) return this.startStory(Number.parseInt(action.replace("dev-stage-", ""), 10) || 1);
     if (action === "dev-clear") return this.showResultShortcut("clear");
@@ -448,6 +479,11 @@ class Game2026 {
     this.resetProgress();
     this.score = 0;
     this.openChapterIntro(1);
+  }
+
+  openSurvivalIntro() {
+    this.sound.cue("menu");
+    this.show("survival-intro");
   }
 
   openPause(message = "Paused") {
@@ -576,25 +612,15 @@ class Game2026 {
     return this.chapterIndexForStage(this.getSavedStage());
   }
 
-  createBossState(stage) {
-    if (stage !== CHAPTER1_BOSS.stage) return null;
-    return {
-      active: true,
-      defeated: false,
-      name: CHAPTER1_BOSS.name,
-      hpMax: CHAPTER1_BOSS.hp,
-      hp: CHAPTER1_BOSS.hp,
-      warningRow: null,
-      warningStartedAt: 0,
-      warningUntil: 0,
-      nextAttackAt: performance.now() + CHAPTER1_BOSS.firstDelay
-    };
+  createBossState() {
+    return null; // 보스전 v2.0 이월
   }
 
   show(name) {
     this.screen = name;
     document.querySelectorAll(".screen").forEach((screen) => screen.classList.toggle("is-active", screen.dataset.screen === name));
     this.app.classList.toggle("is-playing", name === "play");
+    this.app.classList.toggle("is-survival", name === "play" && this.mode === "survival");
     this.app.classList.toggle("has-result", Boolean(this.resultState));
     this.updatePowerControls();
   }
@@ -629,11 +655,12 @@ class Game2026 {
     this.stageBestCombo = 0;
     this.combo = 0;
     this.mistakes = 0;
+    this.storyLastChanceUsed = false;
+    this.initShuffle(stage);
     this.message = this.startMessageForStage(stage);
     this.pulse(1.08, 0);
     this.sound.cue("start");
-    if (this.bossState) this.sound.startMusic("bossBgm");
-    else this.sound.startMusic("normalGameBgm");
+    this.sound.startMusic("normalGameBgm");
     this.updateHud();
     this.show("play");
   }
@@ -647,9 +674,13 @@ class Game2026 {
     this.resultState = null;
     this.rewardUnlocked = null;
     this.clearAdvanceAt = 0;
+    this.survivalTimer = 0;
+    this.survivalDelay = 7600;
+    this.survivalLevel = 1;
+    this.lastRightAt = 0;
     this.board = this.emptyBoard();
     for (let row = 9; row <= 11; row += 1) {
-      for (let col = 0; col < COLS - 1; col += 1) this.board[row][col] = this.randomBlock();
+      for (let col = 0; col < 5; col += 1) this.board[row][col] = this.randomSurvivalBlock();
     }
     this.actorY = 10;
     this.pendingPush = null;
@@ -661,11 +692,10 @@ class Game2026 {
     this.stoneFlag = 0;
     this.storyTime = 0;
     this.clearBlastUntil = 0;
-    this.survivalTimer = 0;
-    this.survivalDelay = 7200;
     this.score = 0;
     this.combo = 0;
-    this.message = "4개 이상 같은 토템을 모으세요";
+    this.mistakes = 0;
+    this.message = "같은 토템 4개 이상을 모으세요";
     this.pulse(1.08, 0);
     this.sound.cue("start");
     this.sound.stopMusic();
@@ -694,6 +724,129 @@ class Game2026 {
     return board;
   }
 
+  rebalanceLegacyStage(board, stage) {
+    if (stage !== 18) return board;
+    void board;
+    return this.stage18MasteryBoard();
+  }
+
+  stage18MasteryBoard() {
+    const board = this.emptyBoard();
+    const rowCounts = [4, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6];
+    const pool = [];
+    for (let type = 1; type <= 5; type += 1) {
+      for (let i = 0; i < 12; i += 1) pool.push(type);
+    }
+    this.seededShuffle(pool, 1801);
+
+    let index = 0;
+    for (let i = 0; i < rowCounts.length; i += 1) {
+      const row = i + 1;
+      for (let col = 0; col < rowCounts[i]; col += 1) {
+        board[row][col] = pool[index];
+        index += 1;
+      }
+    }
+    return board;
+  }
+
+  seededShuffle(values, seed) {
+    let state = seed >>> 0;
+    const next = () => {
+      state = (state * 1664525 + 1013904223) >>> 0;
+      return state / 0x100000000;
+    };
+    for (let i = values.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(next() * (i + 1));
+      [values[i], values[j]] = [values[j], values[i]];
+    }
+    return values;
+  }
+
+  generateStage(number) {
+    const board = this.emptyBoard();
+    const blockTypes = this.availableBlockCount(number);
+    const profile = this.stageDifficultyProfile(number);
+    const filledRows = profile.filledRows;
+    const numTypes = Math.min(blockTypes, profile.types);
+    const totalClears = Math.max(numTypes, profile.clears);
+    const totalBlocks = totalClears * 6; // 반드시 6의 배수 → 잔여 블록 0 보장
+
+    // ── 랜덤 타입 선택 ───────────────────────────────
+    const available = Array.from({ length: blockTypes }, (_, i) => i + 1)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, numTypes);
+
+    // ── 타입별 클리어 배분 (라운드로빈 → 각 타입 6의 배수) ──
+    const clearsPerType = Array(numTypes).fill(0);
+    for (let i = 0; i < totalClears; i += 1) clearsPerType[i % numTypes] += 1;
+
+    // ── 블록 풀 생성 및 셔플 ─────────────────────────
+    const pool = [];
+    for (let i = 0; i < numTypes; i += 1) {
+      for (let c = 0; c < clearsPerType[i] * 6; c += 1) pool.push(available[i]);
+    }
+    for (let i = pool.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+
+    // ── 행별 블록 수 계산 (합 = totalBlocks, 중력 원칙) ──
+    const startRow = ROWS - 1 - filledRows;
+    const counts = this.distributeStageBlocks(totalBlocks, filledRows);
+
+    // ── 보드에 배치 ──────────────────────────────────
+    let poolIdx = 0;
+    for (let i = 0; i < filledRows; i += 1) {
+      const row = startRow + i;
+      for (let col = 0; col < counts[i]; col += 1) {
+        board[row][col] = pool[poolIdx];
+        poolIdx += 1;
+      }
+    }
+    return board;
+  }
+
+  stageDifficultyProfile(stage) {
+    if (stage <= 24) {
+      const t = (stage - 19) / 5;
+      return {
+        filledRows: Math.round(7 + t),
+        types: Math.round(4 + t),
+        clears: Math.round(8 + t)
+      };
+    }
+    if (stage <= 30) {
+      const t = (stage - 25) / 5;
+      return {
+        filledRows: Math.round(8 + t * 2),
+        types: Math.round(5 + t),
+        clears: Math.round(9 + t * 2)
+      };
+    }
+    const t = Math.min(1, (stage - 31) / 5);
+    return {
+      filledRows: Math.round(10 + t),
+      types: Math.round(6 + t),
+      clears: Math.round(11 + t)
+    };
+  }
+
+  distributeStageBlocks(totalBlocks, filledRows) {
+    const maxPerRow = COLS - 1;
+    const counts = Array(filledRows).fill(Math.floor(totalBlocks / filledRows));
+    let remaining = totalBlocks - counts.reduce((sum, value) => sum + value, 0);
+    for (let i = counts.length - 1; remaining > 0 && i >= 0; i -= 1) {
+      const room = maxPerRow - counts[i];
+      if (room <= 0) continue;
+      const add = Math.min(room, remaining);
+      counts[i] += add;
+      remaining -= add;
+    }
+    counts.sort((a, b) => a - b);
+    return counts;
+  }
+
   randomBlock(limit = this.availableBlockCount(this.stage)) {
     return Math.floor(Math.random() * limit) + 1;
   }
@@ -704,12 +857,18 @@ class Game2026 {
   }
 
   availableBlockCount(stage) {
+    // 1-18: 레거시 데이터 원본값 유지
     if (stage <= 4) return 3;
     if (stage <= 7) return 4;
     if (stage <= 10) return 5;
     if (stage <= 13) return 6;
     if (stage <= 15) return 7;
     if (stage <= 17) return 8;
+    if (stage <= 18) return 9;
+    // 19-36: Chapter 4-5, 팔레트가 6종→9종으로 다시 확장
+    if (stage <= 24) return 6;
+    if (stage <= 30) return 7;
+    if (stage <= 35) return 8;
     return 9;
   }
 
@@ -721,12 +880,80 @@ class Game2026 {
   }
 
   stageTime(stage) {
-    const times = [980, 970, 960, 950, 930, 910, 890, 870, 850, 830, 810, 790, 770, 750, 730, 710, 690, 670];
-    return times[Math.min(stage - 1, times.length - 1)] || 670;
+    const times = [1000, 990, 980, 960, 940, 920, 900, 880, 860, 850, 830, 810, 790, 770, 750, 730, 710, 700];
+    if (stage <= times.length) return times[stage - 1];
+    if (stage <= 24) return 760 - (stage - 19) * 8;   // 76s → 72s
+    if (stage <= 30) return 700 - (stage - 25) * 8;   // 70s → 66s
+    return Math.max(560, 640 - (stage - 31) * 16);    // 64s → 56s
   }
 
+  // ── 블록 셔플 메커니즘 ─────────────────────────────────────────
+  // stage 19+: 주기적으로 보드 내 블록 위치를 랜덤으로 교환
+  // 높은 스테이지일수록 교환 빈도↑, 교환 개수↑, 시간↓
+
+  getShuffleConfig(stage) {
+    if (stage < 25) return null;
+    if (stage <= 30) {
+      const t = (stage - 25) / 5;
+      return {
+        interval: Math.round((25 - t * 5) * 1000),
+        count: 1 + Math.round(t),
+        warningMs: 3000
+      };
+    }
+    const t = Math.min(1, (stage - 31) / 5);
+    return {
+      interval: Math.round((18 - t * 6) * 1000),
+      count: stage >= 36 ? 5 : 2 + Math.round(t * 2),
+      warningMs: 3000
+    };
+  }
+
+  initShuffle(stage) {
+    this.shuffleConfig = this.getShuffleConfig(stage);
+    this.nextShuffleAt = this.shuffleConfig ? performance.now() + this.shuffleConfig.interval : 0;
+    this.shuffleWarningShown = false;
+  }
+
+  updateShuffle(now) {
+    if (!this.shuffleConfig || !this.nextShuffleAt) return;
+    if (!this.shuffleWarningShown && this.nextShuffleAt - now <= this.shuffleConfig.warningMs) {
+      this.shuffleWarningShown = true;
+      this.message = "숲의 바람이 토템을 흔듭니다";
+      this.pulse(1.04, 1.5);
+      this.camera.shake = 2;
+      return;
+    }
+    if (now < this.nextShuffleAt) return;
+    // 보드(row 0-11)에서 비어있지 않은 블록 위치 수집
+    const positions = [];
+    for (let row = 0; row <= 11; row += 1) {
+      for (let col = 0; col < COLS; col += 1) {
+        if (this.board[row][col] && this.board[row][col] !== OBSTACLE_DEVELOPMENT) {
+          positions.push([row, col]);
+        }
+      }
+    }
+    // N쌍 랜덤 교환
+    const swapCount = Math.min(this.shuffleConfig.count, Math.floor(positions.length / 2));
+    for (let i = 0; i < swapCount; i += 1) {
+      if (positions.length < 2) break;
+      const ai = Math.floor(Math.random() * positions.length);
+      const [ar, ac] = positions.splice(ai, 1)[0];
+      const bi = Math.floor(Math.random() * positions.length);
+      const [br, bc] = positions.splice(bi, 1)[0];
+      [this.board[ar][ac], this.board[br][bc]] = [this.board[br][bc], this.board[ar][ac]];
+    }
+    this.nextShuffleAt = performance.now() + this.shuffleConfig.interval;
+    this.shuffleWarningShown = false;
+    this.message = swapCount > 1 ? `토템이 뒤섞였다 (${swapCount}곳)` : "토템이 뒤섞였다";
+    this.pulse(1.08, 3);
+    this.camera.shake = 5;
+  }
+  // ──────────────────────────────────────────────────────────────
+
   getTotalStages() {
-    return this.stageFiles.length || 18;
+    return 36;
   }
 
   getSavedStage() {
@@ -758,12 +985,7 @@ class Game2026 {
   }
 
   leafCleanseUnlocked() {
-    try {
-      if (localStorage.getItem(POWER_SAVE_KEY)?.includes("leafCleanse")) return true;
-    } catch {
-      // Storage may be unavailable in private browsing or locked-down webviews.
-    }
-    return this.getSavedStage() >= 7;
+    return false; // 정화 스킬 v2.0 이월
   }
 
   unlockLeafCleanse() {
@@ -775,9 +997,6 @@ class Game2026 {
   }
 
   startMessageForStage(stage) {
-    if (stage >= 7 && this.leafCleanseUnlocked()) {
-      return `${this.chapterForStage(stage).label} / Stage ${stage}: 정화 버튼으로 줄 앞 토템을 지울 수 있습니다`;
-    }
     return this.bossState ? `Boss Stage ${stage}: ${this.bossState.name}` : `${this.chapterForStage(stage).label} / Stage ${stage}: 줄 터치 이동, 같은 줄 다시 터치 Push`;
   }
 
@@ -879,6 +1098,19 @@ class Game2026 {
     this.selectRow(this.actorY + delta);
   }
 
+  handleSurvivalRushKey() {
+    if (this.screen !== "play" || this.mode !== "survival" || this.gameOver || this.pendingPush || this.isCountingDown()) return false;
+    const now = performance.now();
+    if (now - this.lastRightAt <= 320) {
+      this.lastRightAt = 0;
+      this.survivalRush();
+      return true;
+    }
+    this.lastRightAt = now;
+    this.message = "→ 한 번 더 누르면 Rush";
+    return false;
+  }
+
   push() {
     if (this.stageClear || this.gameOver) {
       return;
@@ -914,8 +1146,9 @@ class Game2026 {
     const { block } = this.pendingPush;
     this.pendingPush = null;
     this.addBottomBlock(block);
-    this.checkBottom();
-    this.settleOneStep();
+    const bottomHandledRise = this.checkBottom();
+    if (this.mode === "story") this.settleOneStep();
+    else if (!bottomHandledRise) this.settlePlayfield();
     this.updateHud();
   }
 
@@ -928,6 +1161,10 @@ class Game2026 {
         this.burst(p.x, p.y, this.color(block), 16);
         return;
       }
+    }
+    if (this.mode === "survival") {
+      this.handleSurvivalOverflow(block);
+      return;
     }
     if (!this.shiftUp()) return;
     this.board[12][lastCol] = block;
@@ -954,12 +1191,35 @@ class Game2026 {
       this.sound.cue("clear");
       this.checkStageClear();
     } else {
-      this.combo = 0;
-      this.mistakes += 1;
-      this.message = "문양 불일치";
-      this.shiftUp();
-      this.sound.cue("fail");
+      this.handleStoryMismatch();
     }
+  }
+
+  handleStoryMismatch() {
+    this.combo = 0;
+    this.mistakes += 1;
+    if (this.canUseStoryLastChance()) {
+      this.storyLastChanceUsed = true;
+      const lastCol = 6 - this.stoneFlag;
+      for (let col = 0; col <= lastCol; col += 1) this.board[12][col] = 0;
+      this.storyTime = Math.max(0, this.storyTime - 60);
+      this.message = "위기 회피: 바닥을 비우고 -6s";
+      this.pulse(1.08, 4);
+      this.camera.shake = 6;
+      this.sound.cue("fail");
+      this.updateHud();
+      return;
+    }
+    this.message = "문양 불일치";
+    this.shiftUp();
+    this.sound.cue("fail");
+  }
+
+  canUseStoryLastChance() {
+    return this.mode === "story"
+      && this.stage >= 13
+      && !this.storyLastChanceUsed
+      && this.board[0].some(Boolean);
   }
 
   checkStageClear() {
@@ -994,10 +1254,6 @@ class Game2026 {
       stageScore,
       totalScore: this.score
     };
-    if (this.stage === 6) {
-      this.unlockLeafCleanse();
-      this.rewardUnlocked = "leafCleanse";
-    }
     this.saveProgress(this.isFinalStage() ? this.stage : this.stage + 1);
     this.message = this.resultState === "ending" ? "Ending: 마을의 길이 지켜졌습니다" : `Stage ${this.stage} Clear!`;
     this.clearBlastUntil = performance.now() + 1600;
@@ -1099,29 +1355,72 @@ class Game2026 {
   }
 
   isFinalStage() {
-    return this.stageFiles.length ? this.stage >= this.stageFiles.length : this.stage >= 18;
+    return this.stage >= 36;
   }
 
   checkSurvivalBottom() {
-    const counts = new Map();
-    for (let col = 0; col <= 6; col += 1) {
-      const value = this.board[12][col];
-      if (value) counts.set(value, (counts.get(value) || 0) + 1);
-    }
-    const match = [...counts.entries()].find(([, count]) => count >= 4);
-    if (match) {
-      const [target] = match;
-      for (let col = 0; col <= 6; col += 1) if (this.board[12][col] === target) this.board[12][col] = 0;
+    let match = this.findSurvivalCollectorRun();
+    while (match) {
+      const removed = match.end - match.start + 1;
+      for (let col = match.start; col <= match.end; col += 1) this.board[12][col] = 0;
+      this.compactCollector();
       this.combo += 1;
-      this.score += 2 ** this.combo;
+      this.score += removed * 80 * this.combo;
       const bonus = this.pushBackBulldozer();
-      this.message = `서바이벌 콤보 ${this.combo} +${bonus}s`;
+      this.message = `서바이벌 콤보 ${this.combo} (${removed}) +${bonus}s`;
       this.pulse(1.18, 1);
       this.sound.cue("clear");
-    } else if (this.board[12][0]) {
-      this.combo = 0;
-      this.message = "라인 상승";
-      this.shiftUp();
+      match = this.findSurvivalCollectorRun();
+    }
+    if (!this.isCollectorFull()) return false;
+    if (!this.findSurvivalCollectorRun()) {
+      this.handleSurvivalOverflow();
+      return true;
+    }
+    return false;
+  }
+
+  isCollectorFull() {
+    return this.board[12].slice(0, 7).every(Boolean);
+  }
+
+  findSurvivalCollectorRun() {
+    let best = null;
+    let start = 0;
+    for (let col = 1; col <= 7; col += 1) {
+      const changed = col === 7 || this.board[12][col] !== this.board[12][start];
+      if (!changed) continue;
+      const length = col - start;
+      if (this.board[12][start] && length >= 4 && (!best || length > best.end - best.start + 1)) {
+        best = { start, end: col - 1 };
+      }
+      start = col;
+    }
+    return best;
+  }
+
+  compactCollector() {
+    const values = this.board[12].slice(0, 7).filter(Boolean);
+    for (let col = 0; col <= 6; col += 1) this.board[12][col] = 0;
+    let target = 6;
+    for (let i = values.length - 1; i >= 0; i -= 1) {
+      this.board[12][target] = values[i];
+      target -= 1;
+    }
+  }
+
+  handleSurvivalOverflow(nextBlock = 0) {
+    this.combo = 0;
+    this.mistakes += 1;
+    if (this.shiftUp()) {
+      if (nextBlock) {
+        this.board[12][6] = nextBlock;
+        const p = this.boardToScreen(12, 6);
+        this.burst(p.x, p.y, this.color(nextBlock), 16);
+      }
+      this.message = nextBlock ? "수집줄 상승: 새 토템 대기" : "수집줄 실패: 라인 상승";
+      this.sound.cue("fail");
+      this.updateHud();
     }
   }
 
@@ -1153,16 +1452,60 @@ class Game2026 {
   }
 
   survivalRise() {
-    if (this.pendingPush) return;
-    if (!this.shiftUp()) return;
-    for (let col = 0; col <= 6; col += 1) this.board[12][col] = this.randomBlock();
-    this.survivalDelay = Math.max(5200, this.survivalDelay - 80);
-    this.message = "불도저 압박";
+    if (this.pendingPush) return false;
+    if (!this.risePlayfield()) return false;
+    const fillCount = Math.min(7, 4 + Math.floor(this.survivalLevel / 3));
+    for (let col = 0; col < fillCount; col += 1) this.board[11][col] = this.randomSurvivalBlock();
+    this.settlePlayfield();
+    this.survivalLevel += 1;
+    this.survivalDelay = Math.max(4800, this.survivalDelay - 120);
+    this.message = `불도저 압박 Lv.${this.survivalLevel}`;
     this.sound.cue("villain");
+    this.updateHud();
+    return true;
+  }
+
+  survivalRush() {
+    if (this.screen !== "play" || this.mode !== "survival" || this.gameOver || this.pendingPush || this.isCountingDown()) return;
+    const previousLevel = this.survivalLevel;
+    if (!this.survivalRise()) return;
+    const reward = 120 + previousLevel * 20;
+    this.score += reward;
+    this.survivalTimer = 0;
+    this.message = `Rush 보너스 +${reward}`;
+    this.updateHud();
+  }
+
+  risePlayfield() {
+    if (this.board[0].some(Boolean)) {
+      this.endGame("토템이 마을 끝까지 밀렸습니다");
+      return false;
+    }
+    for (let row = 0; row < ROWS - 2; row += 1) this.board[row] = [...this.board[row + 1]];
+    this.board[11] = Array(COLS).fill(0);
+    this.pulse(1.1, 3);
+    return true;
+  }
+
+  randomSurvivalBlock() {
+    const limit = Math.min(7, 4 + Math.floor(this.survivalLevel / 5));
+    return this.randomBlock(limit);
+  }
+
+  settlePlayfield() {
+    const rows = [];
+    for (let row = 0; row <= 11; row += 1) {
+      if (this.board[row].some(Boolean)) rows.push([...this.board[row]]);
+      this.board[row] = Array(COLS).fill(0);
+    }
+    const start = 12 - rows.length;
+    rows.forEach((source, index) => {
+      this.board[start + index] = source;
+    });
   }
 
   updateHud() {
-    document.querySelector("#timeLabel").textContent = this.mode === "story" ? String(this.storySecondsLeft()) : String(Math.ceil(this.survivalDelay / 1000));
+    document.querySelector("#timeLabel").textContent = this.mode === "story" ? String(this.storySecondsLeft()) : String(this.survivalSecondsLeft());
     document.querySelector("#scoreLabel").textContent = String(this.score);
     document.querySelector("#comboLabel").textContent = String(this.combo);
     this.updatePowerControls();
@@ -1170,6 +1513,10 @@ class Game2026 {
 
   storySecondsLeft() {
     return Math.max(0, Math.ceil(this.storyTime / 10));
+  }
+
+  survivalSecondsLeft() {
+    return Math.max(0, Math.ceil((this.survivalDelay - this.survivalTimer) / 1000));
   }
 
   pushBackBulldozer() {
@@ -1219,15 +1566,16 @@ class Game2026 {
       this.storyTime = Math.max(0, this.storyTime - delta / 100);
       if (Math.floor(this.time / 120) !== Math.floor((this.time - delta) / 120)) this.updateHud();
       this.updateBoss(now);
+      this.updateShuffle(now);
       if (this.storyTime <= 0) {
         this.endGame("Game Over: 불도저가 마을에 도달했습니다");
       }
     }
     if (this.screen === "play" && this.mode === "survival" && !countdown && !this.gameOver) {
       this.survivalTimer += delta;
+      if (Math.floor(this.time / 120) !== Math.floor((this.time - delta) / 120)) this.updateHud();
       if (this.survivalTimer > this.survivalDelay) {
-        this.survivalTimer = 0;
-        this.survivalRise();
+        if (this.survivalRise()) this.survivalTimer = 0;
       }
     }
     this.camera.zoom += (this.camera.target - this.camera.zoom) * 0.08;
@@ -1358,7 +1706,13 @@ class Game2026 {
       return true;
     }
     if (this.resultState === "ending") {
-      if (ny >= 0.78) this.openMenu();
+      if (ny >= 0.856) {
+        if (nx >= 0.06 && nx <= 0.64) {
+          this.openSurvivalIntro();
+        } else {
+          this.openMenu();
+        }
+      }
       return true;
     }
     return false;
@@ -1428,23 +1782,6 @@ class Game2026 {
       ctx.font = "900 16px Arial";
       ctx.fillText(`Total ${result.totalScore.toLocaleString()}`, this.width / 2, panelY + panelH - lineH * 0.38);
 
-      if (this.rewardUnlocked === "leafCleanse") {
-        const rewardY = panelY + panelH + 12;
-        const rewardH = 58;
-        ctx.fillStyle = "rgba(5, 28, 20, 0.82)";
-        this.roundRect(ctx, this.width * 0.14, rewardY, this.width * 0.72, rewardH, 8);
-        ctx.fill();
-        ctx.strokeStyle = "rgba(121, 221, 191, 0.68)";
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-        ctx.fillStyle = "#79ddbf";
-        ctx.textAlign = "center";
-        ctx.font = "900 14px Arial";
-        ctx.fillText("잎 토템이 깨어났습니다", this.width / 2, rewardY + 23);
-        ctx.fillStyle = "#fff7d8";
-        ctx.font = "800 12px Arial";
-        ctx.fillText("Stage 7부터 정화 버튼을 사용할 수 있습니다", this.width / 2, rewardY + 43);
-      }
     }
     if (this.resultState === "gameover") {
       ctx.fillStyle = "rgba(5, 8, 7, 0.42)";
@@ -1456,15 +1793,47 @@ class Game2026 {
       ctx.fillText(`Stage ${this.stage}  Score ${this.score}`, this.width / 2, this.height * 0.62 + 27);
     }
     if (this.resultState === "ending") {
+      const msgY = this.height * 0.775;
       ctx.fillStyle = "rgba(5, 8, 7, 0.72)";
-      this.roundRect(ctx, this.width * 0.1, this.height * 0.78, this.width * 0.8, 72, 8);
+      this.roundRect(ctx, this.width * 0.1, msgY, this.width * 0.8, 54, 8);
       ctx.fill();
       ctx.fillStyle = "#f7c15f";
       ctx.textAlign = "center";
-      ctx.font = "900 20px Arial";
-      ctx.fillText("마을은 다시 숲의 노래를 되찾았습니다", this.width / 2, this.height * 0.78 + 31);
+      ctx.font = "900 17px Arial";
+      ctx.fillText("모든 스테이지 완주!", this.width / 2, msgY + 22);
+      ctx.fillStyle = "#fff7d8";
+      ctx.font = "800 13px Arial";
+      ctx.fillText("마을은 다시 숲의 노래를 되찾았습니다", this.width / 2, msgY + 44);
+
+      const btnY = this.height * 0.856;
+      const btnH = Math.min(44, this.height * 0.058);
+      const gap = this.width * 0.03;
+      const survivalW = this.width * 0.58;
+      const menuW = this.width * 0.32;
+      const survivalX = this.width * 0.06;
+      const menuX = survivalX + survivalW + gap;
+
+      ctx.fillStyle = "rgba(121, 221, 191, 0.22)";
+      this.roundRect(ctx, survivalX, btnY, survivalW, btnH, 8);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(121, 221, 191, 0.72)";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.fillStyle = "#79ddbf";
+      ctx.textAlign = "center";
       ctx.font = "800 14px Arial";
-      ctx.fillText("터치하면 메뉴로 돌아갑니다", this.width / 2, this.height * 0.78 + 55);
+      ctx.fillText("서바이벌 도전", survivalX + survivalW / 2, btnY + btnH * 0.62);
+
+      ctx.fillStyle = "rgba(5, 8, 7, 0.54)";
+      this.roundRect(ctx, menuX, btnY, menuW, btnH, 8);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(247, 193, 95, 0.38)";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.fillStyle = "#f7f1df";
+      ctx.textAlign = "center";
+      ctx.font = "800 13px Arial";
+      ctx.fillText("메뉴", menuX + menuW / 2, btnY + btnH * 0.62);
     }
     ctx.restore();
   }

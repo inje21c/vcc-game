@@ -103,6 +103,7 @@ button:disabled {
 .screen,
 .hud,
 .play-actions,
+.rush-actions,
 .power-actions {
   position: absolute;
   z-index: 2;
@@ -220,6 +221,7 @@ button:disabled {
 
 .story-screen,
 .story-choice-screen,
+.survival-intro-screen,
 .help-screen,
 .settings-screen,
 .pause-screen {
@@ -265,6 +267,7 @@ button:disabled {
 
 .story-screen h1,
 .story-choice-screen h1,
+.survival-intro-screen h1,
 .help-screen h1,
 .settings-screen h1,
 .pause-screen h1 {
@@ -275,6 +278,7 @@ button:disabled {
 
 .story-screen p,
 .story-choice-screen p,
+.survival-intro-screen p,
 .help-screen p,
 .settings-screen p,
 .pause-screen p {
@@ -507,7 +511,8 @@ button:disabled {
   gap: 10px;
 }
 
-.story-choice-actions {
+.story-choice-actions,
+.survival-intro-actions {
   display: grid;
   grid-template-columns: 1.25fr 1fr 0.75fr;
   gap: 10px;
@@ -519,10 +524,15 @@ button:disabled {
   font-size: 14px;
 }
 
-.story-choice-actions button {
+.story-choice-actions button,
+.survival-intro-actions button {
   min-width: 0;
   padding: 0 8px;
   font-size: 14px;
+}
+
+.survival-intro-actions {
+  grid-template-columns: 0.85fr 1.35fr;
 }
 
 .settings-grid {
@@ -603,6 +613,28 @@ button:disabled {
   display: grid;
 }
 
+.rush-actions {
+  right: 14px;
+  bottom: max(54px, calc(env(safe-area-inset-bottom) + 44px));
+  display: none;
+}
+
+.app.is-survival .rush-actions {
+  display: block;
+}
+
+.survival-rush-button {
+  min-width: 82px;
+  min-height: 40px;
+  padding: 0 12px;
+  border-color: rgba(121, 221, 191, 0.48);
+  background: linear-gradient(180deg, rgba(24, 75, 55, 0.76), rgba(5, 18, 14, 0.72));
+  color: #79ddbf;
+  font-size: 11px;
+  text-transform: uppercase;
+  backdrop-filter: blur(10px);
+}
+
 .power-actions {
   right: 14px;
   bottom: max(54px, calc(env(safe-area-inset-bottom) + 44px));
@@ -668,6 +700,7 @@ button:disabled {
 
 .app.has-result .hud,
 .app.has-result .play-actions,
+.app.has-result .rush-actions,
 .app.has-result .power-actions,
 .app.has-result .report-link {
   display: none;
@@ -714,12 +747,14 @@ button:disabled {
 
   .story-screen h1,
   .story-choice-screen h1,
+  .survival-intro-screen h1,
   .help-screen h1 {
     font-size: 30px;
   }
 
   .story-screen p,
   .story-choice-screen p,
+  .survival-intro-screen p,
   .help-screen p {
     min-height: 118px;
     font-size: 15px;

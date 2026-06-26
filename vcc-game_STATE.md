@@ -18,9 +18,15 @@
 - beta-report API 원인 분석/수정 완료:
   - `.env.local` 값의 따옴표를 서버 함수에서 정규화
   - GitHub `beta` 라벨이 없어도 이슈 생성이 되도록 라벨 없이 자동 재시도
+  - Vercel dev에서 이미 파싱된 `req.body`를 처리하도록 수정
+- beta-report 로컬 테스트 **성공 완료**. 초대코드 검증 및 실제 제출 흐름 확인.
+- GitHub `inje21c/vcc-game` main 최신 커밋을 Vercel Production에 수동 배포 완료:
+  - Production URL: https://vcc-game-iota.vercel.app
+  - Vercel Git 연결도 `inje21c/vcc-game` + Production branch `main`으로 복구 완료.
 
 ## 다음에 할 차례
-- [ ] 배포 후 Vercel Production URL에서 메뉴 아트, 게임오버 화면, beta-report 제출 흐름 확인
+- [ ] 이번 `STATE.md` 커밋 push 후 Vercel 자동 Production 배포가 새 커밋으로 뜨는지 확인
+- [ ] Vercel Production URL에서 메뉴 아트, 게임오버 화면, beta-report 제출 흐름 최종 확인
 - [ ] (선택) 집 맥북에서도 `vercel dev --local`로 검증
 
 ## 막힌 것 / 결정 대기

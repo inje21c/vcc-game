@@ -53,7 +53,7 @@ button:disabled {
   position: relative;
   width: min(100vw, 430px);
   height: calc(min(100svh, 932px) - var(--ad-h));
-  min-height: calc(740px - var(--ad-h));
+  min-height: calc(min(100svh, 740px) - var(--ad-h));
   overflow: hidden;
   background: #050807;
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.54);
@@ -113,7 +113,7 @@ button:disabled {
 .screen {
   inset: 0;
   display: none;
-  padding: max(28px, env(safe-area-inset-top)) 22px max(26px, env(safe-area-inset-bottom));
+  padding: max(28px, env(safe-area-inset-top)) 22px max(52px, env(safe-area-inset-bottom));
 }
 
 .screen.is-active {
@@ -773,7 +773,7 @@ button:disabled {
   .story-choice-screen p,
   .survival-intro-screen p,
   .help-screen p {
-    min-height: 118px;
+    min-height: 80px;
     font-size: 15px;
   }
 

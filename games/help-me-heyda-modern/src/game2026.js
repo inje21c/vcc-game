@@ -243,6 +243,9 @@ class Game2026 {
     this.stageBestCombo = 0;
     this.stageResult = null;
     this.rewardUnlocked = null;
+    this.secretStageSequence = "";
+    this.secretStageTapCount = 0;
+    this.secretStageTapAt = 0;
     this.mistakes = 0;
     this.storyLastChanceUsed = false;
     this.message = "Ready";
@@ -381,6 +384,9 @@ class Game2026 {
   bind() {
     window.addEventListener("resize", () => this.resize());
     document.addEventListener("click", async (event) => {
+      if (event.target.closest("[data-secret-stage-trigger]")) {
+        await this.handleSecretStageTap();
+      }
       const action = event.target.closest("[data-action]")?.dataset.action;
       if (!action) return;
       this.sound.unlock();
@@ -402,6 +408,7 @@ class Game2026 {
       if (this.pointer.row >= 0 && this.pointer.row <= 11) this.tapRow(this.pointer.row - 1);
     });
     window.addEventListener("keydown", async (event) => {
+      if (await this.handleSecretStageKeys(event)) return;
       if (this.screen === "menu") {
         const menuMap = { ArrowUp: "story", ArrowRight: "survival", ArrowDown: "help", ArrowLeft: "option" };
         if (menuMap[event.code]) {
@@ -509,7 +516,42 @@ class Game2026 {
 
   openSettings() {
     this.sound.cue("menu");
+    this.secretStageSequence = "";
+    this.secretStageTapCount = 0;
+    this.secretStageTapAt = 0;
     this.show("settings");
+  }
+
+  async handleSecretStageTap() {
+    if (this.screen !== "settings") return;
+    const now = performance.now();
+    this.secretStageTapCount = now - this.secretStageTapAt > 1200 ? 1 : this.secretStageTapCount + 1;
+    this.secretStageTapAt = now;
+    if (this.secretStageTapCount >= 7) {
+      this.secretStageTapCount = 0;
+      await this.openSecretStagePrompt();
+    }
+  }
+
+  async handleSecretStageKeys(event) {
+    if (this.screen !== "settings" || event.ctrlKey || event.metaKey || event.altKey) return false;
+    if (!event.key || event.key.length !== 1) return false;
+    this.secretStageSequence = `${this.secretStageSequence}${event.key.toLowerCase()}`.slice(-5);
+    if (this.secretStageSequence !== "heyda") return false;
+    event.preventDefault();
+    this.secretStageSequence = "";
+    await this.openSecretStagePrompt();
+    return true;
+  }
+
+  async openSecretStagePrompt() {
+    this.sound.unlock();
+    this.sound.cue("menu");
+    const rawStage = window.prompt(`스테이지 번호를 입력하세요. 1-${this.getTotalStages()}`);
+    if (rawStage === null) return;
+    const stage = Number.parseInt(rawStage, 10);
+    if (!Number.isFinite(stage)) return;
+    await this.startStory(Math.max(1, Math.min(this.getTotalStages(), stage)));
   }
 
   async handleDevShortcut() {

@@ -5,6 +5,9 @@ const ACTOR_MIN = -1;
 const ACTOR_MAX = 10;
 const SAVE_KEY = "help-me-heyda-2026-story-progress";
 const POWER_SAVE_KEY = "help-me-heyda-2026-powers";
+const HIGH_SCORE_KEY = "help-me-heyda-2026-high-scores";
+const HIGH_SCORE_LIMIT = 10;
+const INITIAL_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const OBSTACLE_DEVELOPMENT = 99;
 const CHAPTER1_BOSS = {
   stage: 6,
@@ -246,6 +249,9 @@ class Game2026 {
     this.secretStageSequence = "";
     this.secretStageTapCount = 0;
     this.secretStageTapAt = 0;
+    this.highScores = this.loadHighScores();
+    this.nameEntry = null;
+    this.nameEntryTouchAreas = [];
     this.mistakes = 0;
     this.storyLastChanceUsed = false;
     this.message = "Ready";
@@ -396,6 +402,7 @@ class Game2026 {
     this.canvas.addEventListener("pointerdown", (event) => {
       const rect = this.canvas.getBoundingClientRect();
       this.pointer = this.screenToBoard(event.clientX - rect.left, event.clientY - rect.top);
+      if (this.handleNameEntryTap(event.clientX - rect.left, event.clientY - rect.top)) return;
       if (this.handleResultTap(event.clientX - rect.left, event.clientY - rect.top)) return;
       if (this.gameOver) {
         this.openMenu();
@@ -408,6 +415,7 @@ class Game2026 {
       if (this.pointer.row >= 0 && this.pointer.row <= 11) this.tapRow(this.pointer.row - 1);
     });
     window.addEventListener("keydown", async (event) => {
+      if (this.handleNameEntryKey(event)) return;
       if (await this.handleSecretStageKeys(event)) return;
       if (this.screen === "menu") {
         const menuMap = { ArrowUp: "story", ArrowRight: "survival", ArrowDown: "help", ArrowLeft: "option" };
@@ -464,6 +472,7 @@ class Game2026 {
 
   openMenu() {
     this.resumeCountdownUntil = 0;
+    this.nameEntry = null;
     this.sound.stopEffects();
     this.sound.startMusic("menuBgm");
     this.sound.cue("menu");
@@ -677,6 +686,7 @@ class Game2026 {
     this.stageClear = false;
     this.gameOver = false;
     this.resultState = null;
+    this.nameEntry = null;
     this.rewardUnlocked = null;
     this.clearAdvanceAt = 0;
     this.board = await this.loadStage(stage);
@@ -714,6 +724,7 @@ class Game2026 {
     this.stageClear = false;
     this.gameOver = false;
     this.resultState = null;
+    this.nameEntry = null;
     this.rewardUnlocked = null;
     this.clearAdvanceAt = 0;
     this.survivalTimer = 0;
@@ -1024,6 +1035,137 @@ class Game2026 {
     } catch {
       // Storage may be unavailable in private browsing or locked-down webviews.
     }
+  }
+
+  loadHighScores() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(HIGH_SCORE_KEY) || "[]");
+      if (!Array.isArray(parsed)) return [];
+      return parsed
+        .map((entry) => ({
+          initials: String(entry.initials || "AAA").toUpperCase().replace(/[^A-Z]/g, "").slice(0, 3).padEnd(3, "A"),
+          score: Number.parseInt(entry.score, 10) || 0,
+          stage: Number.parseInt(entry.stage, 10) || 1,
+          mode: entry.mode === "survival" ? "survival" : "story",
+          date: String(entry.date || "")
+        }))
+        .filter((entry) => entry.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, HIGH_SCORE_LIMIT * 2);
+    } catch {
+      return [];
+    }
+  }
+
+  saveHighScores() {
+    try {
+      localStorage.setItem(HIGH_SCORE_KEY, JSON.stringify(this.highScores));
+    } catch {
+      // Local storage can be unavailable in private browsing.
+    }
+  }
+
+  highScoresForMode(mode = this.mode) {
+    return this.highScores
+      .filter((entry) => entry.mode === mode)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, HIGH_SCORE_LIMIT);
+  }
+
+  qualifiesForHighScore(score, mode = this.mode) {
+    if (score <= 0) return false;
+    const scores = this.highScoresForMode(mode);
+    return scores.length < HIGH_SCORE_LIMIT || score > scores[scores.length - 1].score;
+  }
+
+  prepareNameEntry() {
+    if (!this.qualifiesForHighScore(this.score, this.mode)) {
+      this.nameEntry = null;
+      return;
+    }
+    this.nameEntry = {
+      initials: ["A", "A", "A"],
+      selected: 0,
+      mode: this.mode,
+      score: this.score,
+      stage: this.stage
+    };
+  }
+
+  handleNameEntryKey(event) {
+    if (!this.nameEntry) return false;
+    const { code, key } = event;
+    event.preventDefault();
+    if (code === "ArrowLeft") {
+      this.nameEntry.selected = Math.max(0, this.nameEntry.selected - 1);
+      this.sound.cue("menu");
+      return true;
+    }
+    if (code === "ArrowRight" || code === "Space") {
+      this.nameEntry.selected = Math.min(2, this.nameEntry.selected + 1);
+      this.sound.cue("menu");
+      return true;
+    }
+    if (code === "ArrowUp" || code === "ArrowDown") {
+      const delta = code === "ArrowUp" ? 1 : -1;
+      this.changeNameEntryLetter(delta);
+      return true;
+    }
+    if (code === "Enter") {
+      this.commitNameEntry();
+      return true;
+    }
+    if (/^[a-z]$/i.test(key)) {
+      this.nameEntry.initials[this.nameEntry.selected] = key.toUpperCase();
+      this.nameEntry.selected = Math.min(2, this.nameEntry.selected + 1);
+      this.sound.cue("menu");
+      return true;
+    }
+    return true;
+  }
+
+  changeNameEntryLetter(delta) {
+    if (!this.nameEntry) return;
+    const current = INITIAL_LETTERS.indexOf(this.nameEntry.initials[this.nameEntry.selected]);
+    const next = (current + delta + INITIAL_LETTERS.length) % INITIAL_LETTERS.length;
+    this.nameEntry.initials[this.nameEntry.selected] = INITIAL_LETTERS[next];
+    this.sound.cue("menu");
+  }
+
+  commitNameEntry() {
+    if (!this.nameEntry) return;
+    const entry = {
+      initials: this.nameEntry.initials.join(""),
+      score: this.nameEntry.score,
+      stage: this.nameEntry.stage,
+      mode: this.nameEntry.mode,
+      date: new Date().toISOString()
+    };
+    const others = this.highScores.filter((score) => score.mode !== entry.mode);
+    const modeScores = [...this.highScoresForMode(entry.mode), entry]
+      .sort((a, b) => b.score - a.score)
+      .slice(0, HIGH_SCORE_LIMIT);
+    this.highScores = [...others, ...modeScores];
+    this.saveHighScores();
+    this.nameEntry = null;
+    this.nameEntryTouchAreas = [];
+    this.sound.cue("stageClear");
+  }
+
+  handleNameEntryTap(x, y) {
+    if (!this.nameEntry) return false;
+    const hit = this.nameEntryTouchAreas.find((area) => x >= area.x && x <= area.x + area.w && y >= area.y && y <= area.y + area.h);
+    if (!hit) return true;
+    if (hit.type === "letter") {
+      this.nameEntry.selected = hit.index;
+      this.changeNameEntryLetter(1);
+      return true;
+    }
+    if (hit.type === "save") {
+      this.commitNameEntry();
+      return true;
+    }
+    return true;
   }
 
   leafCleanseUnlocked() {
@@ -1589,6 +1731,7 @@ class Game2026 {
     this.sound.stopMusic();
     this.message = reason;
     this.clearBlastUntil = 0;
+    this.prepareNameEntry();
     this.pulse(1.06, 4);
     this.sound.cue("gameover");
     this.updateHud();
@@ -1826,13 +1969,11 @@ class Game2026 {
 
     }
     if (this.resultState === "gameover") {
-      ctx.fillStyle = "rgba(5, 8, 7, 0.42)";
-      this.roundRect(ctx, this.width * 0.14, this.height * 0.62, this.width * 0.72, 42, 8);
-      ctx.fill();
-      ctx.fillStyle = "#fff7d8";
-      ctx.textAlign = "center";
-      ctx.font = "900 17px Arial";
-      ctx.fillText(`Stage ${this.stage}  Score ${this.score}`, this.width / 2, this.height * 0.62 + 27);
+      if (this.nameEntry) {
+        this.drawNameEntryOverlay(ctx);
+      } else {
+        this.drawGameOverScoreboard(ctx);
+      }
     }
     if (this.resultState === "ending") {
       const msgY = this.height * 0.775;
@@ -1876,6 +2017,111 @@ class Game2026 {
       ctx.textAlign = "center";
       ctx.font = "800 13px Arial";
       ctx.fillText("메뉴", menuX + menuW / 2, btnY + btnH * 0.62);
+    }
+    ctx.restore();
+  }
+
+  drawNameEntryOverlay(ctx) {
+    const panelW = Math.min(this.width * 0.76, 330);
+    const panelH = Math.min(this.height * 0.23, 178);
+    const panelX = this.width / 2 - panelW / 2;
+    const panelY = Math.max(22, this.height * 0.135);
+    const boxSize = Math.min(50, panelW * 0.18);
+    const gap = Math.min(16, this.width * 0.04);
+    const startX = this.width / 2 - boxSize * 1.5 - gap;
+    const boxY = panelY + panelH * 0.39;
+    const saveW = Math.min(156, panelW * 0.54);
+    const saveH = 34;
+    const saveX = this.width / 2 - saveW / 2;
+    const saveY = panelY + panelH - saveH - 14;
+
+    this.nameEntryTouchAreas = [];
+    ctx.save();
+    ctx.fillStyle = "rgba(5, 8, 7, 0.88)";
+    this.roundRect(ctx, panelX, panelY, panelW, panelH, 8);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(247, 193, 95, 0.72)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#f7c15f";
+    ctx.font = "900 18px Arial";
+    ctx.fillText("NEW HIGH SCORE", this.width / 2, panelY + 30);
+    ctx.fillStyle = "rgba(247, 241, 223, 0.72)";
+    ctx.font = "800 11px Arial";
+    ctx.fillText("ENTER 3 LETTERS", this.width / 2, panelY + 50);
+
+    for (let i = 0; i < 3; i += 1) {
+      const x = startX + i * (boxSize + gap);
+      const selected = i === this.nameEntry.selected;
+      ctx.fillStyle = selected ? "rgba(247, 193, 95, 0.26)" : "rgba(255, 255, 255, 0.08)";
+      this.roundRect(ctx, x, boxY, boxSize, boxSize, 8);
+      ctx.fill();
+      ctx.strokeStyle = selected ? "#f7c15f" : "rgba(247, 241, 223, 0.22)";
+      ctx.lineWidth = selected ? 2 : 1.2;
+      ctx.stroke();
+      ctx.fillStyle = "#fff7d8";
+      ctx.font = "900 34px Arial";
+      ctx.fillText(this.nameEntry.initials[i], x + boxSize / 2, boxY + boxSize * 0.7);
+      this.nameEntryTouchAreas.push({ type: "letter", index: i, x, y: boxY, w: boxSize, h: boxSize });
+    }
+
+    ctx.fillStyle = "rgba(121, 221, 191, 0.22)";
+    this.roundRect(ctx, saveX, saveY, saveW, saveH, 8);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(121, 221, 191, 0.72)";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.fillStyle = "#79ddbf";
+    ctx.font = "900 14px Arial";
+    ctx.fillText("SAVE", this.width / 2, saveY + 25);
+    this.nameEntryTouchAreas.push({ type: "save", x: saveX, y: saveY, w: saveW, h: saveH });
+
+    ctx.fillStyle = "rgba(247, 241, 223, 0.58)";
+    ctx.font = "800 10px Arial";
+    ctx.fillText("ARROWS CHANGE  ENTER SAVE", this.width / 2, panelY + panelH - 4);
+    ctx.restore();
+  }
+
+  drawGameOverScoreboard(ctx) {
+    const scores = this.highScoresForMode(this.mode).slice(0, 5);
+    const panelW = Math.min(this.width * 0.66, 292);
+    const rowH = 15;
+    const panelH = scores.length ? 53 + rowH * scores.length : 56;
+    const panelX = this.width / 2 - panelW / 2;
+    const panelY = Math.max(18, this.height * 0.115);
+    ctx.save();
+    ctx.fillStyle = "rgba(5, 8, 7, 0.58)";
+    this.roundRect(ctx, panelX, panelY, panelW, panelH, 8);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(247, 193, 95, 0.42)";
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    ctx.fillStyle = "#fff7d8";
+    ctx.textAlign = "center";
+    ctx.font = "900 15px Arial";
+    ctx.fillText(`Stage ${this.stage}  Score ${this.score.toLocaleString()}`, this.width / 2, panelY + 22);
+
+    if (!scores.length) {
+      ctx.restore();
+      return;
+    }
+
+    ctx.fillStyle = "#f7c15f";
+    ctx.textAlign = "center";
+    ctx.font = "900 11px Arial";
+    ctx.fillText(`${this.mode.toUpperCase()} LOCAL RANK`, this.width / 2, panelY + 40);
+    ctx.font = "800 11px Arial";
+    for (let i = 0; i < scores.length; i += 1) {
+      const entry = scores[i];
+      const y = panelY + 57 + i * rowH;
+      ctx.fillStyle = i === 0 ? "#fff7d8" : "rgba(247, 241, 223, 0.76)";
+      ctx.textAlign = "left";
+      ctx.fillText(`${i + 1}. ${entry.initials}`, panelX + 18, y);
+      ctx.textAlign = "right";
+      ctx.fillText(entry.score.toLocaleString(), panelX + panelW - 18, y);
     }
     ctx.restore();
   }

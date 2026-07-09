@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "tuning": { "G": 10 },
+  "stages": [
+    {
+      "id": "1-1",
+      "chapter": 1,
+      "title": "감귤 과수원",
+      "startHp": 60,
+      "targetAlpha": 2.0,
+      "solutionNotes": [
+        "토끼로 (5,2)에서 오른쪽 땅굴을 써서 (7,2) 귤을 먹고 되돌아온다.",
+        "거북이로 물에 들어가 (7,5)의 열쇠를 얻는다.",
+        "고양이로 (3,4)와 (5,4)의 돌을 각각 아래로 밀어 (3,8), (5,8) 버튼을 누르면 (10,10) 돌문이 열린다.",
+        "선택 검증: 고양이로 (8,11)의 돌을 아래로 밀면 구덩이 (8,12)가 메워지고, (4,11) 폭탄은 (4,8) 폭탄을 연쇄 기폭해 나무문을 제거한다.",
+        "열쇠 보유 상태로 열린 돌문을 지나 (12,10)의 상자를 열면 클리어된다."
+      ],
+      "roomGrid": [1, 1],
+      "startRoom": [0, 0],
+      "startPos": [7, 13],
+      "rooms": [
+        {
+          "coord": [0, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.....TTT.T...T",
+            "T.....T.T.T...T",
+            "T.....TTT.T...T",
+            "T.........T...T",
+            "T.....~~~.T...T",
+            "T.....~~~.T...T",
+            "T.........T...T",
+            "T.........T...T",
+            "T...d.....T...T",
+            "T.........D...T",
+            "T.........T...T",
+            "T.......P.T...T",
+            "T.........T...T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "tangerine", "pos": [7, 2] },
+            { "type": "tangerine", "pos": [1, 4] },
+            { "type": "tangerine", "pos": [13, 4] },
+            { "type": "tangerine", "pos": [1, 12] },
+            { "type": "tangerine", "pos": [13, 12] },
+            { "type": "rock", "pos": [3, 4] },
+            { "type": "rock", "pos": [5, 4] },
+            { "type": "rock", "pos": [8, 11] },
+            { "type": "key", "pos": [7, 5] },
+            { "type": "button", "pos": [3, 8], "group": "g1" },
+            { "type": "button", "pos": [5, 8], "group": "g1" },
+            { "type": "bomb", "pos": [4, 11], "range": 3 },
+            { "type": "bomb", "pos": [4, 8],  "range": 2 },
+            { "type": "chest", "pos": [12, 10] }
+          ],
+          "doorGroups": { "10,10": "g1" }
+        }
+      ]
+    }
+  ]
+}

@@ -8,38 +8,60 @@ const DIRS = {
   right: [1,  0],
 };
 
+const GRID = 15;
+
 function key(x, y) { return `${x},${y}`; }
-function inBounds(x, y) { return x >= 0 && y >= 0 && x < 15 && y < 15; }
+function inBounds(x, y) { return x >= 0 && y >= 0 && x < GRID && y < GRID; }
 
 function getTile(room, x, y) {
   if (!inBounds(x, y)) return '#';
   return room.terrain[y][x];
 }
 
-function setAdd(s, item) { const n = new Set(s); n.add(item); return n; }
-function setDelete(s, item) { const n = new Set(s); n.delete(item); return n; }
-function mapDelete(m, k) { const n = new Map(m); n.delete(k); return n; }
+function setAdd(s, item)  { const n = new Set(s); n.add(item);    return n; }
+function setDelete(s, item){ const n = new Set(s); n.delete(item); return n; }
+function mapDelete(m, k)   { const n = new Map(m); n.delete(k);   return n; }
+
+// Deep-clone the per-room mutable state archive.
+function cloneRoomStates(map) {
+  const out = new Map();
+  for (const [rk, rs] of map) {
+    out.set(rk, {
+      tangerines:   new Set(rs.tangerines),
+      rocks:        new Set(rs.rocks),
+      bombs:        new Map(rs.bombs),
+      removedTiles: new Set(rs.removedTiles),
+      filledPits:   new Set(rs.filledPits),
+      openDoors:    new Set(rs.openDoors),
+      tunnelHoles:  new Set(rs.tunnelHoles),
+    });
+  }
+  return out;
+}
 
 function cloneState(state) {
   return {
     char: state.char,
+    roomCoord: [...state.roomCoord],
     pos: [...state.pos],
     dir: state.dir,
     walkFrame: state.walkFrame,
     terrainLock: state.terrainLock || null,
     hp: state.hp,
     hasKey: state.hasKey,
-    tangerines: new Set(state.tangerines),
-    rocks: new Set(state.rocks),
-    bombs: new Map(state.bombs),
+    tangerines:   new Set(state.tangerines),
+    rocks:        new Set(state.rocks),
+    bombs:        new Map(state.bombs),
     removedTiles: new Set(state.removedTiles),
-    filledPits: new Set(state.filledPits),
-    openDoors: new Set(state.openDoors),
-    tunnelHoles: new Set(state.tunnelHoles || []),
+    filledPits:   new Set(state.filledPits),
+    openDoors:    new Set(state.openDoors),
+    tunnelHoles:  new Set(state.tunnelHoles || []),
     chestOpen: state.chestOpen,
     status: state.status,
-    _room: state._room,
-    _doorGroups: state._doorGroups,
+    _room:         state._room,          // immutable room data — safe to share
+    _rooms:        state._rooms,         // immutable map — safe to share
+    _roomStates:   cloneRoomStates(state._roomStates),
+    _buttonGroups: state._buttonGroups,  // stage-level, immutable
     _G: state._G,
   };
 }
@@ -57,7 +79,6 @@ function applyTerrainLock(state, forcedLock = null) {
     state.terrainLock = forcedLock;
     return;
   }
-
   const [x, y] = state.pos;
   if (state.char === 'rabbit' && state.tunnelHoles.has(key(x, y))) {
     state.terrainLock = 'rabbit';
@@ -69,30 +90,49 @@ function applyTerrainLock(state, forcedLock = null) {
 function effectiveTile(state, x, y) {
   const k = key(x, y);
   if (state.removedTiles.has(k)) return '.';
-  if (state.filledPits.has(k)) return '.';
-  if (state.openDoors.has(k)) return '.';
+  if (state.filledPits.has(k))   return '.';
+  if (state.openDoors.has(k))    return '.';
   return getTile(state._room, x, y);
 }
 
+// effectiveTile for a room that isn't currently active — reads from its archived state.
+function effectiveTileInRoom(room, rs, x, y) {
+  const k = key(x, y);
+  if (rs.removedTiles.has(k)) return '.';
+  if (rs.filledPits.has(k))   return '.';
+  if (rs.openDoors.has(k))    return '.';
+  return getTile(room, x, y);
+}
+
 function reEvalButtons(state, events) {
-  const room = state._room;
-  const groups = {};
+  const crk = key(...state.roomCoord);
 
-  for (const obj of room.objects) {
-    if (obj.type !== 'button') continue;
-    const gid = obj.group;
-    if (!groups[gid]) groups[gid] = { needed: 0, pressed: 0 };
-    groups[gid].needed++;
-    if (state.rocks.has(key(...obj.pos))) groups[gid].pressed++;
-  }
+  for (const [gid, group] of Object.entries(state._buttonGroups)) {
+    // Check if every button in this group has a rock on it.
+    let allPressed = true;
+    for (const btn of group.buttons) {
+      const rk  = key(...btn.room);
+      const bk  = key(...btn.pos);
+      const rocks = rk === crk ? state.rocks : state._roomStates.get(rk)?.rocks;
+      if (!rocks || !rocks.has(bk)) { allPressed = false; break; }
+    }
+    if (!allPressed) continue;
 
-  for (const [gid, { needed, pressed }] of Object.entries(groups)) {
-    if (needed === 0) continue;
-    for (const [dkey, dgroup] of Object.entries(state._doorGroups)) {
-      if (dgroup !== gid) continue;
-      if (pressed >= needed && !state.openDoors.has(dkey)) {
-        state.openDoors = setAdd(state.openDoors, dkey);
-        events.push({ type: 'door_open', pos: dkey });
+    // Open every door in this group (same-room or cross-room).
+    for (const door of group.doors) {
+      const rk = key(...door.room);
+      const dk = key(...door.pos);
+      if (rk === crk) {
+        if (!state.openDoors.has(dk)) {
+          state.openDoors = setAdd(state.openDoors, dk);
+          events.push({ type: 'door_open', pos: dk, room: door.room });
+        }
+      } else {
+        const rs = state._roomStates.get(rk);
+        if (rs && !rs.openDoors.has(dk)) {
+          rs.openDoors = setAdd(rs.openDoors, dk);
+          events.push({ type: 'door_open', pos: dk, room: door.room });
+        }
       }
     }
   }
@@ -168,6 +208,84 @@ function applyPickups(state, x, y, events) {
   return state;
 }
 
+// Swap flat mutable fields between rooms.
+// Saves current flat state → _roomStates[old], loads _roomStates[new] → flat fields.
+function doRoomTransition(s, newCoord, newPos, events) {
+  const oldRk = key(...s.roomCoord);
+  const newRk = key(...newCoord);
+
+  // Archive current flat state for the room we're leaving.
+  s._roomStates.set(oldRk, {
+    tangerines:   s.tangerines,
+    rocks:        s.rocks,
+    bombs:        s.bombs,
+    removedTiles: s.removedTiles,
+    filledPits:   s.filledPits,
+    openDoors:    s.openDoors,
+    tunnelHoles:  s.tunnelHoles,
+  });
+
+  // Restore the room we're entering.
+  const newRS = s._roomStates.get(newRk);
+  s.tangerines   = newRS.tangerines;
+  s.rocks        = newRS.rocks;
+  s.bombs        = newRS.bombs;
+  s.removedTiles = newRS.removedTiles;
+  s.filledPits   = newRS.filledPits;
+  s.openDoors    = newRS.openDoors;
+  s.tunnelHoles  = newRS.tunnelHoles;
+
+  const newRoom = s._rooms.get(newRk);
+  s.roomCoord  = newCoord;
+  s._room      = newRoom;
+  s.pos        = newPos;
+  // terrainLock is recalculated by the caller via applyTerrainLock.
+  s.terrainLock = null;
+
+  events.push({ type: 'room_enter', roomCoord: newCoord });
+}
+
+// Attempt to move the player off the current room's edge into an adjacent room.
+function handleRoomTransition(s, tx, ty, events) {
+  const [rx, ry] = s.roomCoord;
+  let newRx = rx, newRy = ry;
+  let newTx = tx, newTy = ty;
+
+  if      (tx < 0)    { newRx = rx - 1; newTx = GRID - 1; }
+  else if (tx >= GRID){ newRx = rx + 1; newTx = 0; }
+  if      (ty < 0)    { newRy = ry - 1; newTy = GRID - 1; }
+  else if (ty >= GRID){ newRy = ry + 1; newTy = 0; }
+
+  const newRk = key(newRx, newRy);
+  if (!s._rooms.has(newRk)) return null; // no adjacent room in this direction
+
+  const newRoom = s._rooms.get(newRk);
+  const newRS   = s._roomStates.get(newRk);
+  const entry   = effectiveTileInRoom(newRoom, newRS, newTx, newTy);
+  const entryKey = key(newTx, newTy);
+
+  // Entry tile must be a valid room entrance. Objects on that tile can further
+  // restrict entry, but cannot be pushed from across the room boundary.
+  if (entry !== '.' && entry !== '~') return null;
+  if (entry === '~' && s.char !== 'turtle') return null;
+  if (newRS.rocks.has(entryKey)) return null;
+  if (newRS.tunnelHoles.has(entryKey) && s.char !== 'rabbit') return null;
+
+  s.hp -= 1;
+  if (s.hp <= 0) {
+    s.hp = 0;
+    s.status = 'gameover';
+    events.push({ type: 'gameover' });
+    return { state: s, events };
+  }
+
+  doRoomTransition(s, [newRx, newRy], [newTx, newTy], events);
+  applyTerrainLock(s);
+  s = applyPickups(s, newTx, newTy, events);
+
+  return { state: s, events };
+}
+
 export function nextState(state, action) {
   if (state.status !== 'playing') return null;
 
@@ -198,14 +316,20 @@ export function nextState(state, action) {
   s.dir = action.dir;
   s.walkFrame = state.walkFrame === 'a' ? 'b' : 'a';
 
+  // Off-edge: attempt room transition before any in-room tile logic.
+  // Rocks and tunnels cannot cross room boundaries.
+  if (!inBounds(tx, ty)) {
+    return handleRoomTransition(s, tx, ty, events);
+  }
+
   const targetTile = effectiveTile(s, tx, ty);
-  const targetKey = key(tx, ty);
+  const targetKey  = key(tx, ty);
 
   if (s.rocks.has(targetKey)) {
     if (char !== 'cat') return null;
     const rx = tx + dx;
     const ry = ty + dy;
-    const rTile = effectiveTile(s, rx, ry);
+    const rTile   = effectiveTile(s, rx, ry);
     const rockDest = key(rx, ry);
 
     if (s.rocks.has(rockDest)) return null;
@@ -245,7 +369,6 @@ export function nextState(state, action) {
     } else if (targetTile === 'P') {
       return null;
     } else if (targetTile === 'd' || targetTile === 'D') {
-      // effectiveTile returns '.' if door is open — if we're here, it's still closed
       return null;
     } else if (targetTile !== '.') {
       return null;

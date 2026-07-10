@@ -20,6 +20,7 @@ function initStage(data, stageId) {
 function serializeState() {
   return {
     char: state.char,
+    roomCoord: [...state.roomCoord],
     pos: [...state.pos],
     dir: state.dir,
     walkFrame: state.walkFrame,
@@ -83,6 +84,9 @@ function dispatch(action) {
       renderer.addExplosionFX(ev.blasted || []);
       if (ev.origin) renderer.addExplosionFX([ev.origin]);
     }
+    if (ev.type === 'rock_push' || ev.type === 'rock_fill') {
+      renderer.showPush();
+    }
     if (ev.type === 'tunnel') {
       renderer.addActionFX('dig', [ev.from, ev.pos].filter(Boolean));
     }
@@ -91,6 +95,9 @@ function dispatch(action) {
     }
     if (ev.type === 'switch') {
       input.highlightChar(ev.char);
+    }
+    if (ev.type === 'room_enter') {
+      renderer.clearFX();
     }
     if (ev.type === 'clear' || ev.type === 'gameover') {
       input.stopMovement();

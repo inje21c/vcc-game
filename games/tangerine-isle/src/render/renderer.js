@@ -15,6 +15,7 @@ function uiImg(id)     { return assetUrl('ui', id); }
 function fxImg(id)     { return assetUrl('fx', id); }
 
 const imageCache = {};
+const imageBoundsCache = {};
 function loadImg(src) {
   if (imageCache[src]) return imageCache[src];
   const img = new Image();
@@ -27,6 +28,85 @@ function drawImg(ctx, src, x, y, w = T, h = T) {
   const img = loadImg(src);
   if (!img.complete || img.naturalWidth === 0) return;
   ctx.drawImage(img, x, y, w, h);
+}
+
+function alphaBounds(src, img) {
+  if (imageBoundsCache[src]) return imageBoundsCache[src];
+  if (!img.complete || img.naturalWidth === 0) return null;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(img, 0, 0);
+
+  let minX = img.naturalWidth;
+  let minY = img.naturalHeight;
+  let maxX = -1;
+  let maxY = -1;
+
+  try {
+    const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    for (let y = 0; y < canvas.height; y++) {
+      for (let x = 0; x < canvas.width; x++) {
+        const alpha = pixels[(y * canvas.width + x) * 4 + 3];
+        if (alpha <= 8) continue;
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+      }
+    }
+  } catch {
+    imageBoundsCache[src] = { x: 0, y: 0, w: img.naturalWidth, h: img.naturalHeight };
+    return imageBoundsCache[src];
+  }
+
+  imageBoundsCache[src] = maxX < 0
+    ? { x: 0, y: 0, w: img.naturalWidth, h: img.naturalHeight }
+    : { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 };
+  return imageBoundsCache[src];
+}
+
+const SPRITE_PROFILES = {
+  cat:    { height: 1.20, foot: 1.00 },
+  rabbit: { height: 1.20, foot: 1.00 },
+  turtle: { height: 1.16, foot: 1.00 },
+};
+
+const SPRITE_FRAME_PROFILES = {
+  'turtle§down§act':  { height: 1.08, foot: 0.98 },
+  'turtle§left§act':  { height: 1.08, foot: 0.98 },
+  'turtle§right§act': { height: 1.08, foot: 0.98 },
+  'turtle§up§act':    { height: 1.08, foot: 0.98 },
+};
+
+function spriteProfile(char, dir, frame) {
+  return {
+    ...(SPRITE_PROFILES[char] || SPRITE_PROFILES.cat),
+    ...(SPRITE_FRAME_PROFILES[`${char}§${dir}§${frame}`] || {}),
+  };
+}
+
+function drawAnchoredSprite(ctx, src, tileX, tileY, char, dir, frame) {
+  const img = loadImg(src);
+  if (!img.complete || img.naturalWidth === 0) return;
+
+  const bounds = alphaBounds(src, img);
+  if (!bounds) return;
+
+  const profile = spriteProfile(char, dir, frame);
+  const targetH = T * profile.height;
+  const scale = targetH / bounds.h;
+  const targetW = bounds.w * scale;
+  const anchorX = tileX * T + T / 2;
+  const footY = tileY * T + T * profile.foot;
+
+  ctx.drawImage(
+    img,
+    bounds.x, bounds.y, bounds.w, bounds.h,
+    anchorX - targetW / 2, footY - targetH, targetW, targetH
+  );
 }
 
 function key(x, y) { return `${x},${y}`; }
@@ -62,6 +142,7 @@ export class Renderer {
     this._waterTimer = 0;
     this._fx = []; // active flash effects [{x,y,alpha,until}]
     this._spriteFx = [];
+    this._pushUntil = 0; // timestamp until cat push act frame is shown
   }
 
   resize() {
@@ -83,6 +164,10 @@ export class Renderer {
   clearFX() {
     this._fx = [];
     this._spriteFx = [];
+  }
+
+  showPush(durationMs = 220) {
+    this._pushUntil = Date.now() + durationMs;
   }
 
   addActionFX(kind, tiles) {
@@ -209,7 +294,9 @@ export class Renderer {
     // Player character
     const playerTile = effectiveTile(room, state, state.pos[0], state.pos[1]);
     const playerKey = key(state.pos[0], state.pos[1]);
+    const isPushing = state.char === 'cat' && Date.now() < this._pushUntil;
     const playerFrame =
+      isPushing ||
       (state.char === 'turtle' && playerTile === '~') ||
       (state.char === 'rabbit' && state.tunnelHoles?.has(playerKey))
         ? 'act'
@@ -256,7 +343,7 @@ export class Renderer {
         drawImg(ctx, objImg(cid), px + ox, py + oy, w, h);
       } else if (e.type === 'player') {
         const sprId = `spr_${e.char}_${e.dir}_${e.frame}`;
-        drawImg(ctx, sprImg(sprId), px + ox, py + oy, w, h);
+        drawAnchoredSprite(ctx, sprImg(sprId), e.x, e.y, e.char, e.dir, e.frame);
       }
     }
 

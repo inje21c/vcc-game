@@ -108,7 +108,6 @@ function reEvalButtons(state, events) {
   const crk = key(...state.roomCoord);
 
   for (const [gid, group] of Object.entries(state._buttonGroups)) {
-    // Check if every button in this group has a rock on it.
     let allPressed = true;
     for (const btn of group.buttons) {
       const rk  = key(...btn.room);
@@ -116,22 +115,29 @@ function reEvalButtons(state, events) {
       const rocks = rk === crk ? state.rocks : state._roomStates.get(rk)?.rocks;
       if (!rocks || !rocks.has(bk)) { allPressed = false; break; }
     }
-    if (!allPressed) continue;
 
-    // Open every door in this group (same-room or cross-room).
+    // Pressure-based: open doors when all buttons pressed, close when any released.
     for (const door of group.doors) {
       const rk = key(...door.room);
       const dk = key(...door.pos);
       if (rk === crk) {
-        if (!state.openDoors.has(dk)) {
+        if (allPressed && !state.openDoors.has(dk)) {
           state.openDoors = setAdd(state.openDoors, dk);
           events.push({ type: 'door_open', pos: dk, room: door.room });
+        } else if (!allPressed && state.openDoors.has(dk)) {
+          state.openDoors = setDelete(state.openDoors, dk);
+          events.push({ type: 'door_close', pos: dk, room: door.room });
         }
       } else {
         const rs = state._roomStates.get(rk);
-        if (rs && !rs.openDoors.has(dk)) {
-          rs.openDoors = setAdd(rs.openDoors, dk);
-          events.push({ type: 'door_open', pos: dk, room: door.room });
+        if (rs) {
+          if (allPressed && !rs.openDoors.has(dk)) {
+            rs.openDoors = setAdd(rs.openDoors, dk);
+            events.push({ type: 'door_open', pos: dk, room: door.room });
+          } else if (!allPressed && rs.openDoors.has(dk)) {
+            rs.openDoors = setDelete(rs.openDoors, dk);
+            events.push({ type: 'door_close', pos: dk, room: door.room });
+          }
         }
       }
     }
@@ -280,6 +286,7 @@ function handleRoomTransition(s, tx, ty, events) {
   }
 
   doRoomTransition(s, [newRx, newRy], [newTx, newTy], events);
+  reEvalButtons(s, events); // re-derive door states from current rock positions
   applyTerrainLock(s);
   s = applyPickups(s, newTx, newTy, events);
 

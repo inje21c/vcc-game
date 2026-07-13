@@ -1,8 +1,10 @@
-// Canvas 2D renderer — 15×15 tiles, 128px each
+// Canvas 2D renderer — 15×15 room tiles, 11×11 viewport with camera
 
 const T = 128; // tile size px
 const COLS = 15;
 const ROWS = 15;
+const VIEWPORT_W = 11;
+const VIEWPORT_H = 11;
 const BG = '#D69E4A';
 
 const ASSET_BASE = new URL('../../assets/', import.meta.url);
@@ -140,18 +142,55 @@ export class Renderer {
     this.ctx = canvas.getContext('2d');
     this._waterFrame = 0;
     this._waterTimer = 0;
-    this._fx = []; // active flash effects [{x,y,alpha,until}]
+    this._fx = [];
     this._spriteFx = [];
-    this._pushUntil = 0; // timestamp until cat push act frame is shown
+    this._pushUntil = 0;
+    this._cam = { x: 0, y: 0 };
+    this._overviewMode = false;
+    // Smooth movement
+    this._visualPos = null;   // {x, y} — interpolated render position
+    this._logicalPos = null;  // {x, y} — current logical tile (integer)
+    this._moveSpeed = 12;     // tiles / second  →  1 tile ≈ 83ms
+    // Room-transition flash
+    this._flashAlpha = 0;
+    this._flashFading = false;
+  }
+
+  // Called when player moves within a room
+  setTargetPos(pos) {
+    if (!this._visualPos) this.snapPos(pos);
+    this._logicalPos = { x: pos[0], y: pos[1] };
+  }
+
+  // Instantly snap visual position (restart / room entry)
+  snapPos(pos) {
+    this._visualPos  = { x: pos[0], y: pos[1] };
+    this._logicalPos = { x: pos[0], y: pos[1] };
+  }
+
+  // Black-flash fade-in for room transitions
+  flashRoomTransition() {
+    this._flashAlpha  = 1;
+    this._flashFading = true;
   }
 
   resize() {
-    const size = Math.min(window.innerWidth, window.innerHeight);
-    this.canvas.style.width = size + 'px';
-    this.canvas.style.height = size + 'px';
-    this.canvas.width = COLS * T;
-    this.canvas.height = ROWS * T;
+    this.canvas.width = VIEWPORT_W * T;
+    this.canvas.height = VIEWPORT_H * T;
   }
+
+  _updateCamera(px, py) {
+    const cx = Math.max(0, Math.min(px - Math.floor(VIEWPORT_W / 2), COLS - VIEWPORT_W));
+    const cy = Math.max(0, Math.min(py - Math.floor(VIEWPORT_H / 2), ROWS - VIEWPORT_H));
+    this._cam = { x: cx, y: cy };
+  }
+
+  toggleOverview() {
+    this._overviewMode = !this._overviewMode;
+    return this._overviewMode;
+  }
+
+  get isOverview() { return this._overviewMode; }
 
   addExplosionFX(tiles) {
     const until = Date.now() + 200;
@@ -186,14 +225,57 @@ export class Renderer {
     }
     this._fx = this._fx.filter(f => Date.now() < f.until);
     this._spriteFx = this._spriteFx.filter(f => Date.now() < f.until);
+
+    // Lerp visual position toward logical position
+    if (this._visualPos && this._logicalPos) {
+      const dx = this._logicalPos.x - this._visualPos.x;
+      const dy = this._logicalPos.y - this._visualPos.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist > 0.004) {
+        const step = this._moveSpeed * dt / 1000;
+        if (step >= dist) {
+          this._visualPos.x = this._logicalPos.x;
+          this._visualPos.y = this._logicalPos.y;
+        } else {
+          this._visualPos.x += (dx / dist) * step;
+          this._visualPos.y += (dy / dist) * step;
+        }
+      }
+    }
+
+    // Room-transition flash fade-out
+    if (this._flashFading) {
+      this._flashAlpha -= dt / 180;
+      if (this._flashAlpha <= 0) {
+        this._flashAlpha  = 0;
+        this._flashFading = false;
+      }
+    }
   }
 
   render(state) {
     const ctx = this.ctx;
     const room = state._room;
 
+    const [lx, ly] = state.pos; // logical (integer) position
+
+    // Bootstrap visual pos on first render or after snap
+    if (!this._visualPos) this.snapPos(state.pos);
+
+    const vpx = this._visualPos.x;
+    const vpy = this._visualPos.y;
+
+    this._updateCamera(vpx, vpy); // camera follows visual pos
+
     ctx.fillStyle = BG;
-    ctx.fillRect(0, 0, COLS * T, ROWS * T);
+    ctx.fillRect(0, 0, VIEWPORT_W * T, VIEWPORT_H * T);
+
+    ctx.save();
+    if (this._overviewMode) {
+      ctx.scale(VIEWPORT_W / COLS, VIEWPORT_H / ROWS);
+    } else {
+      ctx.translate(-this._cam.x * T, -this._cam.y * T);
+    }
 
     // --- Pass 1: Terrain ---
     for (let y = 0; y < ROWS; y++) {
@@ -291,17 +373,17 @@ export class Renderer {
       }
     }
 
-    // Player character
-    const playerTile = effectiveTile(room, state, state.pos[0], state.pos[1]);
-    const playerKey = key(state.pos[0], state.pos[1]);
-    const isPushing = state.char === 'cat' && Date.now() < this._pushUntil;
+    // Player character — logical pos for game-state queries, visual pos for rendering
+    const playerTile = effectiveTile(room, state, lx, ly);
+    const playerKey  = key(lx, ly);
+    const isPushing  = state.char === 'cat' && Date.now() < this._pushUntil;
     const playerFrame =
       isPushing ||
       (state.char === 'turtle' && playerTile === '~') ||
       (state.char === 'rabbit' && state.tunnelHoles?.has(playerKey))
         ? 'act'
         : state.walkFrame || 'a';
-    entities.push({ type: 'player', x: state.pos[0], y: state.pos[1], char: state.char, dir: state.dir || 'down', frame: playerFrame });
+    entities.push({ type: 'player', x: vpx, y: vpy, char: state.char, dir: state.dir || 'down', frame: playerFrame });
 
     entities.sort((a, b) => a.y - b.y);
 
@@ -370,6 +452,22 @@ export class Renderer {
       ctx.restore();
     }
 
+    ctx.restore(); // end world-space translate / overview scale
+
+    // --- Room-transition flash ---
+    if (this._flashAlpha > 0) {
+      ctx.save();
+      ctx.globalAlpha = this._flashAlpha;
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, VIEWPORT_W * T, VIEWPORT_H * T);
+      ctx.restore();
+    }
+
+    // --- Overview hint bar ---
+    if (this._overviewMode) {
+      this._renderOverviewHint(ctx);
+    }
+
     // --- HUD ---
     this._renderHUD(ctx, state);
 
@@ -377,7 +475,7 @@ export class Renderer {
     if (state.status === 'gameover') {
       this._renderOverlay(ctx, 'GAME OVER', '#8B0000', 'R 또는 버튼으로 재시작');
     } else if (state.status === 'clear') {
-      this._renderOverlay(ctx, 'CLEAR!', '#2E7D32', '다음 스테이지로...');
+      this._renderOverlay(ctx, 'CLEAR!', '#2E7D32', '다음 스테이지로...', '다음 스테이지');
     }
   }
 
@@ -406,25 +504,26 @@ export class Renderer {
     ctx.restore();
   }
 
-  _renderOverlay(ctx, title, color, sub) {
+  _renderOverlay(ctx, title, color, sub, btnText = '다시 시작') {
+    const VW = VIEWPORT_W * T;
+    const VH = VIEWPORT_H * T;
     ctx.save();
     ctx.fillStyle = 'rgba(0,0,0,0.65)';
-    ctx.fillRect(0, 0, COLS * T, ROWS * T);
+    ctx.fillRect(0, 0, VW, VH);
 
     ctx.fillStyle = color;
     ctx.font = `bold ${T * 1.1}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(title, (COLS * T) / 2, (ROWS * T) / 2 - T * 0.4);
+    ctx.fillText(title, VW / 2, VH / 2 - T * 0.4);
 
     ctx.fillStyle = '#fff';
     ctx.font = `${T * 0.42}px sans-serif`;
-    ctx.fillText(sub, (COLS * T) / 2, (ROWS * T) / 2 + T * 0.6);
+    ctx.fillText(sub, VW / 2, VH / 2 + T * 0.6);
 
-    // Restart button rect (store coords for hit-test in main.js)
     const bw = T * 4, bh = T * 0.9;
-    const bx = (COLS * T) / 2 - bw / 2;
-    const by = (ROWS * T) / 2 + T * 1.6;
+    const bx = VW / 2 - bw / 2;
+    const by = VH / 2 + T * 1.6;
     ctx.fillStyle = 'rgba(255,255,255,0.2)';
     ctx.strokeStyle = '#fff';
     ctx.lineWidth = 6;
@@ -434,10 +533,88 @@ export class Renderer {
     ctx.stroke();
     ctx.fillStyle = '#fff';
     ctx.font = `bold ${T * 0.45}px sans-serif`;
-    ctx.fillText('다시 시작', (COLS * T) / 2, by + bh / 2);
+    ctx.fillText(btnText, VW / 2, by + bh / 2);
     this._restartBtnRect = { bx, by, bw, bh };
 
     ctx.restore();
+  }
+
+  _renderOverviewHint(ctx) {
+    const VW = VIEWPORT_W * T;
+    const VH = VIEWPORT_H * T;
+    const h = T * 0.28;
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.fillRect(0, VH - h, VW, h);
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.font = `bold ${Math.round(T * 0.17)}px monospace`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('전체 보기  ·  탭하면 돌아가기', VW / 2, VH - h / 2);
+    ctx.restore();
+  }
+
+  renderMinimap(mmCanvas, state) {
+    const room = state._room;
+    if (!room) return;
+
+    const ctx = mmCanvas.getContext('2d');
+    const W = mmCanvas.width;
+    const H = mmCanvas.height;
+    const sw = W / COLS;
+    const sh = H / ROWS;
+
+    ctx.clearRect(0, 0, W, H);
+
+    for (let y = 0; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        const tile = effectiveTile(room, state, x, y);
+        let color;
+        switch (tile) {
+          case '#':        color = '#0E0600'; break;
+          case 'T':        color = '#183018'; break;
+          case '~':        color = '#1A4870'; break;
+          case 'P':        color = '#2E1200'; break;
+          case 'P_filled': color = '#A06830'; break;
+          case 'd': case 'D': color = '#4A2E14'; break;
+          default:         color = '#A87030';
+        }
+        ctx.fillStyle = color;
+        ctx.fillRect(
+          Math.floor(x * sw), Math.floor(y * sh),
+          Math.ceil(sw) + 1, Math.ceil(sh) + 1
+        );
+      }
+    }
+
+    // Rocks
+    ctx.fillStyle = '#6A6A6A';
+    for (const rk of state.rocks) {
+      const [rx, ry] = rk.split(',').map(Number);
+      ctx.fillRect(Math.floor(rx * sw), Math.floor(ry * sh), Math.ceil(sw), Math.ceil(sh));
+    }
+
+    // Player dot
+    const [px, py] = state.pos;
+    const ps = Math.max(2, Math.round(sw * 0.75));
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(
+      Math.floor(px * sw + sw / 2 - ps / 2),
+      Math.floor(py * sh + sh / 2 - ps / 2),
+      ps, ps
+    );
+
+    // Viewport rectangle
+    if (!this._overviewMode) {
+      ctx.strokeStyle = 'rgba(255, 210, 60, 0.85)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(
+        Math.round(this._cam.x * sw) + 0.5,
+        Math.round(this._cam.y * sh) + 0.5,
+        Math.round(VIEWPORT_W * sw),
+        Math.round(VIEWPORT_H * sh)
+      );
+    }
   }
 
   getRestartBtnRect() { return this._restartBtnRect || null; }

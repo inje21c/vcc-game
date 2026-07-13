@@ -2,7 +2,6 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
-const { chromium } = require('playwright');
 
 const ROOT = path.resolve(__dirname, '..');
 const REPO_ROOT = path.resolve(ROOT, '..', '..');
@@ -17,6 +16,20 @@ const CONTENT_TYPES = {
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
+}
+
+function expandSolutionPath(stage) {
+  const actions = [];
+  for (const item of stage.solutionPath || []) {
+    if (item.move) {
+      for (let i = 0; i < (item.count ?? 1); i++) {
+        actions.push({ type: 'move', dir: item.move });
+      }
+    } else if (item.switch) {
+      actions.push({ type: 'switch', char: item.switch });
+    }
+  }
+  return actions;
 }
 
 async function runRuleSmoke() {
@@ -119,46 +132,12 @@ async function runRuleSmoke() {
 
   console.log('rules smoke ok');
 
-  // --- Map 1 directed route smoke ---
-  // A(cat rock) → D(turtle water) → G(rabbit tunnel) → H(button opens E)
-  // → E/F/E → B → A(hidden key) → B → C(chest).
+  // --- Stage 1 directed route smoke ---
   state = buildState(mapStage, data);
-  const mapPath = [];
-  const add = (action, count = 1) => {
-    for (let i = 0; i < count; i++) mapPath.push(action);
-  };
-  add({ type: 'move', dir: 'up' }, 2);
-  add({ type: 'move', dir: 'up' }, 2);
-  add({ type: 'move', dir: 'down' }, 6);
-  add({ type: 'switch', char: 'turtle' });
-  add({ type: 'move', dir: 'down' }, 15);
-  add({ type: 'switch', char: 'rabbit' });
-  add({ type: 'move', dir: 'down' }, 7);
-  add({ type: 'move', dir: 'right' }, 7);
-  add({ type: 'switch', char: 'cat' });
-  add({ type: 'move', dir: 'right' }, 5);
-  add({ type: 'move', dir: 'down' });
-  add({ type: 'move', dir: 'right' }, 2);
-  add({ type: 'move', dir: 'up' }, 9);
-  add({ type: 'move', dir: 'up' }, 7);
-  add({ type: 'move', dir: 'right' }, 8);
-  add({ type: 'move', dir: 'left' });
-  add({ type: 'move', dir: 'left' }, 7);
-  add({ type: 'move', dir: 'up' }, 8);
-  add({ type: 'move', dir: 'up' }, 12);
-  add({ type: 'move', dir: 'left' }, 8);
-  add({ type: 'switch', char: 'rabbit' });
-  add({ type: 'move', dir: 'left' }, 2);
-  add({ type: 'move', dir: 'right' }, 3);
-  add({ type: 'move', dir: 'right' });
-  add({ type: 'move', dir: 'down' }, 5);
-  add({ type: 'move', dir: 'right' }, 14);
-  add({ type: 'move', dir: 'right' }, 11);
-
-  for (const action of mapPath) state = act(state, action);
-  assert(state.status === 'clear', 'map 1 directed route did not clear');
-  assert(state.hasKey && state.chestOpen, 'map 1 key/chest state missing');
-  console.log('map 1 route smoke ok');
+  for (const action of expandSolutionPath(mapStage)) state = act(state, action);
+  assert(state.status === 'clear', 'stage 1 directed route did not clear');
+  assert(state.hasKey && state.chestOpen, 'stage 1 key/chest state missing');
+  console.log('stage 1 route smoke ok');
 
   // --- Room transition smoke ---
   // Minimal 2×1 stage: room [0,0] exits right at col 14 row 7 → room [1,0] entry at col 0 row 7.
@@ -371,6 +350,14 @@ function startServer() {
 }
 
 async function runBrowserSmoke() {
+  let chromium;
+  try {
+    ({ chromium } = require('playwright'));
+  } catch {
+    console.log('browser smoke skipped (playwright not installed)');
+    return;
+  }
+
   const server = await startServer();
   const port = server.address().port;
   const browser = await chromium.launch({ headless: true });
@@ -389,48 +376,41 @@ async function runBrowserSmoke() {
     await page.waitForTimeout(600);
     assert(errors.length === 0, errors.join('\n'));
 
-    await page.evaluate(() => {
-      const api = window.__tangerineIsle;
-      const actions = [];
-      const add = (action, count = 1) => {
-        for (let i = 0; i < count; i++) actions.push(action);
-      };
+    for (let i = 0; i < 4; i++) {
+      await page.click('#intro-overlay');
+      await page.waitForTimeout(120);
+    }
 
-      add({ type: 'move', dir: 'up' }, 2);
-      add({ type: 'move', dir: 'up' }, 2);
-      add({ type: 'move', dir: 'down' }, 6);
-      add({ type: 'switch', char: 'turtle' });
-      add({ type: 'move', dir: 'down' }, 15);
-      add({ type: 'switch', char: 'rabbit' });
-      add({ type: 'move', dir: 'down' }, 7);
-      add({ type: 'move', dir: 'right' }, 7);
-      add({ type: 'switch', char: 'cat' });
-      add({ type: 'move', dir: 'right' }, 5);
-      add({ type: 'move', dir: 'down' });
-      add({ type: 'move', dir: 'right' }, 2);
-      add({ type: 'move', dir: 'up' }, 9);
-      add({ type: 'move', dir: 'up' }, 7);
-      add({ type: 'move', dir: 'right' }, 8);
-      add({ type: 'move', dir: 'left' });
-      add({ type: 'move', dir: 'left' }, 7);
-      add({ type: 'move', dir: 'up' }, 8);
-      add({ type: 'move', dir: 'up' }, 12);
-      add({ type: 'move', dir: 'left' }, 8);
-      add({ type: 'switch', char: 'rabbit' });
-      add({ type: 'move', dir: 'left' }, 2);
-      add({ type: 'move', dir: 'right' }, 3);
-      add({ type: 'move', dir: 'right' });
-      add({ type: 'move', dir: 'down' }, 5);
-      add({ type: 'move', dir: 'right' }, 14);
-      add({ type: 'move', dir: 'right' }, 11);
+    await page.evaluate(async () => {
+      const api = window.__tangerineIsle;
+      const data = await fetch('./src/data/stages.json').then(res => res.json());
+      const stage = data.stages[0];
+      const actions = [];
+
+      for (const item of stage.solutionPath || []) {
+        if (item.move) {
+          for (let i = 0; i < (item.count ?? 1); i++) actions.push({ type: 'move', dir: item.move });
+        } else if (item.switch) {
+          actions.push({ type: 'switch', char: item.switch });
+        }
+      }
+
+      const dismissHint = () => {
+        const hint = document.getElementById('hint-overlay');
+        if (hint && !hint.classList.contains('hidden')) {
+          hint.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true }));
+        }
+      };
+      dismissHint();
 
       for (const action of actions) {
         api.dispatch(action);
+        dismissHint();
       }
     });
 
     let state = await page.evaluate(() => window.__tangerineIsle.getState());
-    assert(state.status === 'clear' && state.hasKey && state.chestOpen, 'browser map 1 route did not clear');
+    assert(state.status === 'clear' && state.hasKey && state.chestOpen, 'browser stage 1 route did not clear');
 
     const canvasNotBlank = await page.evaluate(() => {
       const canvas = document.querySelector('#game');

@@ -8,7 +8,8 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      background: #1A1008;
+      /* Dark felt/tabletop background */
+      background: radial-gradient(ellipse at center, #141A14 0%, #080C08 100%);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -16,23 +17,764 @@
       overflow: hidden;
     }
 
+    /* ═══════════════════════════════════════
+       DEVICE SHELL  —  Game Boy Color–inspired
+       Jungle Green variant, portrait orientation
+    ════════════════════════════════════════ */
+    #device {
+      width: min(360px, 100vw);
+      height: 100dvh;
+      max-height: 760px;
+      position: relative;
+
+      /* Matte plastic body gradient — lighter upper-left catching light */
+      background:
+        /* micro-diagonal texture lines (matte plastic) */
+        repeating-linear-gradient(
+          -48deg,
+          rgba(255,255,255,0.013) 0px, rgba(255,255,255,0.013) 1px,
+          transparent 1px, transparent 4px
+        ),
+        /* main body gradient */
+        linear-gradient(
+          170deg,
+          #5C7A60 0%,
+          #3E5C46 15%,
+          #2E4A38 40%,
+          #24402E 65%,
+          #1A3224 100%
+        );
+
+      /* GBC-style shape: modest top radius, very round bottom */
+      border-radius: 14px 14px 60px 60px;
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 13px 20px;
+      gap: 0;
+
+      /* Edge highlights + outer shadows */
+      box-shadow:
+        0 0 0 1.5px #0A1408,
+        0 0 0 3.5px #1E3428,
+        inset 0 1.5px 0 rgba(255,255,255,0.20),   /* top rim highlight */
+        inset 1.5px 0 0 rgba(255,255,255,0.09),    /* left rim */
+        inset -1.5px 0 0 rgba(255,255,255,0.04),   /* right rim (darker) */
+        inset 0 -3px 10px rgba(0,0,0,0.55),        /* bottom inner shadow */
+        0 8px 24px rgba(0,0,0,0.65),
+        0 20px 60px rgba(0,0,0,0.4);
+
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    #device-header {
+      width: 100%;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 4px 5px 6px;
+      flex-shrink: 0;
+    }
+
+    #device-title {
+      font-family: 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      line-height: 1;
+    }
+
+    #device-title .t1 { color: #F09820; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+    #device-title .t2 { color: rgba(255,255,255,0.55); }
+
+    .device-subtitle {
+      font-family: monospace;
+      font-size: 6.5px;
+      color: rgba(255,255,255,0.28);
+      letter-spacing: 1px;
+      margin-top: 3px;
+    }
+
+    #power-led {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      margin-top: 3px;
+      flex-shrink: 0;
+      background: radial-gradient(circle at 38% 38%, #AAFFAA, #22CC22);
+      box-shadow: 0 0 4px #44EE44, 0 0 12px rgba(60,220,60,0.5);
+    }
+
+    /* ── Screen surround (outer raised frame, like GBC bezel lip) ── */
+    #screen-surround {
+      width: 100%;
+      flex-shrink: 0;
+      background: linear-gradient(165deg, #283C2E 0%, #1A2C22 100%);
+      border-radius: 6px 6px 8px 8px;
+      padding: 8px 10px 6px;
+      box-shadow:
+        inset 0 2px 5px rgba(0,0,0,0.5),
+        inset 0 -1px 3px rgba(0,0,0,0.3),
+        0 1px 0 rgba(255,255,255,0.07),
+        0 -1px 0 rgba(0,0,0,0.3);
+    }
+
+    /* "DOT MATRIX WITH STEREO SOUND" – etched into bezel above screen */
+    .screen-label {
+      text-align: center;
+      font-family: monospace;
+      font-size: 6.5px;
+      color: rgba(255,255,255,0.22);
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+      user-select: none;
+    }
+
+    /* ── Screen bezel (deep inset black frame) ── */
+    #screen-bezel {
+      background: #060808;
+      border-radius: 5px;
+      padding: 10px;
+      box-shadow:
+        inset 0 4px 14px rgba(0,0,0,0.99),
+        inset 0 0 0 1px rgba(0,0,0,0.95),
+        0 1px 0 rgba(255,255,255,0.04);
+    }
+
+    /* ── Screen canvas area + glass shine ── */
     #wrap {
       position: relative;
-      width: min(100vw, 100dvh);
-      height: min(100vw, 100dvh);
+      width: 100%;
+      aspect-ratio: 1;
     }
 
     #game {
       display: block;
       width: 100%;
       height: 100%;
-      image-rendering: auto;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    /* Subtle diagonal glass reflection on screen */
+    #wrap::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        130deg,
+        rgba(255,255,255,0.07) 0%,
+        rgba(255,255,255,0.02) 35%,
+        transparent 55%
+      );
+      pointer-events: none;
+      border-radius: 2px;
+    }
+
+    /* ── Separator groove between screen section and controls ── */
+    #separator {
+      width: 78%;
+      height: 3px;
+      margin: 5px 0 4px;
+      flex-shrink: 0;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(0,0,0,0.55) 15%,
+        rgba(0,0,0,0.55) 85%,
+        transparent
+      );
+      border-radius: 2px;
+    }
+
+    /* ── Info row (status + minimap) ── */
+    #info-row {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 2px 7px;
+      flex-shrink: 0;
+    }
+
+    /* Status panel ── */
+    #status-panel {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+      min-width: 80px;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .status-item img {
+      width: 20px;
+      height: 20px;
+      object-fit: contain;
+      flex-shrink: 0;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+    }
+
+    #hp-value {
+      font-family: monospace;
+      font-size: 20px;
+      font-weight: bold;
+      color: #fff;
+      min-width: 34px;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.7);
+      transition: color 300ms;
+    }
+
+    #hp-value.caution { color: #FFD060; }
+    #hp-value.warn    { color: #FF7060; }
+
+    #key-display { display: none; }
+    #key-display span {
+      font-family: monospace;
+      font-size: 10px;
+      color: rgba(255,240,140,0.88);
+      letter-spacing: 1px;
+      text-shadow: 0 0 6px rgba(255,220,80,0.4);
+    }
+
+    #hp-warning {
+      display: none;
+      font-family: monospace;
+      font-size: 10px;
+      color: #FF7060;
+      letter-spacing: 1px;
+      animation: status-blink 900ms infinite;
+    }
+
+    @keyframes status-blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.18; }
+    }
+
+    /* Minimap ── */
+    #minimap-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      cursor: pointer;
+    }
+
+    .minimap-label {
+      font-family: monospace;
+      font-size: 8px;
+      color: rgba(255,255,255,0.32);
+      letter-spacing: 2px;
+    }
+
+    #minimap {
+      width: min(22vw, 88px);
+      height: min(22vw, 88px);
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 3px;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      cursor: pointer;
+      transition: border-color 150ms, box-shadow 150ms;
+    }
+
+    #minimap.overview-active {
+      border-color: rgba(255, 210, 60, 0.8);
+      box-shadow: 0 0 8px rgba(255, 210, 60, 0.35);
+    }
+
+    /* ── Controls area ── */
+    #controls {
+      width: 100%;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 4px 0;
+      min-height: 0;
+    }
+
+    /* ═══════════════════
+       D-PAD  (cross shape)
+       Real GBC uses cross-shaped molded plastic
+    ═══════════════════ */
+    #dpad {
+      position: relative;
+      width: min(38vw, 134px);
+      height: min(38vw, 134px);
+      flex-shrink: 0;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Horizontal arm of the cross */
+    #dpad::before {
+      content: '';
+      position: absolute;
+      top: 33%; left: 0;
+      width: 100%; height: 34%;
+      background: linear-gradient(
+        180deg,
+        #2A2A2A 0%, #333 40%, #2E2E2E 60%, #252525 100%
+      );
+      border-radius: 7px;
+      box-shadow:
+        0 3px 8px rgba(0,0,0,0.7),
+        inset 0 1.5px 0 rgba(255,255,255,0.11),
+        inset 0 -1.5px 0 rgba(0,0,0,0.5);
+    }
+
+    /* Vertical arm of the cross */
+    #dpad::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 33%;
+      width: 34%; height: 100%;
+      background: linear-gradient(
+        90deg,
+        #2A2A2A 0%, #333 40%, #2E2E2E 60%, #252525 100%
+      );
+      border-radius: 7px;
+      box-shadow:
+        3px 0 8px rgba(0,0,0,0.7),
+        inset 1.5px 0 0 rgba(255,255,255,0.11),
+        inset -1.5px 0 0 rgba(0,0,0,0.5);
+    }
+
+    .dpad-btn {
+      position: absolute;
+      z-index: 2;
+      background: transparent;
+      border: none;
+      color: rgba(255,255,255,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      touch-action: none;
+      font-size: min(3.8vw, 13px);
+      transition: color 60ms, text-shadow 60ms;
+    }
+
+    .dpad-btn.up    { top: 0;    left: 33%; width: 34%; height: 33%; }
+    .dpad-btn.left  { top: 33%;  left: 0;   width: 33%; height: 34%; }
+    .dpad-btn.right { top: 33%;  right: 0;  width: 33%; height: 34%; }
+    .dpad-btn.down  { bottom: 0; left: 33%; width: 34%; height: 33%; }
+
+    .dpad-btn:active,
+    .dpad-btn.pressed {
+      color: rgba(255,255,255,0.95);
+      text-shadow: 0 0 8px rgba(255,255,255,0.6);
+    }
+
+    /* Center hub — circular indent like real d-pad */
+    .dpad-center {
+      position: absolute;
+      z-index: 3;
+      top: 33%; left: 33%;
+      width: 34%; height: 34%;
+      background: radial-gradient(circle at 42% 38%, #383838, #1C1C1C);
+      border-radius: 50%;
+      box-shadow:
+        inset 0 2px 3px rgba(0,0,0,0.8),
+        inset 0 -1px 1px rgba(255,255,255,0.06);
+    }
+
+    /* ═══════════════════════════════
+       CHARACTER BUTTONS  (A/B/C style)
+       3D raised effect with highlight + shadow
+    ═══════════════════════════════ */
+    #action-cluster {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    #char-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      align-items: center;
+    }
+
+    .char-btn {
+      width: min(13vw, 47px);
+      height: min(13vw, 47px);
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: none;
+      overflow: visible;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      /* 3D raised: highlight on top, shadow cast below */
+      box-shadow:
+        0 4px 0 rgba(0,0,0,0.50),
+        0 6px 10px rgba(0,0,0,0.55),
+        inset 0 2.5px 4px rgba(255,255,255,0.28),
+        inset 0 -2px 4px rgba(0,0,0,0.35);
+      transform: translateY(0);
+      transition: transform 70ms, box-shadow 70ms;
+    }
+
+    .char-btn img {
+      width: 112%;
+      height: 112%;
+      object-fit: contain;
+      pointer-events: none;
+      transform: translateY(4%);
+    }
+
+    .char-btn:active {
+      transform: translateY(3px);
+      box-shadow:
+        0 1px 0 rgba(0,0,0,0.45),
+        0 2px 5px rgba(0,0,0,0.5),
+        inset 0 1.5px 3px rgba(255,255,255,0.2),
+        inset 0 -1px 3px rgba(0,0,0,0.3);
+    }
+
+    .char-btn.active {
+      outline: 2.5px solid rgba(255,255,255,0.88);
+      outline-offset: 3px;
+    }
+
+    /* ═══════════════════════════════
+       CENTER META (START/SELECT style)
+    ═══════════════════════════════ */
+    #meta-buttons {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    /* Speaker dot grid (3×5) – GBC style hole pattern */
+    #speaker-dots {
+      display: grid;
+      grid-template-columns: repeat(3, 6px);
+      grid-template-rows: repeat(5, 6px);
+      gap: 3px;
+      opacity: 0.45;
+    }
+
+    .sdot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.7);
+      box-shadow:
+        inset 0 1px 2px rgba(0,0,0,0.9),
+        0 0.5px 0 rgba(255,255,255,0.04);
+    }
+
+    /* Restart button styled like START/SELECT oval pill */
+    .meta-btn {
+      background: linear-gradient(175deg, #3C3C3C 0%, #262626 100%);
+      border: none;
+      border-radius: 14px;
+      color: rgba(255,255,255,0.58);
+      font-size: 9px;
+      font-family: monospace;
+      letter-spacing: 1px;
+      padding: 5px 13px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: none;
+      box-shadow:
+        0 2.5px 0 rgba(0,0,0,0.5),
+        0 3px 6px rgba(0,0,0,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.12);
+      transform: translateY(0);
+      transition: transform 70ms, box-shadow 70ms, color 70ms;
+    }
+
+    .meta-btn:active {
+      transform: translateY(2px);
+      box-shadow:
+        0 0.5px 0 rgba(0,0,0,0.4),
+        0 1px 3px rgba(0,0,0,0.4),
+        inset 0 1px 2px rgba(0,0,0,0.3);
+      color: rgba(255,255,255,0.85);
+    }
+
+    /* ── Intro overlay (full screen, shown before game starts) ── */
+    #intro-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      background: rgba(8, 16, 8, 0.97);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 26px;
+      padding: 28px;
+      opacity: 1;
+      transition: opacity 400ms;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    #intro-overlay.intro-fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .intro-title {
+      font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
+      font-size: 19px;
+      font-weight: 900;
+      color: #F09820;
+      letter-spacing: 3px;
+      text-shadow: 0 2px 14px rgba(240, 152, 32, 0.4);
+    }
+
+    .intro-scene {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 14px;
+      padding: 18px 20px;
+      width: 100%;
+      max-width: 310px;
+    }
+
+    #intro-portrait {
+      width: 72px;
+      height: 72px;
+      object-fit: contain;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.06);
+      flex-shrink: 0;
+    }
+
+    .intro-bubble { flex: 1; }
+
+    #intro-name {
+      font-family: monospace;
+      font-size: 12px;
+      font-weight: bold;
+      color: #F09820;
+      margin-bottom: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    #intro-text {
+      font-family: sans-serif;
+      font-size: 15px;
+      line-height: 1.55;
+      color: rgba(255,255,255,0.92);
+    }
+
+    .intro-tap {
+      font-family: monospace;
+      font-size: 11px;
+      color: rgba(255,255,255,0.35);
+      letter-spacing: 2px;
+      animation: tap-blink 1300ms infinite;
+    }
+
+    @keyframes tap-blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.12; }
+    }
+
+    /* ── Hint overlay (inside game canvas area) ── */
+    #hint-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      background: rgba(0, 0, 0, 0.62);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 10px;
+      gap: 6px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    #hint-overlay.hidden { display: none; }
+
+    .hint-box {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      background: rgba(10, 20, 10, 0.97);
+      border: 1.5px solid rgba(255,255,255,0.22);
+      border-radius: 10px;
+      padding: 11px 14px;
+      width: 100%;
+    }
+
+    #hint-portrait {
+      width: 50px;
+      height: 50px;
+      object-fit: contain;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.06);
+      flex-shrink: 0;
+    }
+
+    .hint-body { flex: 1; }
+
+    #hint-name {
+      font-family: monospace;
+      font-size: 11px;
+      font-weight: bold;
+      color: #F09820;
+      margin-bottom: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    #hint-text {
+      font-family: sans-serif;
+      font-size: 12.5px;
+      line-height: 1.45;
+      color: rgba(255,255,255,0.90);
+      white-space: pre-line;
+    }
+
+    .hint-tap {
+      font-family: monospace;
+      font-size: 10px;
+      color: rgba(255,255,255,0.30);
+      letter-spacing: 1.5px;
+      animation: tap-blink 1300ms infinite;
     }
   </style>
 </head>
 <body>
-  <div id="wrap">
-    <canvas id="game"></canvas>
+
+  <!-- ── Intro story overlay ── -->
+  <div id="intro-overlay">
+    <div class="intro-title">감귤섬 삼총사</div>
+    <div class="intro-scene">
+      <img id="intro-portrait" src="" alt="">
+      <div class="intro-bubble">
+        <div id="intro-name"></div>
+        <div id="intro-text"></div>
+      </div>
+    </div>
+    <div class="intro-tap">탭하면 계속 ▶</div>
+  </div>
+
+  <div id="device">
+
+    <!-- ── Header ── -->
+    <div id="device-header">
+      <div>
+        <div id="device-title">
+          <span class="t1">TANGERINE</span><span class="t2"> ISLE</span>
+        </div>
+        <div class="device-subtitle">PORTABLE GAME SYSTEM</div>
+      </div>
+      <div id="power-led"></div>
+    </div>
+
+    <!-- ── Screen section ── -->
+    <div id="screen-surround">
+      <div class="screen-label">COLOR PUZZLE SYSTEM</div>
+      <div id="screen-bezel">
+        <div id="wrap">
+          <canvas id="game"></canvas>
+          <!-- In-game hint overlay (first visit per room) -->
+          <div id="hint-overlay" class="hidden">
+            <div class="hint-box">
+              <img id="hint-portrait" src="" alt="">
+              <div class="hint-body">
+                <div id="hint-name"></div>
+                <div id="hint-text"></div>
+              </div>
+            </div>
+            <div class="hint-tap">탭하면 계속 ▶</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Groove separator ── -->
+    <div id="separator"></div>
+
+    <!-- ── Info row: status panel + minimap ── -->
+    <div id="info-row">
+      <div id="status-panel">
+        <div class="status-item" id="hp-display">
+          <img src="./assets/ui/ui_icon_tangerine.png" alt="">
+          <span id="hp-value">—</span>
+        </div>
+        <div class="status-item" id="key-display">
+          <img src="./assets/ui/ui_icon_key.png" alt="">
+          <span>KEY</span>
+        </div>
+        <div id="hp-warning">⚠ 귤 부족!</div>
+      </div>
+
+      <div id="minimap-wrap">
+        <span class="minimap-label">MAP</span>
+        <canvas id="minimap" width="90" height="90"></canvas>
+      </div>
+    </div>
+
+    <!-- ── Controls ── -->
+    <div id="controls">
+
+      <!-- Character buttons (left) — like A/B/C -->
+      <div id="action-cluster">
+        <div id="char-buttons">
+          <button class="char-btn" data-char="cat"
+            style="background: radial-gradient(circle at 40% 35%, #E08828, #A05010);">
+          </button>
+          <button class="char-btn" data-char="rabbit"
+            style="background: radial-gradient(circle at 40% 35%, #9A6840, #6A4020);">
+          </button>
+          <button class="char-btn" data-char="turtle"
+            style="background: radial-gradient(circle at 40% 35%, #4A9060, #2A6040);">
+          </button>
+        </div>
+      </div>
+
+      <!-- Center: speaker + restart -->
+      <div id="meta-buttons">
+        <div id="speaker-dots">
+          <div class="sdot"></div><div class="sdot"></div><div class="sdot"></div>
+          <div class="sdot"></div><div class="sdot"></div><div class="sdot"></div>
+          <div class="sdot"></div><div class="sdot"></div><div class="sdot"></div>
+          <div class="sdot"></div><div class="sdot"></div><div class="sdot"></div>
+          <div class="sdot"></div><div class="sdot"></div><div class="sdot"></div>
+        </div>
+        <button class="meta-btn" id="btn-restart">↺ 재시작</button>
+      </div>
+
+      <!-- D-pad (right) — cross-shaped arms via ::before/::after -->
+      <div id="dpad">
+        <button class="dpad-btn up"    data-dir="up">▲</button>
+        <button class="dpad-btn left"  data-dir="left">◀</button>
+        <div class="dpad-center"></div>
+        <button class="dpad-btn right" data-dir="right">▶</button>
+        <button class="dpad-btn down"  data-dir="down">▼</button>
+      </div>
+
+    </div>
   </div>
   <script type="module" src="./src/main.js"></script>
 </body>

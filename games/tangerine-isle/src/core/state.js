@@ -63,7 +63,6 @@ export function buildState(stage, stageData) {
     status: 'playing',
 
     // Stage-wide immutable references
-    _stage:        stage,
     _room:         startRoom,
     _rooms:        rooms,         // Map<"rx,ry", Room>
     _roomStates:   roomStates,    // Map<"rx,ry", RoomMutable> — current room entry is stale during play

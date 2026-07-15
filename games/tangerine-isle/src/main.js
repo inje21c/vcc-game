@@ -3,12 +3,10 @@ import { nextState }  from './core/rules.js';
 import { Renderer }   from './render/renderer.js';
 import { InputHandler } from './input/input.js';
 import { showIntro } from './ui/intro.js';
-import { applyEditionChrome, getEditionFromUrl } from './editions.js';
 
 let stageData, stage, state, renderer, input;
 let lastTime = 0;
 let minimapEl;
-const edition = getEditionFromUrl();
 
 let inputBlocked = false;
 const visitedRooms = new Set();
@@ -19,7 +17,7 @@ function portraitSrc(char) {
 }
 
 async function loadStages() {
-  const res = await fetch(edition.stagePath);
+  const res = await fetch('./src/data/stages.json');
   return res.json();
 }
 
@@ -227,15 +225,13 @@ function loop(ts) {
 }
 
 async function main() {
-  applyEditionChrome(edition);
-
   const data = await loadStages();
 
   const canvas = document.getElementById('game');
   minimapEl = document.getElementById('minimap');
-  renderer = new Renderer(canvas, edition);
+  renderer = new Renderer(canvas);
 
-  initStage(data, edition.initialStageId);
+  initStage(data, '1-1');
   installDebugHook();
   renderer.resize();
   updateStatusPanel(state);
@@ -276,7 +272,7 @@ async function main() {
     inputBlocked = false;
     const startHint = _getHintForRoom(stage.startRoom || [0, 0]);
     if (startHint) showHint(startHint);
-  }, edition);
+  });
 
   lastTime = performance.now();
   requestAnimationFrame(loop);

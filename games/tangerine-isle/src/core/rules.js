@@ -58,6 +58,7 @@ function cloneState(state) {
     tunnelHoles:  new Set(state.tunnelHoles || []),
     chestOpen: state.chestOpen,
     status: state.status,
+    _stage:        state._stage,
     _room:         state._room,          // immutable room data — safe to share
     _rooms:        state._rooms,         // immutable map — safe to share
     _roomStates:   cloneRoomStates(state._roomStates),

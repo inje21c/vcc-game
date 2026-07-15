@@ -190,13 +190,14 @@
       border-radius: 2px;
     }
 
-    /* ── Info row (status + minimap) ── */
+    /* ── Information area (status + stage info + minimap) ── */
     #info-row {
       width: 100%;
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 2px 7px;
+      gap: 8px;
       flex-shrink: 0;
     }
 
@@ -257,6 +258,49 @@
     @keyframes status-blink {
       0%, 100% { opacity: 1; }
       50%       { opacity: 0.18; }
+    }
+
+    /* Stage info ── subtle center readout inside the information area */
+    #stage-panel {
+      flex: 1;
+      min-width: 0;
+      max-width: 130px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      padding: 4px 8px;
+      border-radius: 5px;
+      background: rgba(0,0,0,0.16);
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow:
+        inset 0 1px 2px rgba(0,0,0,0.25),
+        0 1px 0 rgba(255,255,255,0.04);
+      overflow: hidden;
+    }
+
+    #stage-id {
+      font-family: monospace;
+      font-size: 8px;
+      color: rgba(255,255,255,0.38);
+      letter-spacing: 1.5px;
+      white-space: nowrap;
+      line-height: 1;
+    }
+
+    #stage-title {
+      width: 100%;
+      font-family: sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.82);
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+      line-height: 1.2;
     }
 
     /* Minimap ── */
@@ -715,7 +759,7 @@
     <!-- ── Groove separator ── -->
     <div id="separator"></div>
 
-    <!-- ── Info row: status panel + minimap ── -->
+    <!-- ── Information area: status panel + stage info + minimap ── -->
     <div id="info-row">
       <div id="status-panel">
         <div class="status-item" id="hp-display">
@@ -727,6 +771,11 @@
           <span>KEY</span>
         </div>
         <div id="hp-warning">⚠ 귤 부족!</div>
+      </div>
+
+      <div id="stage-panel" aria-live="polite">
+        <div id="stage-id">STAGE —</div>
+        <div id="stage-title">—</div>
       </div>
 
       <div id="minimap-wrap">

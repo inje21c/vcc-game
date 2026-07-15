@@ -4,7 +4,7 @@
   "stages": [
     {
       "id": "1-1",
-      "next": "2-1",
+      "next": "1-2",
       "chapter": 1,
       "title": "감귤 과수원",
       "startHp": 140,
@@ -175,8 +175,323 @@
     }
   ,
     {
+      "id": "1-2",
+      "next": "1-3",
+      "chapter": 1,
+      "title": "첫 선택",
+      "startHp": 90,
+      "roomGrid": [2, 1],
+      "startRoom": [0, 0],
+      "startPos": [5, 12],
+      "solutionPath": [
+        { "move": "up",    "count": 5 },
+        { "move": "down",  "count": 2 },
+        { "move": "up",    "count": 2 },
+        { "move": "right", "count": 3 },
+        { "move": "down",  "count": 2 },
+        { "move": "up",    "count": 2 },
+        { "move": "right", "count": 3 },
+        { "move": "down",  "count": 2 },
+        { "move": "up",    "count": 2 },
+        { "move": "right", "count": 4 },
+        { "switch": "turtle" },
+        { "move": "right", "count": 12 }
+      ],
+      "buttonGroups": {
+        "two_stones_gate": {
+          "buttons": [
+            { "room": [0, 0], "pos": [5, 6] },
+            { "room": [0, 0], "pos": [8, 10] }
+          ],
+          "doors": [
+            { "room": [0, 0], "pos": [13, 7] }
+          ]
+        }
+      },
+      "hints": [
+        {
+          "room": [0, 0],
+          "char": "cat",
+          "name": "라봉이",
+          "text": "돌은 버튼에도, 구덩이에도 쓸 수 있어. 이번에는 둘 다 필요해."
+        }
+      ],
+      "rooms": [
+        {
+          "coord": [0, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T............D.",
+            "T.............T",
+            "T.............T",
+            "T..........P..T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "rock",      "pos": [5, 8] },
+            { "type": "rock",      "pos": [8, 8] },
+            { "type": "rock",      "pos": [11, 8] },
+            { "type": "button",    "pos": [5, 6] },
+            { "type": "button",    "pos": [8, 10] },
+            { "type": "tangerine", "pos": [3, 3] },
+            { "type": "tangerine", "pos": [12, 3] }
+          ]
+        },
+        {
+          "coord": [1, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T....~~~~~....T",
+            ".....~~~~~....T",
+            "T....~~~~~....T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "key",       "pos": [7, 7] },
+            { "type": "chest",     "pos": [12, 7] },
+            { "type": "tangerine", "pos": [11, 4] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1-3",
+      "next": "1-4",
+      "chapter": 1,
+      "title": "물길의 순서",
+      "startHp": 28,
+      "roomGrid": [2, 1],
+      "startRoom": [0, 0],
+      "startPos": [2, 7],
+      "solutionPath": [
+        { "switch": "turtle" },
+        { "move": "right", "count": 13 },
+        { "switch": "rabbit" },
+        { "move": "right", "count": 9 }
+      ],
+      "buttonGroups": {},
+      "hints": [
+        {
+          "room": [0, 0],
+          "char": "turtle",
+          "name": "청귤이",
+          "text": "물에서 어디로 나오느냐가 다음 길을 정해. 오른쪽으로 빠져나가 보자."
+        }
+      ],
+      "rooms": [
+        {
+          "coord": [0, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTT~~~~~.TTTT",
+            "TTTTT~~~~~TTTTT",
+            "T....~~~~~.....",
+            "TTTTT~~~~~TTTTT",
+            "TTTTT~~~~~TTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "key",       "pos": [7, 7] }
+          ]
+        },
+        {
+          "coord": [1, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            ".....T........T",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "chest",     "pos": [10, 7] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1-4",
+      "next": "2-1",
+      "chapter": 1,
+      "title": "순서가 열쇠다",
+      "startHp": 75,
+      "roomGrid": [2, 2],
+      "startRoom": [0, 0],
+      "startPos": [2, 7],
+      "solutionPath": [
+        { "switch": "rabbit" },
+        { "move": "right", "count": 4 },
+        { "switch": "cat" },
+        { "move": "right", "count": 1 },
+        { "move": "down",  "count": 2 },
+        { "move": "up",    "count": 2 },
+        { "move": "right", "count": 7 },
+        { "move": "right", "count": 7 },
+        { "move": "down",  "count": 8 },
+        { "move": "down",  "count": 7 },
+        { "move": "left",  "count": 8 },
+        { "switch": "turtle" },
+        { "move": "left",  "count": 7 },
+        { "move": "right", "count": 8 },
+        { "move": "right", "count": 11 }
+      ],
+      "buttonGroups": {
+        "orchard_order_gate": {
+          "buttons": [
+            { "room": [0, 0], "pos": [8, 10] }
+          ],
+          "doors": [
+            { "room": [0, 0], "pos": [13, 7] }
+          ]
+        }
+      },
+      "hints": [
+        {
+          "room": [0, 0],
+          "char": "rabbit",
+          "name": "금향이",
+          "text": "먼저 길을 만들어 두자. 돌을 움직인 뒤에는 돌아갈 수 없는 길이 생길 수 있어."
+        }
+      ],
+      "rooms": [
+        {
+          "coord": [0, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "T....T.......D.",
+            "TTTTTTTT.TTTTTT",
+            "TTTTTTTT.TTTTTT",
+            "TTTTTTTT.TTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "rock",      "pos": [8, 8] },
+            { "type": "button",    "pos": [8, 10] },
+            { "type": "tangerine", "pos": [11, 7] }
+          ]
+        },
+        {
+          "coord": [1, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "........TTTTTTT",
+            "TTTTTTT.TTTTTTT",
+            "TTTTTTT.TTTTTTT",
+            "TTTTTTT.TTTTTTT",
+            "TTTTTTT.TTTTTTT",
+            "TTTTTTT.TTTTTTT",
+            "TTTTTTT.TTTTTTT",
+            "TTTTTTT.TTTTTTT"
+          ],
+          "objects": [
+            { "type": "tangerine", "pos": [3, 7] }
+          ]
+        },
+        {
+          "coord": [0, 1],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTT~~~~~~....",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "key",       "pos": [7, 7] },
+            { "type": "tangerine", "pos": [12, 7] }
+          ]
+        },
+        {
+          "coord": [1, 1],
+          "terrain": [
+            "TTTTTTT.TTTTTTT",
+            "TTTTTTT.TTTTTTT",
+            "TTTTTTT.TTTTTTT",
+            "TTTTTTT.TTTTTTT",
+            "TTTTTTT.TTTTTTT",
+            "TTTTTTT.TTTTTTT",
+            "TTTTTTT.TTTTTTT",
+            "............TTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "chest",     "pos": [11, 7] }
+          ]
+        }
+      ]
+    },
+    {
       "id": "2-1",
-      "next": "3-1",
+      "next": "2-2",
       "chapter": 2,
       "title": "귤밭 창고",
       "startHp": 150,
@@ -325,7 +640,429 @@
       ]
     },
     {
+      "id": "2-2",
+      "next": "2-3",
+      "chapter": 2,
+      "title": "하나씩 열어야 한다",
+      "startHp": 95,
+      "roomGrid": [2, 2],
+      "startRoom": [0, 0],
+      "startPos": [4, 7],
+      "solutionPath": [
+        { "move": "right", "count": 5 },
+        { "move": "up",    "count": 1 },
+        { "move": "right", "count": 3 },
+        { "move": "down",  "count": 1 },
+        { "move": "right", "count": 3 },
+        { "move": "right", "count": 3 },
+        { "move": "left",  "count": 4 },
+        { "move": "left",  "count": 3 },
+        { "move": "left",  "count": 3 },
+        { "move": "up",    "count": 1 },
+        { "move": "left",  "count": 1 },
+        { "move": "down",  "count": 3 },
+        { "move": "left",  "count": 1 },
+        { "move": "down",  "count": 4 },
+        { "move": "right", "count": 1 },
+        { "move": "down",  "count": 2 },
+        { "switch": "turtle" },
+        { "move": "down",  "count": 7 },
+        { "move": "right", "count": 8 },
+        { "move": "right", "count": 4 }
+      ],
+      "buttonGroups": {
+        "east_gate": {
+          "buttons": [
+            { "room": [0, 0], "pos": [10, 7] }
+          ],
+          "doors": [
+            { "room": [0, 0], "pos": [13, 7] }
+          ]
+        },
+        "south_gate": {
+          "buttons": [
+            { "room": [0, 0], "pos": [7, 10] }
+          ],
+          "doors": [
+            { "room": [0, 0], "pos": [7, 13] }
+          ]
+        }
+      },
+      "hints": [
+        {
+          "room": [0, 0],
+          "char": "cat",
+          "name": "라봉이",
+          "text": "돌 하나가 두 문을 동시에 열 수는 없어. 먼저 오른쪽 길을 열고, 돌아와서 아래쪽 길로 돌려 쓰자."
+        }
+      ],
+      "rooms": [
+        {
+          "coord": [0, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T............D.",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T......D......T",
+            "TTTTTTT.TTTTTTT"
+          ],
+          "objects": [
+            { "type": "rock",      "pos": [7, 7] },
+            { "type": "button",    "pos": [10, 7] },
+            { "type": "button",    "pos": [7, 10] },
+            { "type": "tangerine", "pos": [3, 3] },
+            { "type": "tangerine", "pos": [11, 3] }
+          ]
+        },
+        {
+          "coord": [1, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "..............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTT.TTTTTTT"
+          ],
+          "objects": [
+            { "type": "tangerine", "pos": [3, 7] },
+            { "type": "tangerine", "pos": [10, 4] }
+          ]
+        },
+        {
+          "coord": [0, 1],
+          "terrain": [
+            "TTTTTTT.TTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T...~~~~~~~...T",
+            "T...~~~~~~~...T",
+            "T...~~~~~~~...T",
+            "T...~~~~~~~....",
+            "T...~~~~~~~...T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "key",       "pos": [7, 7] },
+            { "type": "tangerine", "pos": [2, 2] },
+            { "type": "tangerine", "pos": [12, 2] }
+          ]
+        },
+        {
+          "coord": [1, 1],
+          "terrain": [
+            "TTTTTTT.TTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "..............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "chest",     "pos": [4, 7] },
+            { "type": "tangerine", "pos": [10, 7] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-3",
+      "next": "2-4",
+      "chapter": 2,
+      "title": "폭탄 순서",
+      "startHp": 45,
+      "roomGrid": [3, 1],
+      "startRoom": [0, 0],
+      "startPos": [3, 7],
+      "solutionPath": [
+        { "move": "right", "count": 12 },
+        { "move": "right", "count": 4 },
+        { "move": "right", "count": 4 },
+        { "move": "up",    "count": 3 },
+        { "move": "left",  "count": 3 },
+        { "move": "right", "count": 6 },
+        { "move": "left",  "count": 3 },
+        { "move": "down",  "count": 3 },
+        { "move": "right", "count": 1 },
+        { "move": "right", "count": 6 },
+        { "switch": "turtle" },
+        { "move": "right", "count": 12 }
+      ],
+      "buttonGroups": {
+        "citrus_cache": {
+          "buttons": [
+            { "room": [1, 0], "pos": [9, 7] }
+          ],
+          "doors": [
+            { "room": [1, 0], "pos": [8, 6] }
+          ]
+        }
+      },
+      "hints": [
+        {
+          "room": [0, 0],
+          "char": "cat",
+          "name": "라봉이",
+          "text": "폭탄은 길을 열어주지만, 그 뒤의 돌 순서가 더 중요해. 돌을 바로 구덩이에 넣기 전에 버튼 위에 먼저 세워 보자."
+        }
+      ],
+      "rooms": [
+        {
+          "coord": [0, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T............d.",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "bomb", "pos": [11, 7], "range": 2 }
+          ]
+        },
+        {
+          "coord": [1, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTDTTTTTT",
+            ".......T..P....",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "bomb",      "pos": [4, 7], "range": 3 },
+            { "type": "rock",      "pos": [5, 7] },
+            { "type": "button",    "pos": [9, 7] },
+            { "type": "tangerine", "pos": [5, 4] },
+            { "type": "tangerine", "pos": [8, 4] },
+            { "type": "tangerine", "pos": [11, 4] }
+          ]
+        },
+        {
+          "coord": [2, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T....~~~~~....T",
+            "T....~~~~~....T",
+            "T....~~~~~....T",
+            ".....~~~~~....T",
+            "T....~~~~~....T",
+            "T....~~~~~....T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "key",   "pos": [7, 7] },
+            { "type": "chest", "pos": [12, 7] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-4",
+      "next": "3-1",
+      "chapter": 2,
+      "title": "다른 방의 버튼",
+      "startHp": 100,
+      "roomGrid": [2, 2],
+      "startRoom": [0, 0],
+      "startPos": [7, 7],
+      "solutionPath": [
+        { "move": "down",  "count": 8 },
+        { "move": "down",  "count": 7 },
+        { "move": "up",    "count": 8 },
+        { "move": "up",    "count": 7 },
+        { "move": "right", "count": 8 },
+        { "move": "right", "count": 7 },
+        { "move": "down",  "count": 8 },
+        { "move": "down",  "count": 7 },
+        { "move": "left",  "count": 8 },
+        { "switch": "turtle" },
+        { "move": "left",  "count": 3 },
+        { "move": "right", "count": 4 },
+        { "move": "right", "count": 4 }
+      ],
+      "buttonGroups": {
+        "remote_gate": {
+          "buttons": [
+            { "room": [0, 1], "pos": [7, 8] }
+          ],
+          "doors": [
+            { "room": [0, 0], "pos": [13, 7] }
+          ]
+        }
+      },
+      "hints": [
+        {
+          "room": [0, 0],
+          "char": "cat",
+          "name": "라봉이",
+          "text": "이 문은 지금 방에서 열 수 없어. 아래 방의 버튼에 돌을 올려 두면, 이 방으로 돌아와도 문이 열린 채 유지돼."
+        }
+      ],
+      "rooms": [
+        {
+          "coord": [0, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T............D.",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTT.TTTTTTT"
+          ],
+          "objects": [
+            { "type": "tangerine", "pos": [3, 3] },
+            { "type": "tangerine", "pos": [11, 3] }
+          ]
+        },
+        {
+          "coord": [1, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "..............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTT.TTTTTTT"
+          ],
+          "objects": [
+            { "type": "tangerine", "pos": [4, 7] },
+            { "type": "tangerine", "pos": [7, 10] },
+            { "type": "tangerine", "pos": [7, 13] }
+          ]
+        },
+        {
+          "coord": [0, 1],
+          "terrain": [
+            "TTTTTTT.TTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.........~~~~T",
+            "T.........~~~~.",
+            "T.........~~~~T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "rock",   "pos": [7, 5] },
+            { "type": "button", "pos": [7, 8] },
+            { "type": "key",    "pos": [11, 7] }
+          ]
+        },
+        {
+          "coord": [1, 1],
+          "terrain": [
+            "TTTTTTT.TTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "..............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "chest", "pos": [4, 7] }
+          ]
+        }
+      ]
+    },
+    {
       "id": "3-1",
+      "next": "3-2",
       "chapter": 3,
       "title": "화산 귤길",
       "startHp": 120,
@@ -432,6 +1169,1500 @@
             { "type": "tangerine", "pos": [4, 4] },
             { "type": "tangerine", "pos": [10, 4] }
           ]
+        }
+      ]
+    },
+    {
+      "id": "3-2",
+      "next": "3-3",
+      "chapter": 3,
+      "title": "땅굴이 동선을 바꾼다",
+      "startHp": 55,
+      "roomGrid": [2, 2],
+      "startRoom": [0, 0],
+      "startPos": [2, 7],
+      "solutionPath": [
+        { "switch": "rabbit" },
+        { "move": "up",    "count": 3 },
+        { "move": "down",  "count": 3 },
+        { "switch": "cat" },
+        { "move": "right", "count": 3 },
+        { "move": "down",  "count": 1 },
+        { "move": "right", "count": 1 },
+        { "move": "up",    "count": 1 },
+        { "move": "right", "count": 9 },
+        { "switch": "turtle" },
+        { "move": "right", "count": 7 },
+        { "move": "down",  "count": 15 }
+      ],
+      "buttonGroups": {
+        "tunnel_gate": {
+          "buttons": [
+            { "room": [0, 0], "pos": [6, 6] }
+          ],
+          "doors": [
+            { "room": [0, 0], "pos": [13, 7] }
+          ]
+        }
+      },
+      "hints": [
+        {
+          "room": [0, 0],
+          "char": "rabbit",
+          "name": "금향이",
+          "text": "이번엔 땅굴 위치가 시작이야. 위쪽 나무 한 칸을 먼저 지나 열쇠를 챙기고, 라봉이와 청귤이에게 길을 넘겨주자."
+        }
+      ],
+      "rooms": [
+        {
+          "coord": [0, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.T...........T",
+            "T.............T",
+            "T............D.",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "key",       "pos": [2, 3] },
+            { "type": "rock",      "pos": [6, 7] },
+            { "type": "button",    "pos": [6, 6] },
+            { "type": "tangerine", "pos": [10, 4] }
+          ]
+        },
+        {
+          "coord": [1, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T....~~~~~....T",
+            "T....~~~~~....T",
+            "T....~~~~~....T",
+            ".....~~~~~....T",
+            "T....~~~~~....T",
+            "T....~~~~~....T",
+            "T....~~~~~....T",
+            "T....~~~~~....T",
+            "T....~~~~~....T",
+            "T....~~~~~....T",
+            "TTTTTTT.TTTTTTT"
+          ],
+          "objects": [
+            { "type": "tangerine", "pos": [11, 4] },
+            { "type": "tangerine", "pos": [11, 10] }
+          ]
+        },
+        {
+          "coord": [1, 1],
+          "terrain": [
+            "TTTTTTT.TTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "chest", "pos": [7, 7] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-3",
+      "next": "3-4",
+      "chapter": 3,
+      "title": "귤이 전략이다",
+      "startHp": 28,
+      "roomGrid": [3, 1],
+      "startRoom": [0, 0],
+      "startPos": [3, 7],
+      "solutionPath": [
+        { "move": "right", "count": 6 },
+        { "move": "up",    "count": 1 },
+        { "move": "right", "count": 2 },
+        { "move": "down",  "count": 1 },
+        { "move": "right", "count": 4 },
+        { "move": "right", "count": 4 },
+        { "move": "down",  "count": 4 },
+        { "move": "right", "count": 6 },
+        { "move": "up",    "count": 4 },
+        { "move": "right", "count": 5 },
+        { "switch": "turtle" },
+        { "move": "right", "count": 12 }
+      ],
+      "buttonGroups": {
+        "energy_gate": {
+          "buttons": [
+            { "room": [0, 0], "pos": [10, 7] }
+          ],
+          "doors": [
+            { "room": [0, 0], "pos": [13, 7] }
+          ]
+        }
+      },
+      "hints": [
+        {
+          "room": [0, 0],
+          "char": "cat",
+          "name": "라봉이",
+          "text": "이번 길은 빠르기만 하면 부족해. 다음 방에서 귤을 챙겨야 청귤이가 마지막 물길을 건널 수 있어."
+        },
+        {
+          "room": [1, 0],
+          "char": "rabbit",
+          "name": "금향이",
+          "text": "위쪽은 짧은 지름길, 아래쪽은 귤이 있는 우회길이야. 지금은 체력이 곧 정답이야."
+        }
+      ],
+      "rooms": [
+        {
+          "coord": [0, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T............D.",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "rock",   "pos": [7, 7] },
+            { "type": "button", "pos": [10, 7] }
+          ]
+        },
+        {
+          "coord": [1, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "TTTT.TTTTT.TTTT",
+            "TTTT.TTTTT.TTTT",
+            "TTTT.TTTTT.TTTT",
+            "TTTT.TTTTT.TTTT",
+            "T......T......T",
+            "TTTT.TTTTT.TTTT",
+            ".....TTTTT.....",
+            "TTTT.TTTTT.TTTT",
+            "TTTT.TTTTT.TTTT",
+            "TTTT.TTTTT.TTTT",
+            "T.............T",
+            "TTTT.TTTTT.TTTT",
+            "TTTT.TTTTT.TTTT",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "tangerine", "pos": [5, 11] },
+            { "type": "tangerine", "pos": [7, 11] },
+            { "type": "tangerine", "pos": [9, 11] }
+          ]
+        },
+        {
+          "coord": [2, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T....~~~~~....T",
+            "T....~~~~~....T",
+            "T....~~~~~....T",
+            ".....~~~~~....T",
+            "T....~~~~~....T",
+            "T....~~~~~....T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "key",   "pos": [7, 7] },
+            { "type": "chest", "pos": [12, 7] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3-4",
+      "next": "4-1",
+      "chapter": 3,
+      "title": "세 관문",
+      "startHp": 80,
+      "roomGrid": [3, 2],
+      "startRoom": [0, 0],
+      "startPos": [3, 7],
+      "solutionPath": [
+        { "move": "right", "count": 12 },
+        { "move": "right", "count": 4 },
+        { "move": "right", "count": 4 },
+        { "move": "down",  "count": 2 },
+        { "move": "up",    "count": 2 },
+        { "move": "right", "count": 7 },
+        { "move": "right", "count": 7 },
+        { "move": "down",  "count": 8 },
+        { "move": "down",  "count": 3 },
+        { "switch": "turtle" },
+        { "move": "down",  "count": 4 },
+        { "move": "left",  "count": 8 },
+        { "move": "left",  "count": 10 }
+      ],
+      "buttonGroups": {
+        "three_gate_inner": {
+          "buttons": [
+            { "room": [1, 0], "pos": [8, 10] }
+          ],
+          "doors": [
+            { "room": [1, 0], "pos": [13, 7] }
+          ]
+        }
+      },
+      "hints": [
+        {
+          "room": [0, 0],
+          "char": "cat",
+          "name": "라봉이",
+          "text": "세 관문이 이어져 있어. 폭탄으로 첫 문을 열고, 다음 방에서는 돌을 버튼에 묶어 둔 채 지나가야 해."
+        },
+        {
+          "room": [2, 1],
+          "char": "turtle",
+          "name": "청귤이",
+          "text": "마지막 관문은 물길이야. 여기부터는 청귤이가 열쇠를 챙겨 상자까지 이어가자."
+        }
+      ],
+      "rooms": [
+        {
+          "coord": [0, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T............d.",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "bomb",      "pos": [11, 7], "range": 3 },
+            { "type": "tangerine", "pos": [6, 5] }
+          ]
+        },
+        {
+          "coord": [1, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T....T........T",
+            "T....T........T",
+            "T....T........T",
+            "T....T........T",
+            "T....T........T",
+            "T....T........T",
+            ".....T.......D.",
+            "T....T........T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "bomb",      "pos": [4, 7], "range": 3 },
+            { "type": "rock",      "pos": [8, 8] },
+            { "type": "button",    "pos": [8, 10] },
+            { "type": "tangerine", "pos": [11, 11] }
+          ]
+        },
+        {
+          "coord": [2, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "..............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTT.TTTTTTT"
+          ],
+          "objects": [
+            { "type": "tangerine", "pos": [7, 10] }
+          ]
+        },
+        {
+          "coord": [0, 1],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "tangerine", "pos": [7, 7] }
+          ]
+        },
+        {
+          "coord": [1, 1],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T....~~~~~~~~~~",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "chest", "pos": [4, 7] }
+          ]
+        },
+        {
+          "coord": [2, 1],
+          "terrain": [
+            "TTTTTTT.TTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T....~~~~~....T",
+            "T....~~~~~....T",
+            "T....~~~~~....T",
+            "~~~~~~~~~~....T",
+            "T....~~~~~....T",
+            "T....~~~~~....T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "key",       "pos": [7, 7] },
+            { "type": "tangerine", "pos": [11, 4] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4-1",
+      "next": "4-2",
+      "chapter": 4,
+      "title": "두 개의 저울",
+      "startHp": 105,
+      "roomGrid": [3, 3],
+      "startRoom": [1, 2],
+      "startPos": [7, 12],
+      "solutionPath": [
+        { "move": "up",    "count": 13 },
+        { "move": "up",    "count": 6 },
+        { "move": "right", "count": 1 },
+        { "move": "up",    "count": 1 },
+        { "move": "left",  "count": 3 },
+        { "move": "up",    "count": 1 },
+        { "move": "left",  "count": 4 },
+        { "move": "down",  "count": 1 },
+        { "move": "left",  "count": 2 },
+        { "move": "left",  "count": 7 },
+        { "move": "right", "count": 7 },
+        { "move": "right", "count": 1 },
+        { "switch": "rabbit" },
+        { "move": "right", "count": 2 },
+        { "move": "down",  "count": 1 },
+        { "switch": "cat" },
+        { "move": "up",    "count": 1 },
+        { "move": "right", "count": 6 },
+        { "move": "down",  "count": 1 },
+        { "move": "right", "count": 4 },
+        { "move": "up",    "count": 1 },
+        { "move": "right", "count": 2 },
+        { "move": "right", "count": 7 }
+      ],
+      "buttonGroups": {
+        "left_gate": {
+          "buttons": [
+            { "room": [1, 1], "pos": [4, 7] }
+          ],
+          "doors": [
+            { "room": [1, 1], "pos": [1, 7] }
+          ]
+        },
+        "right_gate": {
+          "buttons": [
+            { "room": [1, 1], "pos": [10, 7] }
+          ],
+          "doors": [
+            { "room": [1, 1], "pos": [13, 7] }
+          ]
+        }
+      },
+      "hints": [
+        {
+          "room": [1, 2],
+          "char": "cat",
+          "name": "라봉이",
+          "text": "돌은 하나뿐이야. 왼쪽 저울을 먼저 맞추고, 다시 가져와 오른쪽 저울을 맞춰 보자."
+        },
+        {
+          "room": [1, 1],
+          "char": "rabbit",
+          "name": "금향이",
+          "text": "돌을 다시 밀 위치로 돌아갈 때는 가운데 짧은 나무벽을 땅굴로 넘으면 빨라."
+        }
+      ],
+      "rooms": [
+        {
+          "coord": [1, 2],
+          "terrain": [
+            "TTTTTTT.TTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "tangerine", "pos": [7, 8] }
+          ]
+        },
+        {
+          "coord": [1, 1],
+          "terrain": [
+            "TTTTTTT.TTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            ".DT..........D.",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTT.TTTTTTT"
+          ],
+          "objects": [
+            { "type": "rock",      "pos": [7, 7] },
+            { "type": "button",    "pos": [4, 7] },
+            { "type": "button",    "pos": [10, 7] },
+            { "type": "tangerine", "pos": [6, 4] },
+            { "type": "tangerine", "pos": [8, 10] }
+          ]
+        },
+        {
+          "coord": [0, 1],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T..............",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "key",       "pos": [7, 7] },
+            { "type": "tangerine", "pos": [5, 5] }
+          ]
+        },
+        {
+          "coord": [2, 1],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "..............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "chest",     "pos": [7, 7] },
+            { "type": "tangerine", "pos": [9, 5] }
+          ]
+        },
+        {
+          "coord": [1, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTT.TTTTTTT"
+          ],
+          "objects": [
+            { "type": "tangerine", "pos": [7, 7] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4-2",
+      "next": "4-3",
+      "chapter": 4,
+      "title": "돌 3개, 버튼 4개",
+      "startHp": 120,
+      "roomGrid": [3, 3],
+      "startRoom": [1, 1],
+      "startPos": [7, 12],
+      "solutionPath": [
+        { "move": "left",  "count": 2 },
+        { "move": "up",    "count": 2 },
+        { "move": "down",  "count": 1 },
+        { "move": "right", "count": 4 },
+        { "move": "up",    "count": 1 },
+        { "move": "left",  "count": 2 },
+        { "move": "up",    "count": 18 },
+        { "move": "down",  "count": 18 },
+        { "move": "left",  "count": 2 },
+        { "move": "up",    "count": 4 },
+        { "move": "down",  "count": 1 },
+        { "move": "right", "count": 6 },
+        { "move": "up",    "count": 1 },
+        { "move": "down",  "count": 1 },
+        { "move": "right", "count": 11 }
+      ],
+      "buttonGroups": {
+        "shared_a_gate": {
+          "buttons": [
+            { "room": [1, 1], "pos": [5, 9] },
+            { "room": [1, 1], "pos": [9, 9] }
+          ],
+          "doors": [
+            { "room": [1, 1], "pos": [7, 1] }
+          ]
+        },
+        "shared_b_gate": {
+          "buttons": [
+            { "room": [1, 1], "pos": [5, 5] },
+            { "room": [1, 1], "pos": [11, 5] }
+          ],
+          "doors": [
+            { "room": [1, 1], "pos": [13, 7] }
+          ]
+        }
+      },
+      "hints": [
+        {
+          "room": [1, 1],
+          "char": "cat",
+          "name": "라봉이",
+          "text": "버튼은 네 개지만 돌은 세 개야. 아래쪽 버튼에 올린 돌 하나를 나중에 위쪽 버튼으로 밀어 올려 다시 써야 해."
+        },
+        {
+          "room": [1, 0],
+          "char": "cat",
+          "name": "라봉이",
+          "text": "열쇠를 챙겼다면 중앙으로 돌아가자. 첫 문이 닫혀도 이제 다음 문을 열 차례야."
+        }
+      ],
+      "rooms": [
+        {
+          "coord": [1, 1],
+          "terrain": [
+            "TTTTTTT.TTTTTTT",
+            "T......D......T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T............D.",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "rock",      "pos": [5, 10] },
+            { "type": "rock",      "pos": [9, 10] },
+            { "type": "rock",      "pos": [11, 6] },
+            { "type": "button",    "pos": [5, 9] },
+            { "type": "button",    "pos": [9, 9] },
+            { "type": "button",    "pos": [5, 5] },
+            { "type": "button",    "pos": [11, 5] },
+            { "type": "tangerine", "pos": [3, 7] },
+            { "type": "tangerine", "pos": [12, 11] }
+          ]
+        },
+        {
+          "coord": [1, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTT.TTTTTTT"
+          ],
+          "objects": [
+            { "type": "key",       "pos": [7, 7] },
+            { "type": "tangerine", "pos": [5, 5] },
+            { "type": "tangerine", "pos": [9, 5] }
+          ]
+        },
+        {
+          "coord": [2, 1],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "..............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "chest",     "pos": [7, 7] },
+            { "type": "tangerine", "pos": [10, 5] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4-3",
+      "next": "4-4",
+      "chapter": 4,
+      "title": "연쇄 잠금",
+      "startHp": 100,
+      "roomGrid": [3, 3],
+      "startRoom": [1, 1],
+      "startPos": [7, 12],
+      "solutionPath": [
+        { "move": "left",  "count": 2 },
+        { "move": "up",    "count": 2 },
+        { "move": "down",  "count": 1 },
+        { "move": "right", "count": 4 },
+        { "move": "up",    "count": 1 },
+        { "move": "left",  "count": 2 },
+        { "move": "up",    "count": 11 },
+        { "move": "up",    "count": 4 },
+        { "switch": "turtle" },
+        { "move": "up",    "count": 3 },
+        { "move": "down",  "count": 3 },
+        { "switch": "cat" },
+        { "move": "down",  "count": 5 },
+        { "move": "down",  "count": 9 },
+        { "move": "right", "count": 1 },
+        { "move": "right", "count": 2 },
+        { "move": "down",  "count": 1 },
+        { "move": "right", "count": 1 },
+        { "move": "up",    "count": 2 },
+        { "move": "right", "count": 1 },
+        { "move": "up",    "count": 1 },
+        { "move": "right", "count": 10 }
+      ],
+      "buttonGroups": {
+        "chain_key_gate": {
+          "buttons": [
+            { "room": [1, 1], "pos": [5, 9] },
+            { "room": [1, 1], "pos": [9, 9] }
+          ],
+          "doors": [
+            { "room": [1, 1], "pos": [7, 1] }
+          ]
+        },
+        "chain_chest_gate": {
+          "buttons": [
+            { "room": [1, 1], "pos": [11, 7] }
+          ],
+          "doors": [
+            { "room": [1, 1], "pos": [13, 7] }
+          ]
+        }
+      },
+      "hints": [
+        {
+          "room": [1, 1],
+          "char": "cat",
+          "name": "라봉이",
+          "text": "처음 두 버튼은 열쇠 방을 열어. 열쇠를 얻은 뒤에는 오른쪽 버튼으로 돌 하나를 다시 써야 상자 문이 열린다."
+        },
+        {
+          "room": [1, 0],
+          "char": "turtle",
+          "name": "청귤이",
+          "text": "열쇠는 물 한가운데 있어. 물길에 들어가면 뭍에 나올 때까지 청귤이로 움직여야 해."
+        }
+      ],
+      "rooms": [
+        {
+          "coord": [1, 1],
+          "terrain": [
+            "TTTTTTT.TTTTTTT",
+            "T......D......T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T............D.",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "rock",      "pos": [5, 10] },
+            { "type": "rock",      "pos": [9, 10] },
+            { "type": "button",    "pos": [5, 9] },
+            { "type": "button",    "pos": [9, 9] },
+            { "type": "button",    "pos": [11, 7] },
+            { "type": "tangerine", "pos": [3, 7] },
+            { "type": "tangerine", "pos": [12, 11] }
+          ]
+        },
+        {
+          "coord": [1, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T....~~~~~....T",
+            "T....~~~~~....T",
+            "T....~~~~~....T",
+            "T....~~~~~....T",
+            "T....~~~~~....T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTT.TTTTTTT"
+          ],
+          "objects": [
+            { "type": "key",       "pos": [7, 7] },
+            { "type": "tangerine", "pos": [5, 5] },
+            { "type": "tangerine", "pos": [9, 5] }
+          ]
+        },
+        {
+          "coord": [2, 1],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "..............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "chest",     "pos": [7, 7] },
+            { "type": "tangerine", "pos": [10, 5] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4-4",
+      "next": "5-1",
+      "chapter": 4,
+      "title": "화산 방어",
+      "startHp": 80,
+      "roomGrid": [3, 3],
+      "startRoom": [1, 1],
+      "startPos": [7, 12],
+      "solutionPath": [
+        { "move": "left",  "count": 4 },
+        { "move": "up",    "count": 1 },
+        { "move": "up",    "count": 1 },
+        { "move": "down",  "count": 1 },
+        { "move": "right", "count": 2 },
+        { "move": "up",    "count": 1 },
+        { "move": "down",  "count": 1 },
+        { "move": "right", "count": 4 },
+        { "move": "up",    "count": 1 },
+        { "move": "left",  "count": 2 },
+        { "move": "up",    "count": 6 },
+        { "move": "right", "count": 1 },
+        { "move": "up",    "count": 3 },
+        { "move": "left",  "count": 1 },
+        { "move": "up",    "count": 2 },
+        { "move": "up",    "count": 2 },
+        { "move": "up",    "count": 2 },
+        { "switch": "turtle" },
+        { "move": "up",    "count": 4 },
+        { "move": "down",  "count": 4 },
+        { "switch": "cat" },
+        { "move": "down",  "count": 5 },
+        { "move": "down",  "count": 2 },
+        { "switch": "rabbit" },
+        { "move": "down",  "count": 1 },
+        { "move": "down",  "count": 1 },
+        { "switch": "cat" },
+        { "move": "down",  "count": 5 },
+        { "move": "right", "count": 2 },
+        { "move": "up",    "count": 1 },
+        { "move": "right", "count": 4 },
+        { "move": "up",    "count": 2 },
+        { "move": "right", "count": 2 },
+        { "move": "right", "count": 7 }
+      ],
+      "buttonGroups": {
+        "volcano_key_gate": {
+          "buttons": [
+            { "room": [1, 1], "pos": [5, 9] },
+            { "room": [1, 1], "pos": [9, 9] }
+          ],
+          "doors": [
+            { "room": [1, 1], "pos": [7, 1] }
+          ]
+        },
+        "volcano_chest_gate": {
+          "buttons": [
+            { "room": [1, 1], "pos": [9, 8] }
+          ],
+          "doors": [
+            { "room": [1, 1], "pos": [13, 7] }
+          ]
+        }
+      },
+      "hints": [
+        {
+          "room": [1, 1],
+          "char": "cat",
+          "name": "라봉이",
+          "text": "왼쪽 돌은 구덩이를 메워 길을 만들고, 가운데 두 돌은 첫 잠금을 연다. 나중에는 그 돌 하나를 다시 빼서 오른쪽 문을 열어야 해."
+        },
+        {
+          "room": [1, 0],
+          "char": "turtle",
+          "name": "청귤이",
+          "text": "폭탄으로 나무문을 없앤 뒤 물길을 건너 열쇠를 챙기자."
+        },
+        {
+          "room": [1, 1],
+          "char": "rabbit",
+          "name": "금향이",
+          "text": "열쇠를 얻고 돌아올 때 중앙 나무벽은 땅굴로 넘으면 오른쪽 돌을 다시 잡을 수 있어."
+        }
+      ],
+      "rooms": [
+        {
+          "coord": [0, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": []
+        },
+        {
+          "coord": [1, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T....~~~~~....T",
+            "T....~~~~~....T",
+            "T....~~~~~....T",
+            "T....~~~~~....T",
+            "T....~~~~~....T",
+            "T......d......T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTT.TTTTTTT"
+          ],
+          "objects": [
+            { "type": "bomb",      "pos": [7, 12], "range": 2 },
+            { "type": "key",       "pos": [7, 7] }
+          ]
+        },
+        {
+          "coord": [2, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": []
+        },
+        {
+          "coord": [0, 1],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": []
+        },
+        {
+          "coord": [1, 1],
+          "terrain": [
+            "TTTTTTT.TTTTTTT",
+            "T......D......T",
+            "T.............T",
+            "T......T......T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T............D.",
+            "T.............T",
+            "T..P..........T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "rock",      "pos": [3, 10] },
+            { "type": "rock",      "pos": [5, 10] },
+            { "type": "rock",      "pos": [9, 10] },
+            { "type": "button",    "pos": [5, 9] },
+            { "type": "button",    "pos": [9, 9] },
+            { "type": "button",    "pos": [9, 8] }
+          ]
+        },
+        {
+          "coord": [2, 1],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "..............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "chest",     "pos": [7, 7] }
+          ]
+        },
+        {
+          "coord": [0, 2],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": []
+        },
+        {
+          "coord": [1, 2],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": []
+        },
+        {
+          "coord": [2, 2],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": []
+        }
+      ]
+    },
+    {
+      "id": "5-1",
+      "chapter": 5,
+      "title": "화산 정상",
+      "startHp": 92,
+      "roomGrid": [3, 3],
+      "startRoom": [1, 1],
+      "startPos": [7, 12],
+      "solutionPath": [
+        { "move": "left",  "count": 4 },
+        { "move": "up",    "count": 2 },
+        { "move": "down",  "count": 1 },
+        { "move": "right", "count": 2 },
+        { "move": "up",    "count": 1 },
+        { "move": "down",  "count": 1 },
+        { "move": "right", "count": 4 },
+        { "move": "up",    "count": 1 },
+        { "move": "down",  "count": 1 },
+        { "move": "right", "count": 2 },
+        { "move": "up",    "count": 1 },
+        { "move": "down",  "count": 1 },
+        { "move": "left",  "count": 4 },
+        { "move": "up",    "count": 1 },
+        { "move": "up",    "count": 10 },
+        { "move": "up",    "count": 2 },
+        { "move": "up",    "count": 2 },
+        { "switch": "turtle" },
+        { "move": "up",    "count": 4 },
+        { "move": "down",  "count": 4 },
+        { "switch": "cat" },
+        { "move": "down",  "count": 5 },
+        { "move": "down",  "count": 9 },
+        { "switch": "rabbit" },
+        { "move": "right", "count": 1 },
+        { "move": "down",  "count": 1 },
+        { "switch": "cat" },
+        { "move": "up",    "count": 2 },
+        { "move": "down",  "count": 1 },
+        { "move": "right", "count": 1 },
+        { "move": "up",    "count": 3 },
+        { "move": "right", "count": 12 }
+      ],
+      "buttonGroups": {
+        "summit_key_gate": {
+          "buttons": [
+            { "room": [1, 1], "pos": [5, 9] },
+            { "room": [1, 1], "pos": [9, 9] }
+          ],
+          "doors": [
+            { "room": [1, 1], "pos": [7, 1] }
+          ]
+        },
+        "summit_chest_gate": {
+          "buttons": [
+            { "room": [1, 1], "pos": [5, 9] },
+            { "room": [1, 1], "pos": [9, 8] },
+            { "room": [1, 1], "pos": [11, 9] }
+          ],
+          "doors": [
+            { "room": [1, 1], "pos": [11, 7] },
+            { "room": [1, 1], "pos": [12, 7] },
+            { "room": [1, 1], "pos": [13, 7] }
+          ]
+        }
+      },
+      "hints": [
+        {
+          "room": [1, 1],
+          "char": "cat",
+          "name": "라봉이",
+          "text": "마지막이야. 구덩이를 메우고, 세 개의 돌을 두 잠금에 나눠 써야 정상의 문이 열린다."
+        },
+        {
+          "room": [1, 0],
+          "char": "turtle",
+          "name": "청귤이",
+          "text": "정상 물길은 용암처럼 뜨거워. 규칙은 같아도, 청귤이만 끝까지 버틸 수 있어."
+        },
+        {
+          "room": [1, 1],
+          "char": "rabbit",
+          "name": "금향이",
+          "text": "돌을 마지막 버튼으로 옮기려면 가운데 나무벽을 땅굴로 넘어가야 해."
+        }
+      ],
+      "rooms": [
+        {
+          "coord": [0, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": []
+        },
+        {
+          "coord": [1, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T....~~~~~....T",
+            "T....~~~~~....T",
+            "T....~~~~~....T",
+            "T....~~~~~....T",
+            "T....~~~~~....T",
+            "T......d......T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTT.TTTTTTT"
+          ],
+          "objects": [
+            { "type": "bomb",  "pos": [7, 12], "range": 2 },
+            { "type": "key",   "pos": [7, 7] },
+            { "type": "stake", "pos": [7, 4] }
+          ]
+        },
+        {
+          "coord": [2, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": []
+        },
+        {
+          "coord": [0, 1],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": []
+        },
+        {
+          "coord": [1, 1],
+          "terrain": [
+            "TTTTTTT.TTTTTTT",
+            "T......D......T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T..........DDD.",
+            "T.............T",
+            "T..P..........T",
+            "T.......T.....T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "rock",   "pos": [3, 10] },
+            { "type": "rock",   "pos": [5, 10] },
+            { "type": "rock",   "pos": [9, 10] },
+            { "type": "rock",   "pos": [11, 10] },
+            { "type": "button", "pos": [5, 9] },
+            { "type": "button", "pos": [9, 9] },
+            { "type": "button", "pos": [9, 8] },
+            { "type": "button", "pos": [11, 9] }
+          ]
+        },
+        {
+          "coord": [2, 1],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "..............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "chest", "pos": [7, 7] }
+          ]
+        },
+        {
+          "coord": [0, 2],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": []
+        },
+        {
+          "coord": [1, 2],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": []
+        },
+        {
+          "coord": [2, 2],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": []
         }
       ]
     }

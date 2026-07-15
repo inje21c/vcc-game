@@ -1,0 +1,182 @@
+{
+  "version": 1,
+  "tuning": { "G": 10 },
+  "stages": [
+    {
+      "id": "samdasoo-1",
+      "next": "samdasoo-2",
+      "chapter": 1,
+      "title": "스며듦",
+      "startHp": 40,
+      "roomGrid": [1, 1],
+      "startRoom": [0, 0],
+      "startPos": [4, 7],
+      "solutionPath": [
+        { "switch": "rabbit" },
+        { "move": "right", "count": 7 }
+      ],
+      "knowledgeCard": {
+        "title": "스며드는 길",
+        "body": "제주의 빗물은 보이지 않는 지질의 틈을 찾아 땅속으로 스며듭니다."
+      },
+      "buttonGroups": {},
+      "hints": [
+        {
+          "room": [0, 0],
+          "char": "rabbit",
+          "name": "틈의 탐사자",
+          "text": "스며듦은 억지로 뚫는 일이 아니야. 얕은 지층의 틈을 찾아 한 방울이 지나갈 길을 열어 보자."
+        }
+      ],
+      "rooms": [
+        {
+          "coord": [0, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T....T........T",
+            "T....T........T",
+            "T....T........T",
+            "T....T........T",
+            "T....T........T",
+            "T....T........T",
+            "T....T........T",
+            "T....T........T",
+            "T....T........T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "key", "pos": [9, 7] },
+            { "type": "chest", "pos": [12, 7] },
+            { "type": "tangerine", "pos": [3, 10] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "samdasoo-2",
+      "next": "samdasoo-3",
+      "chapter": 2,
+      "title": "머금음",
+      "startHp": 44,
+      "roomGrid": [1, 1],
+      "startRoom": [0, 0],
+      "startPos": [2, 7],
+      "solutionPath": [
+        { "switch": "turtle" },
+        { "move": "right", "count": 10 }
+      ],
+      "knowledgeCard": {
+        "title": "암석 틈의 시간",
+        "body": "물은 거대한 지하 강이 아니라 암석의 틈에 머물며 천천히 더 깊은 곳으로 이동합니다."
+      },
+      "buttonGroups": {},
+      "hints": [
+        {
+          "room": [0, 0],
+          "char": "turtle",
+          "name": "물길 안내",
+          "text": "이 장에서는 빠르게 달리는 것보다, 암석 사이 물길을 따라 차분히 이동하는 것이 중요해."
+        }
+      ],
+      "rooms": [
+        {
+          "coord": [0, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T..~~~~~~~....T",
+            "T..~~~~~~~....T",
+            "T..~~~~~~~....T",
+            "T..~~~~~~~....T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "key", "pos": [7, 7] },
+            { "type": "chest", "pos": [12, 7] },
+            { "type": "tangerine", "pos": [2, 10] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "samdasoo-3",
+      "chapter": 4,
+      "title": "소중함",
+      "startHp": 55,
+      "roomGrid": [1, 1],
+      "startRoom": [0, 0],
+      "startPos": [7, 10],
+      "solutionPath": [
+        { "move": "left", "count": 2 },
+        { "move": "right", "count": 2 },
+        { "move": "up", "count": 2 },
+        { "move": "right", "count": 3 },
+        { "move": "up", "count": 1 },
+        { "move": "right", "count": 2 }
+      ],
+      "knowledgeCard": {
+        "title": "지키는 사람들의 시간",
+        "body": "자연이 만든 한 방울은 관측과 관리, 보전의 시간으로 미래에 이어집니다."
+      },
+      "buttonGroups": {
+        "observation_gate": {
+          "buttons": [
+            { "room": [0, 0], "pos": [7, 7] }
+          ],
+          "doors": [
+            { "room": [0, 0], "pos": [10, 7] }
+          ]
+        }
+      },
+      "hints": [
+        {
+          "room": [0, 0],
+          "char": "cat",
+          "name": "지층 조율자",
+          "text": "관측 노드가 켜지면 암반 경계가 열린다. 화산석을 알맞은 위치에 놓아 물길을 확인해 보자."
+        }
+      ],
+      "rooms": [
+        {
+          "coord": [0, 0],
+          "terrain": [
+            "TTTTTTTTTTTTTTT",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.........D...T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "T.............T",
+            "TTTTTTTTTTTTTTT"
+          ],
+          "objects": [
+            { "type": "rock", "pos": [7, 8] },
+            { "type": "button", "pos": [7, 7] },
+            { "type": "key", "pos": [5, 10] },
+            { "type": "chest", "pos": [12, 7] },
+            { "type": "tangerine", "pos": [3, 3] }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // BFS solver for Tangerine Isle stages — 02-level-format.md §3 준수
-// Usage: node tools/solver/solve.js <stageId>
+// Usage: node tools/solver/solve.js <stageId> [--search]
 //
 // Stage 1: 0-1 BFS (switch=cost 0, move=cost 1) — HP 제외 상태 그래프
 //   → MinSteps, 해 경로 확보
@@ -79,12 +79,40 @@ function actionLabel(a) {
   return a.type === 'move' ? a.dir : `[${a.char}]`;
 }
 
+class Deque {
+  constructor(items = []) {
+    this.items = {};
+    this.head = 0;
+    this.tail = 0;
+    for (const item of items) this.pushBack(item);
+  }
+
+  get length() {
+    return this.tail - this.head;
+  }
+
+  pushFront(item) {
+    this.items[--this.head] = item;
+  }
+
+  pushBack(item) {
+    this.items[this.tail++] = item;
+  }
+
+  shift() {
+    if (this.length <= 0) return null;
+    const item = this.items[this.head];
+    delete this.items[this.head++];
+    return item;
+  }
+}
+
 function solve(stage, data, buildState, nextState) {
   const init = buildState(stage, data);
 
   // 0-1 deque: [{ state, steps, path }]
   // switches → front (cost 0), moves → back (cost 1)
-  const deque   = [{ state: init, steps: 0, path: [] }];
+  const deque   = new Deque([{ state: init, steps: 0, path: [] }]);
   const visited = new Map(); // key → minSteps
   visited.set(stateKey(init), 0);
 
@@ -113,7 +141,7 @@ function solve(stage, data, buildState, nextState) {
 
       const newPath = [...path, actionLabel(sw)];
       if (next.status === 'clear') return { solvable: true, minSteps: steps, path: newPath };
-      deque.unshift({ state: next, steps, path: newPath }); // front (cost 0)
+      deque.pushFront({ state: next, steps, path: newPath }); // front (cost 0)
     }
 
     // ── 이동 (cost 1) ──
@@ -130,7 +158,7 @@ function solve(stage, data, buildState, nextState) {
 
       const newPath = [...path, actionLabel(mv)];
       if (next.status === 'clear') return { solvable: true, minSteps: steps + 1, path: newPath };
-      deque.push({ state: next, steps: steps + 1, path: newPath }); // back (cost 1)
+      deque.pushBack({ state: next, steps: steps + 1, path: newPath }); // back (cost 1)
     }
   }
 
@@ -199,9 +227,11 @@ function countTangerines(stage) {
 // ─── 메인 ────────────────────────────────────────────────────────────────────
 
 async function main() {
-  const stageId = process.argv[2];
+  const args = process.argv.slice(2);
+  const forceSearch = args.includes('--search') || args.includes('--ignore-solution');
+  const stageId = args.find(arg => !arg.startsWith('--'));
   if (!stageId) {
-    console.error('Usage: node tools/solver/solve.js <stageId>');
+    console.error('Usage: node tools/solver/solve.js <stageId> [--search]');
     process.exit(1);
   }
 
@@ -222,7 +252,7 @@ async function main() {
   const totalG     = totalTang * G;
   const maxHp      = stage.startHp + totalG;
 
-  const directedPath = expandSolutionPath(stage);
+  const directedPath = forceSearch ? null : expandSolutionPath(stage);
   process.stdout.write(`${directedPath ? 'Checking solutionPath' : 'Solving'} ${stageId}... `);
   const t0 = Date.now();
   const result = directedPath

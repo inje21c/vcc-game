@@ -3,10 +3,12 @@ import { nextState }  from './core/rules.js';
 import { Renderer }   from './render/renderer.js';
 import { InputHandler } from './input/input.js';
 import { showIntro } from './ui/intro.js';
+import { applyEditionChrome, getEditionFromUrl } from './editions.js';
 
 let stageData, stage, state, renderer, input;
 let lastTime = 0;
 let minimapEl;
+const edition = getEditionFromUrl();
 
 let inputBlocked = false;
 const visitedRooms = new Set();
@@ -17,7 +19,7 @@ function portraitSrc(char) {
 }
 
 async function loadStages() {
-  const res = await fetch('./src/data/stages.json');
+  const res = await fetch(edition.stagePath);
   return res.json();
 }
 
@@ -71,16 +73,18 @@ function currentSwitchLock() {
 const _statusEls = {};
 function _getStatusEls() {
   if (!_statusEls.ready) {
-    _statusEls.hpVal  = document.getElementById('hp-value');
-    _statusEls.keyRow = document.getElementById('key-display');
-    _statusEls.warn   = document.getElementById('hp-warning');
+    _statusEls.hpVal      = document.getElementById('hp-value');
+    _statusEls.keyRow     = document.getElementById('key-display');
+    _statusEls.warn       = document.getElementById('hp-warning');
+    _statusEls.stageId    = document.getElementById('stage-id');
+    _statusEls.stageTitle = document.getElementById('stage-title');
     _statusEls.ready  = true;
   }
   return _statusEls;
 }
 
 function updateStatusPanel(s) {
-  const { hpVal, keyRow, warn } = _getStatusEls();
+  const { hpVal, keyRow, warn, stageId, stageTitle } = _getStatusEls();
   if (!hpVal) return;
 
   hpVal.textContent = s.hp;
@@ -88,6 +92,9 @@ function updateStatusPanel(s) {
 
   keyRow.style.display  = s.hasKey ? 'flex' : 'none';
   warn.style.display    = s.hp < 40 ? 'block' : 'none';
+
+  if (stageId) stageId.textContent = `STAGE ${stage.id}`;
+  if (stageTitle) stageTitle.textContent = stage.title || '';
 }
 
 function _getHintForRoom(coord) {
@@ -220,13 +227,15 @@ function loop(ts) {
 }
 
 async function main() {
+  applyEditionChrome(edition);
+
   const data = await loadStages();
 
   const canvas = document.getElementById('game');
   minimapEl = document.getElementById('minimap');
-  renderer = new Renderer(canvas);
+  renderer = new Renderer(canvas, edition);
 
-  initStage(data, '1-1');
+  initStage(data, edition.initialStageId);
   installDebugHook();
   renderer.resize();
   updateStatusPanel(state);
@@ -267,7 +276,7 @@ async function main() {
     inputBlocked = false;
     const startHint = _getHintForRoom(stage.startRoom || [0, 0]);
     if (startHint) showHint(startHint);
-  });
+  }, edition);
 
   lastTime = performance.now();
   requestAnimationFrame(loop);

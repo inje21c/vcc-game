@@ -137,9 +137,10 @@ function drawTunnelHole(ctx, x, y) {
 }
 
 export class Renderer {
-  constructor(canvas) {
+  constructor(canvas, edition = {}) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
+    this.edition = edition;
     this._waterFrame = 0;
     this._waterTimer = 0;
     this._fx = [];
@@ -473,10 +474,22 @@ export class Renderer {
 
     // --- Status overlays ---
     if (state.status === 'gameover') {
-      this._renderOverlay(ctx, 'GAME OVER', '#8B0000', 'R 또는 버튼으로 재시작');
+      this._renderOverlay(ctx, this._label('gameover', 'GAME OVER'), '#8B0000', 'R 또는 버튼으로 재시작');
     } else if (state.status === 'clear') {
-      this._renderOverlay(ctx, 'CLEAR!', '#2E7D32', '다음 스테이지로...', '다음 스테이지');
+      const card = state._stage?.knowledgeCard;
+      this._renderOverlay(
+        ctx,
+        this._label('clearTitle', 'CLEAR!'),
+        this.edition.id === 'samdasoo' ? '#1688A0' : '#2E7D32',
+        card?.title || this._label('clearNext', '다음 스테이지로...'),
+        this._label('clearButton', '다음 스테이지'),
+        card?.body || null
+      );
     }
+  }
+
+  _label(keyName, fallback) {
+    return this.edition?.labels?.[keyName] || fallback;
   }
 
   _renderHUD(ctx, state) {
@@ -504,7 +517,7 @@ export class Renderer {
     ctx.restore();
   }
 
-  _renderOverlay(ctx, title, color, sub, btnText = '다시 시작') {
+  _renderOverlay(ctx, title, color, sub, btnText = '다시 시작', body = null) {
     const VW = VIEWPORT_W * T;
     const VH = VIEWPORT_H * T;
     ctx.save();
@@ -521,9 +534,17 @@ export class Renderer {
     ctx.font = `${T * 0.42}px sans-serif`;
     ctx.fillText(sub, VW / 2, VH / 2 + T * 0.6);
 
+    if (body) {
+      ctx.fillStyle = 'rgba(255,255,255,0.88)';
+      ctx.font = `${T * 0.26}px sans-serif`;
+      ctx.textBaseline = 'top';
+      this._wrapText(ctx, body, VW / 2, VH / 2 + T * 0.95, T * 6.6, T * 0.36, 3);
+      ctx.textBaseline = 'middle';
+    }
+
     const bw = T * 4, bh = T * 0.9;
     const bx = VW / 2 - bw / 2;
-    const by = VH / 2 + T * 1.6;
+    const by = VH / 2 + (body ? T * 2.2 : T * 1.6);
     ctx.fillStyle = 'rgba(255,255,255,0.2)';
     ctx.strokeStyle = '#fff';
     ctx.lineWidth = 6;
@@ -539,6 +560,28 @@ export class Renderer {
     ctx.restore();
   }
 
+  _wrapText(ctx, text, x, y, maxWidth, lineHeight, maxLines) {
+    const chars = [...text];
+    const lines = [];
+    let line = '';
+
+    for (const ch of chars) {
+      const next = line + ch;
+      if (ctx.measureText(next).width > maxWidth && line) {
+        lines.push(line);
+        line = ch;
+        if (lines.length === maxLines - 1) break;
+      } else {
+        line = next;
+      }
+    }
+    if (line && lines.length < maxLines) lines.push(line);
+
+    for (let i = 0; i < lines.length; i++) {
+      ctx.fillText(lines[i], x, y + i * lineHeight);
+    }
+  }
+
   _renderOverviewHint(ctx) {
     const VW = VIEWPORT_W * T;
     const VH = VIEWPORT_H * T;
@@ -550,7 +593,7 @@ export class Renderer {
     ctx.font = `bold ${Math.round(T * 0.17)}px monospace`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('전체 보기  ·  탭하면 돌아가기', VW / 2, VH - h / 2);
+    ctx.fillText(this._label('overview', '전체 보기  ·  탭하면 돌아가기'), VW / 2, VH - h / 2);
     ctx.restore();
   }
 

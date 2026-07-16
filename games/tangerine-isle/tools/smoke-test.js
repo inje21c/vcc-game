@@ -380,6 +380,10 @@ async function runBrowserSmoke() {
       await page.click('#intro-overlay');
       await page.waitForTimeout(120);
     }
+    // 인트로 페이드아웃(opacity 400ms) 완료 후 display:none 될 때까지 대기 —
+    // 그 전에는 inputBlocked라 dispatch가 무시된다.
+    await page.waitForSelector('#intro-overlay', { state: 'hidden', timeout: 5000 });
+    await page.waitForTimeout(100);
 
     await page.evaluate(async () => {
       const api = window.__tangerineIsle;

@@ -35,7 +35,12 @@ games/tangerine-isle/
 ```jsonc
 {
   "version": 1,
-  "tuning": { "G": 10 },              // 귤 1개 = 체력 +G (전역 기본값)
+  "tuning": {
+    "G": 10,                          // 귤 1개 = 체력 +G (전역 기본값)
+    "swimLimit": 8,                   // 거북이 연속 수영 가능 칸 수
+    "explosionBurnsTangerines": true, // 폭발 범위 안 귤 소멸
+    "explosionScorches": true         // 폭발 탄 자국 표시
+  },
   "stages": [ { /* Stage */ } ]
 }
 ```
@@ -88,11 +93,33 @@ games/tangerine-isle/
     { "type": "tangerine", "pos": [2, 6] },
     { "type": "key",       "pos": [13, 2] },
     { "type": "chest",     "pos": [7, 11] },
+    { "type": "valve",     "pos": [2, 2],  "group": "reservoir" },  // 물 차단 밸브
     { "type": "stake",     "pos": [1, 1] }               // 서사 장식, 규칙 무관
   ],
   "doorGroups": { "D:10,6": "g1" }    // 문 좌표 → 버튼 그룹 매핑
 }
 ```
+
+### 2.3b 밸브와 waterGroups (2026-07-16 추가 — 11 문서 §3.2)
+
+물 그룹은 스테이지 레벨에서 선언한다. 밸브를 밟으면 연결된 그룹의 물 타일들이 **영구히** 마른 바닥이 된다.
+
+```json
+"waterGroups": {
+  "reservoir": {
+    "rooms": [
+      { "room": [1, 0], "tiles": [[5, 6], [5, 7], [6, 6]] },
+      { "room": [0, 1], "tiles": [[3, 3]] }
+    ]
+  }
+}
+```
+
+- 밸브 오브젝트: `{ "type": "valve", "pos": [x, y], "group": "reservoir" }`. 바닥(`.`) 타일 위에만 배치한다.
+- 캐릭터가 밸브 칸을 밟는 순간 그룹이 마른다. 한 번 마르면 되돌릴 수 없다 (영구 상태 — `drainedGroups`).
+- 그룹 타일은 반드시 초기 지형 `~` 여야 한다 (검증 V11).
+- 물속에 있던 열쇠는 마른 뒤 누구나 주울 수 있고, 거북이 전환 잠금도 함께 풀린다.
+- 검증 V11: 밸브의 `group`이 `waterGroups`에 존재, 밸브 타일이 `.`, 그룹 타일이 전부 `~`, 밸브 없는 그룹은 경고.
 
 ### 2.4 지형 문자 코드
 

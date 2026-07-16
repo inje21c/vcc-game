@@ -34,6 +34,7 @@ function cloneRoomStates(map) {
       filledPits:   new Set(rs.filledPits),
       openDoors:    new Set(rs.openDoors),
       tunnelHoles:  new Set(rs.tunnelHoles),
+      scorchedTiles: new Set(rs.scorchedTiles || []),
     });
   }
   return out;
@@ -47,8 +48,10 @@ function cloneState(state) {
     dir: state.dir,
     walkFrame: state.walkFrame,
     terrainLock: state.terrainLock || null,
+    swimStreak: state.swimStreak || 0,
     hp: state.hp,
     hasKey: state.hasKey,
+    drainedGroups: new Set(state.drainedGroups || []),
     tangerines:   new Set(state.tangerines),
     rocks:        new Set(state.rocks),
     bombs:        new Map(state.bombs),
@@ -56,14 +59,28 @@ function cloneState(state) {
     filledPits:   new Set(state.filledPits),
     openDoors:    new Set(state.openDoors),
     tunnelHoles:  new Set(state.tunnelHoles || []),
+    scorchedTiles: new Set(state.scorchedTiles || []),
     chestOpen: state.chestOpen,
     status: state.status,
     _room:         state._room,          // immutable room data — safe to share
     _rooms:        state._rooms,         // immutable map — safe to share
     _roomStates:   cloneRoomStates(state._roomStates),
     _buttonGroups: state._buttonGroups,  // stage-level, immutable
+    _drainedLookup: state._drainedLookup, // stage-level, immutable
     _G: state._G,
+    _swimLimit: state._swimLimit,
+    _explosionBurnsTangerines: state._explosionBurnsTangerines,
+    _explosionScorches: state._explosionScorches,
   };
+}
+
+function nextSwimStreak(state, tile) {
+  return tile === '~' ? (state.swimStreak || 0) + 1 : 0;
+}
+
+function canEnterWater(state, tile) {
+  if (tile !== '~') return true;
+  return !state._swimLimit || nextSwimStreak(state, tile) <= state._swimLimit;
 }
 
 function currentTerrainLock(state) {
@@ -87,21 +104,31 @@ function applyTerrainLock(state, forcedLock = null) {
   }
 }
 
+// 잠긴 밸브가 말린 물 타일인가 — roomKey는 "rx,ry".
+function isDrainedTile(state, roomKey, x, y) {
+  const gid = state._drainedLookup?.get(roomKey)?.get(key(x, y));
+  return gid != null && state.drainedGroups?.has(gid);
+}
+
 function effectiveTile(state, x, y) {
   const k = key(x, y);
   if (state.removedTiles.has(k)) return '.';
   if (state.filledPits.has(k))   return '.';
   if (state.openDoors.has(k))    return '.';
-  return getTile(state._room, x, y);
+  const raw = getTile(state._room, x, y);
+  if (raw === '~' && isDrainedTile(state, key(...state.roomCoord), x, y)) return '.';
+  return raw;
 }
 
 // effectiveTile for a room that isn't currently active — reads from its archived state.
-function effectiveTileInRoom(room, rs, x, y) {
+function effectiveTileInRoom(state, room, rs, x, y) {
   const k = key(x, y);
   if (rs.removedTiles.has(k)) return '.';
   if (rs.filledPits.has(k))   return '.';
   if (rs.openDoors.has(k))    return '.';
-  return getTile(room, x, y);
+  const raw = getTile(room, x, y);
+  if (raw === '~' && isDrainedTile(state, key(...room.coord), x, y)) return '.';
+  return raw;
 }
 
 function reEvalButtons(state, events) {
@@ -148,7 +175,11 @@ function detonate(state, bx, by, events) {
   const range = state.bombs.get(key(bx, by));
   if (range == null) return state;
 
-  state.bombs = mapDelete(state.bombs, key(bx, by));
+  const originKey = key(bx, by);
+  state.bombs = mapDelete(state.bombs, originKey);
+  if (state._explosionScorches && getTile(state._room, bx, by) !== '#') {
+    state.scorchedTiles = setAdd(state.scorchedTiles || new Set(), originKey);
+  }
   const blasted = [[bx, by]];
 
   const dirs4 = [[0,-1],[0,1],[-1,0],[1,0]];
@@ -159,19 +190,29 @@ function detonate(state, bx, by, events) {
       if (!inBounds(tx, ty)) break;
 
       const raw = getTile(state._room, tx, ty);
+      const tk = key(tx, ty);
       blasted.push([tx, ty]);
 
-      if (raw === 'T' && !state.removedTiles.has(key(tx, ty))) {
-        state.removedTiles = setAdd(state.removedTiles, key(tx, ty));
+      if (state._explosionScorches && raw !== '#') {
+        state.scorchedTiles = setAdd(state.scorchedTiles || new Set(), tk);
+      }
+
+      if (state._explosionBurnsTangerines && state.tangerines.has(tk)) {
+        state.tangerines = setDelete(state.tangerines, tk);
+        events.push({ type: 'tangerine_burn', pos: [tx, ty] });
+      }
+
+      if (raw === 'T' && !state.removedTiles.has(tk)) {
+        state.removedTiles = setAdd(state.removedTiles, tk);
         events.push({ type: 'explosion_tile', pos: [tx, ty] });
       }
 
-      if (raw === 'd' && !state.removedTiles.has(key(tx, ty)) && !state.openDoors.has(key(tx, ty))) {
-        state.removedTiles = setAdd(state.removedTiles, key(tx, ty));
+      if (raw === 'd' && !state.removedTiles.has(tk) && !state.openDoors.has(tk)) {
+        state.removedTiles = setAdd(state.removedTiles, tk);
         events.push({ type: 'door_destroy', pos: [tx, ty] });
       }
 
-      if (state.bombs.has(key(tx, ty))) {
+      if (state.bombs.has(tk)) {
         state = detonate(state, tx, ty, events);
       }
     }
@@ -207,6 +248,13 @@ function applyPickups(state, x, y, events) {
     }
   }
 
+  // 밸브: 밟으면 연결된 물 그룹이 영구히 마른다 (되돌릴 수 없음).
+  const valveObj = state._room.objects.find(o => o.type === 'valve' && o.pos[0] === x && o.pos[1] === y);
+  if (valveObj && valveObj.group && !state.drainedGroups.has(valveObj.group)) {
+    state.drainedGroups = setAdd(state.drainedGroups, valveObj.group);
+    events.push({ type: 'valve_close', group: valveObj.group, pos: [x, y] });
+  }
+
   if (state.bombs.has(k)) {
     state = detonate(state, x, y, events);
   }
@@ -229,6 +277,7 @@ function doRoomTransition(s, newCoord, newPos, events) {
     filledPits:   s.filledPits,
     openDoors:    s.openDoors,
     tunnelHoles:  s.tunnelHoles,
+    scorchedTiles: s.scorchedTiles,
   });
 
   // Restore the room we're entering.
@@ -240,6 +289,7 @@ function doRoomTransition(s, newCoord, newPos, events) {
   s.filledPits   = newRS.filledPits;
   s.openDoors    = newRS.openDoors;
   s.tunnelHoles  = newRS.tunnelHoles;
+  s.scorchedTiles = newRS.scorchedTiles || new Set();
 
   const newRoom = s._rooms.get(newRk);
   s.roomCoord  = newCoord;
@@ -267,13 +317,13 @@ function handleRoomTransition(s, tx, ty, events) {
 
   const newRoom = s._rooms.get(newRk);
   const newRS   = s._roomStates.get(newRk);
-  const entry   = effectiveTileInRoom(newRoom, newRS, newTx, newTy);
+  const entry   = effectiveTileInRoom(s, newRoom, newRS, newTx, newTy);
   const entryKey = key(newTx, newTy);
 
   // Entry tile must be a valid room entrance. Objects on that tile can further
   // restrict entry, but cannot be pushed from across the room boundary.
   if (entry !== '.' && entry !== '~') return null;
-  if (entry === '~' && s.char !== 'turtle') return null;
+  if (entry === '~' && (s.char !== 'turtle' || !canEnterWater(s, entry))) return null;
   if (newRS.rocks.has(entryKey)) return null;
   if (newRS.tunnelHoles.has(entryKey) && s.char !== 'rabbit') return null;
 
@@ -287,6 +337,7 @@ function handleRoomTransition(s, tx, ty, events) {
 
   doRoomTransition(s, [newRx, newRy], [newTx, newTy], events);
   reEvalButtons(s, events); // re-derive door states from current rock positions
+  s.swimStreak = nextSwimStreak(s, entry);
   applyTerrainLock(s);
   s = applyPickups(s, newTx, newTy, events);
 
@@ -371,8 +422,8 @@ export function nextState(state, action) {
         return null;
       }
     } else if (targetTile === '~') {
-      if (char !== 'turtle') return null;
-      events.push({ type: 'swim', pos: [tx, ty] });
+      if (char !== 'turtle' || !canEnterWater(s, targetTile)) return null;
+      events.push({ type: 'swim', pos: [tx, ty], streak: nextSwimStreak(s, targetTile), limit: s._swimLimit });
     } else if (targetTile === 'P') {
       return null;
     } else if (targetTile === 'd' || targetTile === 'D') {
@@ -392,6 +443,7 @@ export function nextState(state, action) {
   }
 
   s.pos = [tx, ty];
+  s.swimStreak = nextSwimStreak(s, effectiveTile(s, tx, ty));
   applyTerrainLock(s, forcedLock);
   s = applyPickups(s, tx, ty, events);
 

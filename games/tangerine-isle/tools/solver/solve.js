@@ -25,6 +25,7 @@ function serializeRS(rs) {
     [...rs.filledPits].sort().join(','),
     [...rs.openDoors].sort().join(','),
     [...rs.tunnelHoles].sort().join(','),
+    [...(rs.scorchedTiles || [])].sort().join(','),
   ].join('|');
 }
 
@@ -40,6 +41,7 @@ function stateKey(state) {
     filledPits:   state.filledPits,
     openDoors:    state.openDoors,
     tunnelHoles:  state.tunnelHoles,
+    scorchedTiles: state.scorchedTiles,
   });
 
   // 나머지 룸: archive에서 읽기
@@ -54,8 +56,10 @@ function stateKey(state) {
     crk,
     state.pos.join(','),
     state.char,
+    state.swimStreak || 0,
     state.hasKey ? '1' : '0',
     state.chestOpen ? '1' : '0',
+    [...(state.drainedGroups || [])].sort().join(','),
     currentRS,
     otherRooms.join(';'),
   ].join('§');

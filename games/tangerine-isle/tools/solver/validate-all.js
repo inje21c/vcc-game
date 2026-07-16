@@ -60,6 +60,35 @@ function validateStatic(stage) {
     }
   }
 
+  // V11: 밸브/waterGroups 무결성
+  const wg = stage.waterGroups || {};
+  for (const room of stage.rooms) {
+    for (const obj of room.objects) {
+      if (obj.type !== 'valve') continue;
+      if (!obj.group || !wg[obj.group]) {
+        errors.push(`V11: 룸 ${room.coord} 밸브 (${obj.pos}) group "${obj.group}" 이 waterGroups에 없음`);
+      }
+      const vTile = room.terrain[obj.pos[1]]?.[obj.pos[0]];
+      if (vTile !== '.') errors.push(`V11: 룸 ${room.coord} 밸브 (${obj.pos}) 타일="${vTile}" (바닥 '.' 필요)`);
+    }
+  }
+  for (const [gid, group] of Object.entries(wg)) {
+    let hasValve = false;
+    for (const room of stage.rooms) {
+      if (room.objects.some(o => o.type === 'valve' && o.group === gid)) hasValve = true;
+    }
+    if (!hasValve) warnings.push(`V11: waterGroups "${gid}" 를 잠글 밸브가 없음`);
+    for (const entry of group.rooms || []) {
+      const rk = `${entry.room[0]},${entry.room[1]}`;
+      const room = rooms.get(rk);
+      if (!room) { errors.push(`V11: waterGroups "${gid}" 룸 ${entry.room} 없음`); continue; }
+      for (const pos of entry.tiles || []) {
+        const tile = room.terrain[pos[1]]?.[pos[0]];
+        if (tile !== '~') errors.push(`V11: waterGroups "${gid}" 룸 ${entry.room} (${pos}) 타일="${tile}" ('~' 아님)`);
+      }
+    }
+  }
+
   // V3/V4: 룸 가장자리 폐쇄성 + 연결부 양측 정합
   for (const room of stage.rooms) {
     const [rx, ry] = room.coord;

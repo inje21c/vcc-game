@@ -10,6 +10,10 @@
 | 05-prompt-pack-image.md | v1.0 — 생성 완료분: 앵커, 캐릭터 3, 지형, 오브젝트, 아이콘 |
 | 06-prompt-pack-audio.md | v1.0 — Suno 미착수 |
 | 07-implementation-phase1.md | v1.0 — Claude Code 투입 대기 |
+| 08-asset-needs-after-prototype.md | 프로토타입 이후 에셋 수요 |
+| 09-puzzle-core-redesign.md | 퍼즐 코어 재설계 — 압력 버튼 원칙 |
+| 10-stage-design.md | 전체 스테이지 로드맵 (17+3스테이지) — 2026-07-16 원작 반영 개정 (레이아웃 원칙, 난이도 곡선, 재작업 지시) |
+| 11-musti-2003-analysis.md | 2003 원작(musti.mp4) 영상 분석 확정 — 수영 K칸 제한, 밸브, 폭발 부수 피해, 각진 담장, 돌-버튼 재사용 |
 
 압축 해제 위치: vcc-game/games/tangerine-isle/ (docs/design/ 구조 유지)
 에셋: tangerine-isle-assets-v5-final.zip 을 같은 루트에 해제

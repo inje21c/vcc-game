@@ -113,12 +113,56 @@ function drawAnchoredSprite(ctx, src, tileX, tileY, char, dir, frame) {
 
 function key(x, y) { return `${x},${y}`; }
 
+function isDrained(state, x, y) {
+  const rk = key(state.roomCoord[0], state.roomCoord[1]);
+  const gid = state._drainedLookup?.get(rk)?.get(key(x, y));
+  return gid != null && state.drainedGroups?.has(gid);
+}
+
 function effectiveTile(room, state, x, y) {
   const k = key(x, y);
   if (state.removedTiles.has(k)) return '.';
   if (state.filledPits.has(k)) return '.';
   if (state.openDoors.has(k)) return '.';
-  return room.terrain[y]?.[x] || '#';
+  const raw = room.terrain[y]?.[x] || '#';
+  if (raw === '~' && isDrained(state, x, y)) return '~dry';
+  return raw;
+}
+
+// 밸브: 도트 에셋이 없어 캔버스로 그린다 — 핸들 달린 급수 밸브.
+function drawValve(ctx, x, y, closed) {
+  const cx = x * T + T / 2;
+  const cy = y * T + T / 2;
+  const r = T * 0.3;
+
+  ctx.save();
+  // Base plate
+  ctx.fillStyle = '#5A5A62';
+  ctx.beginPath();
+  ctx.ellipse(cx, cy + T * 0.08, r * 1.05, r * 0.55, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Wheel
+  ctx.strokeStyle = closed ? '#8B2E2E' : '#2E7FB8';
+  ctx.lineWidth = T * 0.09;
+  ctx.beginPath();
+  ctx.arc(cx, cy - T * 0.05, r * 0.75, 0, Math.PI * 2);
+  ctx.stroke();
+  // Spokes
+  ctx.lineWidth = T * 0.055;
+  const spin = closed ? Math.PI / 4 : 0;
+  for (let i = 0; i < 3; i++) {
+    const a = spin + (i * Math.PI * 2) / 3;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - T * 0.05);
+    ctx.lineTo(cx + Math.cos(a) * r * 0.75, cy - T * 0.05 + Math.sin(a) * r * 0.75);
+    ctx.stroke();
+  }
+  // Hub
+  ctx.fillStyle = closed ? '#8B2E2E' : '#2E7FB8';
+  ctx.beginPath();
+  ctx.arc(cx, cy - T * 0.05, r * 0.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
 }
 
 function drawTunnelHole(ctx, x, y) {
@@ -285,6 +329,7 @@ export class Renderer {
         if (state.removedTiles.has(k)) tile = '.';
         if (state.filledPits.has(k)) tile = 'P_filled';
         if (state.openDoors.has(k)) tile = '.';
+        if (tile === '~' && isDrained(state, x, y)) tile = '~dry';
 
         const px = x * T, py = y * T;
         drawImg(ctx, tileImg('tile_ground_a'), px, py);
@@ -292,6 +337,18 @@ export class Renderer {
         if (tile === '~') {
           const wf = this._waterFrame === 0 ? 'tile_water_a' : 'tile_water_b';
           drawImg(ctx, tileImg(wf), px, py);
+        } else if (tile === '~dry') {
+          // 마른 강바닥 — 어두운 모래빛 + 물결 흔적
+          drawImg(ctx, tileImg('tile_ground_b'), px, py);
+          ctx.save();
+          ctx.globalAlpha = 0.22;
+          ctx.strokeStyle = '#4A7A9A';
+          ctx.lineWidth = T * 0.03;
+          ctx.beginPath();
+          ctx.moveTo(px + T * 0.15, py + T * 0.55);
+          ctx.quadraticCurveTo(px + T * 0.5, py + T * 0.42, px + T * 0.85, py + T * 0.55);
+          ctx.stroke();
+          ctx.restore();
         } else if (tile === 'P') {
           drawImg(ctx, tileImg('tile_pit'), px, py);
         } else if (tile === 'P_filled') {
@@ -300,6 +357,16 @@ export class Renderer {
           drawImg(ctx, tileImg('tile_door_wood'), px, py);
         } else if (tile === 'D') {
           drawImg(ctx, tileImg('tile_door_stone'), px, py);
+        }
+
+        if (state.scorchedTiles?.has(k)) {
+          ctx.save();
+          ctx.globalAlpha = 0.38;
+          ctx.fillStyle = '#2B1608';
+          ctx.beginPath();
+          ctx.ellipse(px + T / 2, py + T / 2, T * 0.38, T * 0.24, -0.25, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
         }
       }
     }
@@ -328,6 +395,9 @@ export class Renderer {
         const pressed = state.rocks.has(ok);
         const id = pressed ? 'obj_button_on' : 'obj_button_off';
         drawImg(ctx, objImg(id), px + off, py + off, S, S);
+      }
+      if (obj.type === 'valve') {
+        drawValve(ctx, ox, oy, state.drainedGroups?.has(obj.group));
       }
     }
 
@@ -501,6 +571,13 @@ export class Renderer {
       }
     }
 
+    if (state._swimLimit && state.char === 'turtle' && state.swimStreak > 0) {
+      ctx.fillStyle = state.swimStreak >= state._swimLimit ? '#FFD060' : 'rgba(255,255,255,0.86)';
+      ctx.font = `bold ${T * 0.23}px monospace`;
+      ctx.textAlign = 'left';
+      ctx.fillText(`SWIM ${state.swimStreak}/${state._swimLimit}`, padX, padY + T * 1.28);
+    }
+
     ctx.restore();
   }
 
@@ -574,6 +651,7 @@ export class Renderer {
           case '#':        color = '#0E0600'; break;
           case 'T':        color = '#183018'; break;
           case '~':        color = '#1A4870'; break;
+          case '~dry':     color = '#8A7040'; break;
           case 'P':        color = '#2E1200'; break;
           case 'P_filled': color = '#A06830'; break;
           case 'd': case 'D': color = '#4A2E14'; break;

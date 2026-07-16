@@ -37,6 +37,7 @@ function serializeState() {
     dir: state.dir,
     walkFrame: state.walkFrame,
     terrainLock: state.terrainLock || null,
+    swimStreak: state.swimStreak || 0,
     hp: state.hp,
     hasKey: state.hasKey,
     tangerines: [...state.tangerines],
@@ -46,6 +47,8 @@ function serializeState() {
     filledPits: [...state.filledPits],
     openDoors: [...state.openDoors],
     tunnelHoles: [...(state.tunnelHoles || [])],
+    scorchedTiles: [...(state.scorchedTiles || [])],
+    drainedGroups: [...(state.drainedGroups || [])],
     chestOpen: state.chestOpen,
     status: state.status,
   };
@@ -55,6 +58,15 @@ function installDebugHook() {
   window.__tangerineIsle = {
     getState: serializeState,
     dispatch,
+    loadStage(id) {
+      initStage(stageData, id);
+      renderer.snapPos(state.pos);
+      input.highlightChar(state.char);
+      input.stopMovement();
+      renderer.clearFX();
+      updateStatusPanel(state);
+      inputBlocked = false;
+    },
   };
 }
 
@@ -198,6 +210,16 @@ function dispatch(action) {
     }
     if (ev.type === 'swim') {
       renderer.addActionFX('splash', [ev.pos]);
+    }
+    if (ev.type === 'valve_close') {
+      const rk = `${state.roomCoord[0]},${state.roomCoord[1]}`;
+      const roomMap = state._drainedLookup?.get(rk);
+      if (roomMap) {
+        const tiles = [...roomMap.entries()]
+          .filter(([, group]) => group === ev.group)
+          .map(([k]) => k.split(',').map(Number));
+        renderer.addActionFX('splash', tiles);
+      }
     }
     if (ev.type === 'switch') {
       input.highlightChar(ev.char);
